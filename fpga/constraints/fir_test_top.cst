@@ -1,0 +1,13 @@
+// Constraint file: fir_test_top.cst
+// Timing test wrapper for fir_filter_bank1 — 3 pins only.
+// All data ports are internal; only clk, rst_n, led need physical pins.
+// All three pins are in 3.3V banks — no bank voltage conflict.
+
+IO_LOC "clk"   4;
+IO_PORT "clk"  PULL_MODE=NONE IO_TYPE=LVCMOS33;
+
+IO_LOC "rst_n" 88;
+IO_PORT "rst_n" PULL_MODE=UP IO_TYPE=LVCMOS33;
+
+IO_LOC "led"   16;
+IO_PORT "led"  PULL_MODE=NONE DRIVE=8 IO_TYPE=LVCMOS33;

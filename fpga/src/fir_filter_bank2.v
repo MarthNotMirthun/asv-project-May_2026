@@ -53,20 +53,29 @@ module fir_filter_bank2 #(
     // ---------------------------------------------------------------
     // Q1.15 coefficient table (compile-time constants, symmetric).
     // ---------------------------------------------------------------
-    reg signed [15:0] coeff [0:N-1];
-    initial begin
-        coeff[0]  = -16'sd36;  coeff[1]  = -16'sd54;   coeff[2]  = -16'sd59;
-        coeff[3]  = -16'sd33;  coeff[4]  =  16'sd42;   coeff[5]  =  16'sd150;
-        coeff[6]  =  16'sd233; coeff[7]  =  16'sd219;  coeff[8]  =  16'sd70;
-        coeff[9]  = -16'sd177; coeff[10] = -16'sd411;  coeff[11] = -16'sd500;
-        coeff[12] = -16'sd365; coeff[13] = -16'sd39;   coeff[14] =  16'sd337;
-        coeff[15] =  16'sd587; coeff[16] =  16'sd587;  coeff[17] =  16'sd337;
-        coeff[18] = -16'sd39;  coeff[19] = -16'sd365;  coeff[20] = -16'sd500;
-        coeff[21] = -16'sd411; coeff[22] = -16'sd177;  coeff[23] =  16'sd70;
-        coeff[24] =  16'sd219; coeff[25] =  16'sd233;  coeff[26] =  16'sd150;
-        coeff[27] =  16'sd42;  coeff[28] = -16'sd33;   coeff[29] = -16'sd59;
-        coeff[30] = -16'sd54;  coeff[31] = -16'sd36;
-    end
+    // Synthesizable case-statement ROM — Gowin ignores initial blocks.
+    function signed [15:0] coeff_rom;
+        input [5:0] addr;
+        case (addr)
+            6'd0:  coeff_rom = -16'sd36;  6'd1:  coeff_rom = -16'sd54;
+            6'd2:  coeff_rom = -16'sd59;  6'd3:  coeff_rom = -16'sd33;
+            6'd4:  coeff_rom =  16'sd42;  6'd5:  coeff_rom =  16'sd150;
+            6'd6:  coeff_rom =  16'sd233; 6'd7:  coeff_rom =  16'sd219;
+            6'd8:  coeff_rom =  16'sd70;  6'd9:  coeff_rom = -16'sd177;
+            6'd10: coeff_rom = -16'sd411; 6'd11: coeff_rom = -16'sd500;
+            6'd12: coeff_rom = -16'sd365; 6'd13: coeff_rom = -16'sd39;
+            6'd14: coeff_rom =  16'sd337; 6'd15: coeff_rom =  16'sd587;
+            6'd16: coeff_rom =  16'sd587; 6'd17: coeff_rom =  16'sd337;
+            6'd18: coeff_rom = -16'sd39;  6'd19: coeff_rom = -16'sd365;
+            6'd20: coeff_rom = -16'sd500; 6'd21: coeff_rom = -16'sd411;
+            6'd22: coeff_rom = -16'sd177; 6'd23: coeff_rom =  16'sd70;
+            6'd24: coeff_rom =  16'sd219; 6'd25: coeff_rom =  16'sd233;
+            6'd26: coeff_rom =  16'sd150; 6'd27: coeff_rom =  16'sd42;
+            6'd28: coeff_rom = -16'sd33;  6'd29: coeff_rom = -16'sd59;
+            6'd30: coeff_rom = -16'sd54;  6'd31: coeff_rom = -16'sd36;
+            default: coeff_rom = 16'sd0;
+        endcase
+    endfunction
 
     // ---------------------------------------------------------------
     // Tap delay line: shift[0] = newest sample.
@@ -136,7 +145,7 @@ module fir_filter_bank2 #(
                         acc       <= {ACCW{1'b0}};
                         acc_cnt   <= 6'd0;
                         mul_a     <= din;
-                        mul_b     <= coeff[0];
+                        mul_b     <= coeff_rom(6'd0);
                         prod_pend <= 1'b1;
                         idx       <= 6'd1;
                         state     <= ST_LOAD;
@@ -145,7 +154,7 @@ module fir_filter_bank2 #(
                 ST_LOAD: begin
                     if (idx < N) begin
                         mul_a     <= shift[idx];
-                        mul_b     <= coeff[idx];
+                        mul_b     <= coeff_rom(idx);
                         prod_pend <= 1'b1;
                         idx       <= idx + 6'd1;
                     end else begin
