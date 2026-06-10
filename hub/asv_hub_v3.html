@@ -1,0 +1,2345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ASV Hub">
+<meta name="theme-color" content="#080B12">
+<title>ASV Hub v3</title>
+<style>
+:root {
+  --bg: #0d1117;
+  --surface: #0e1320;
+  --surface2: #151c2e;
+  --surface3: #1a2236;
+  --border: #1e2a42;
+  --border-light: #2a3855;
+  --accent: #00d9ff;
+  --accent2: #22c55e;
+  --warn: #eab308;
+  --danger: #ef4444;
+  --text: #e2eaf4;
+  --muted: #4a5a78;
+  --muted2: #6b7c9c;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: ui-monospace, 'SF Mono', 'Cascadia Code', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: var(--font); min-height: 100vh;
+  overflow-x: hidden; -webkit-font-smoothing: antialiased;
+}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background-image: linear-gradient(rgba(0,217,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(0,217,255,0.025) 1px, transparent 1px);
+  background-size: 40px 40px; pointer-events: none; z-index: 0;
+}
+/* HEADER */
+.header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(13,17,23,0.96); backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border); padding: 10px 16px 0;
+}
+.header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 8px; }
+.logo { font-family: var(--mono); font-size: 12px; color: var(--accent); letter-spacing: 0.1em; display: flex; align-items: center; gap: 8px; }
+.logo-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent2); box-shadow: 0 0 8px var(--accent2); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.header-right { display: flex; align-items: center; gap: 8px; }
+.week-badge { font-family: var(--mono); font-size: 11px; background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 4px 10px; color: var(--muted2); }
+.week-badge .w-num { color: var(--warn); font-weight: 700; }
+.week-badge .deadline { color: var(--muted); margin-left: 5px; }
+.gear-btn { background: var(--surface2); border: 1px solid var(--border); width: 32px; height: 28px; border-radius: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--muted2); transition: all 0.15s; }
+.gear-btn:hover, .gear-btn:active { color: var(--accent); border-color: var(--accent); }
+/* TABS */
+.tabs { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { background: none; border: none; border-bottom: 2px solid transparent; color: var(--muted2); font-family: var(--font); font-size: 12px; font-weight: 500; padding: 8px 12px 10px; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab-count { display: inline-block; font-family: var(--mono); font-size: 9px; background: var(--surface3); color: var(--muted2); border-radius: 8px; padding: 1px 5px; margin-left: 3px; }
+.tab.active .tab-count { background: rgba(0,217,255,0.15); color: var(--accent); }
+/* MAIN */
+main { padding: 14px 16px; position: relative; z-index: 1; max-width: 600px; margin: 0 auto; padding-bottom: 40px; }
+.panel { display: none; }
+.panel.active { display: block; animation: fadein 0.2s ease; }
+@keyframes fadein { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
+/* CARDS */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+.card-title { font-family: var(--mono); font-size: 10px; color: var(--muted2); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 12px; }
+/* STATUS LIGHTS */
+.status-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.status-light { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 10px; text-align: center; cursor: pointer; transition: all 0.15s; }
+.status-light:active { opacity: 0.8; }
+.status-light .sl-icon { font-size: 20px; margin-bottom: 4px; }
+.status-light .sl-label { font-family: var(--mono); font-size: 9px; color: var(--muted2); letter-spacing: 0.08em; text-transform: uppercase; display: block; margin-bottom: 4px; }
+.status-light .sl-val { font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: 0.05em; }
+.sl-green { border-color: rgba(34,197,94,0.4); background: rgba(34,197,94,0.06); }
+.sl-green .sl-val { color: var(--accent2); }
+.sl-yellow { border-color: rgba(234,179,8,0.4); background: rgba(234,179,8,0.06); }
+.sl-yellow .sl-val { color: var(--warn); }
+.sl-red { border-color: rgba(239,68,68,0.4); background: rgba(239,68,68,0.06); }
+.sl-red .sl-val { color: var(--danger); }
+/* COUNTDOWN */
+.countdown-row { display: flex; gap: 8px; margin-bottom: 12px; }
+.countdown-cell { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 8px; text-align: center; }
+.cc-num { font-family: var(--mono); font-size: 22px; font-weight: 700; color: var(--accent); line-height: 1; }
+.cc-label { font-family: var(--mono); font-size: 9px; color: var(--muted2); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 3px; }
+/* CRITICAL PATH BANNER */
+.crit-banner { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3); border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; }
+.crit-banner .cb-title { font-family: var(--mono); font-size: 10px; color: var(--danger); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+.crit-banner .cb-text { font-size: 13px; line-height: 1.5; color: var(--text); }
+/* MINI TIMELINE */
+.mini-wk { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; margin-bottom: 6px; border: 1px solid var(--border); background: var(--surface2); }
+.mini-wk.current { border-color: var(--accent); background: rgba(0,217,255,0.04); }
+.mini-wk-num { font-family: var(--mono); font-size: 10px; color: var(--muted2); min-width: 24px; }
+.mini-wk-info { flex: 1; min-width: 0; }
+.mini-wk-title { font-size: 12px; font-weight: 500; }
+.mini-wk-dates { font-family: var(--mono); font-size: 10px; color: var(--muted2); }
+.mini-wk-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+/* ADD BUTTONS */
+.add-row { display: flex; gap: 8px; margin-bottom: 12px; }
+.add-btn { flex: 1; background: var(--surface2); border: 1px dashed var(--border-light); border-radius: 10px; padding: 10px; color: var(--accent); font-family: var(--mono); font-size: 11px; letter-spacing: 0.05em; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; }
+.add-btn:hover, .add-btn:active { background: rgba(0,217,255,0.05); border-color: var(--accent); }
+/* TASKS */
+.task-group { margin-bottom: 16px; }
+.task-group-label { font-size: 10px; font-family: var(--mono); color: var(--muted2); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; padding-left: 2px; }
+.task-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 6px; background: var(--surface2); transition: all 0.2s; }
+.task-item.done { opacity: 0.45; }
+.task-item.done .task-text { text-decoration: line-through; }
+.task-item.priority { border-left: 3px solid var(--danger); }
+.task-item.priority.done { border-left-color: var(--muted); }
+.task-item.flash { animation: flashGreen 1s ease; }
+@keyframes flashGreen { 0%,100%{box-shadow:none} 50%{box-shadow:0 0 16px rgba(34,197,94,0.4);border-color:var(--accent2)} }
+.task-check { width: 20px; height: 20px; border-radius: 4px; border: 1px solid var(--muted); flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
+.task-item.done .task-check { background: var(--accent2); border-color: var(--accent2); }
+.task-check svg { display: none; }
+.task-item.done .task-check svg { display: block; }
+.task-text { font-size: 13px; line-height: 1.4; flex: 1; cursor: pointer; padding-top: 2px; }
+.task-tag { font-size: 10px; font-family: var(--mono); padding: 2px 6px; border-radius: 3px; flex-shrink: 0; margin-top: 1px; align-self: flex-start; }
+.tag-red { background: rgba(239,68,68,0.15); color: var(--danger); }
+.tag-yellow { background: rgba(234,179,8,0.15); color: var(--warn); }
+.tag-green { background: rgba(34,197,94,0.15); color: var(--accent2); }
+.tag-blue { background: rgba(0,217,255,0.15); color: var(--accent); }
+.kebab { background: none; border: none; color: var(--muted); cursor: pointer; padding: 4px 6px; border-radius: 4px; font-size: 16px; line-height: 1; flex-shrink: 0; align-self: flex-start; min-width: 28px; min-height: 28px; display: flex; align-items: center; justify-content: center; }
+.kebab:hover, .kebab:active { color: var(--accent); background: var(--surface3); }
+.progress-bar-wrap { background: var(--surface2); border-radius: 4px; height: 4px; overflow: hidden; margin: 12px 0 4px; }
+.progress-bar { height: 100%; background: linear-gradient(90deg, var(--accent2), var(--accent)); border-radius: 4px; transition: width 0.4s ease; }
+.progress-label { font-size: 11px; font-family: var(--mono); color: var(--muted2); display: flex; justify-content: space-between; }
+/* TIMELINE */
+.timeline-week { display: flex; gap: 12px; margin-bottom: 8px; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface2); align-items: flex-start; position: relative; overflow: hidden; }
+.timeline-week.current { border-color: var(--accent); background: rgba(0,217,255,0.04); }
+.timeline-week.current::before { content: 'NOW'; position: absolute; top: 8px; right: 8px; font-size: 9px; font-family: var(--mono); color: var(--accent); letter-spacing: 0.1em; font-weight: 700; }
+.timeline-week.past { opacity: 0.5; }
+.week-num { font-family: var(--mono); font-size: 10px; color: var(--muted2); min-width: 28px; margin-top: 2px; }
+.week-info { flex: 1; }
+.week-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+.week-dates { font-size: 11px; color: var(--muted2); font-family: var(--mono); margin-bottom: 4px; }
+.week-milestone { font-size: 11px; color: var(--muted2); line-height: 1.4; }
+.week-status { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; cursor: pointer; }
+.status-green { background: var(--accent2); box-shadow: 0 0 6px var(--accent2); }
+.status-yellow { background: var(--warn); box-shadow: 0 0 6px var(--warn); }
+.status-red { background: var(--danger); box-shadow: 0 0 6px var(--danger); }
+.status-grey { background: var(--muted); }
+/* LEARNING */
+.concept-card { border-radius: 10px; border: 1px solid var(--border); background: var(--surface2); margin-bottom: 8px; overflow: hidden; }
+.concept-card.flash { animation: flashCyan 1.2s ease; }
+@keyframes flashCyan { 0%,100%{box-shadow:none} 50%{box-shadow:0 0 16px rgba(0,217,255,0.4);border-color:var(--accent)} }
+.concept-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; cursor: pointer; gap: 8px; min-height: 48px; }
+.concept-title { font-size: 13px; font-weight: 600; line-height: 1.3; }
+.concept-week { font-size: 10px; font-family: var(--mono); color: var(--muted2); margin-top: 2px; }
+.concept-info { flex: 1; min-width: 0; }
+.concept-arrow { color: var(--muted2); font-size: 18px; transition: transform 0.2s; flex-shrink: 0; }
+.concept-card.open .concept-arrow { transform: rotate(90deg); }
+.concept-body { display: none; padding: 0 14px 14px; font-size: 12px; line-height: 1.7; color: #aab8cc; }
+.concept-card.open .concept-body { display: block; }
+.concept-body p { margin-bottom: 8px; }
+.concept-body code { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; font-family: var(--mono); font-size: 11px; color: var(--accent2); }
+.concept-body pre { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 10px; margin: 8px 0; overflow-x: auto; font-family: var(--mono); font-size: 11px; color: var(--accent2); line-height: 1.6; }
+.concept-body strong { color: var(--accent); }
+.concept-actions { display: flex; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); }
+.mini-btn { background: var(--surface3); border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; color: var(--muted2); font-family: var(--mono); font-size: 10px; cursor: pointer; transition: all 0.15s; min-height: 32px; }
+.mini-btn:hover, .mini-btn:active { color: var(--accent); border-color: var(--accent); }
+.mini-btn.danger:hover, .mini-btn.danger:active { color: var(--danger); border-color: var(--danger); }
+.phase-divider { font-size: 10px; font-family: var(--mono); color: var(--muted2); letter-spacing: 0.12em; text-transform: uppercase; margin: 18px 0 10px; display: flex; align-items: center; gap: 8px; }
+.phase-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+/* PARTS */
+.part-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; margin-bottom: 6px; border: 1px solid var(--border); background: var(--surface2); }
+.part-row.flash { animation: flashGreen 1s ease; }
+.part-status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; cursor: pointer; }
+.part-info { flex: 1; min-width: 0; }
+.part-name { font-size: 13px; font-weight: 500; }
+.part-detail { font-size: 11px; color: var(--muted2); font-family: var(--mono); margin-top: 2px; word-break: break-word; }
+.part-badge { font-size: 10px; font-family: var(--mono); padding: 3px 8px; border-radius: 10px; white-space: nowrap; cursor: pointer; min-height: 24px; display: flex; align-items: center; }
+.badge-arrived { background: rgba(34,197,94,0.12); color: var(--accent2); border: 1px solid rgba(34,197,94,0.3); }
+.badge-ordered { background: rgba(234,179,8,0.12); color: var(--warn); border: 1px solid rgba(234,179,8,0.3); }
+.badge-pending { background: rgba(239,68,68,0.12); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
+.badge-owned { background: rgba(0,217,255,0.12); color: var(--accent); border: 1px solid rgba(0,217,255,0.3); }
+/* LOG */
+.log-input-wrap { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 12px; }
+.log-input { width: 100%; background: none; border: none; outline: none; color: var(--text); font-family: var(--font); font-size: 13px; line-height: 1.6; resize: none; min-height: 90px; }
+.log-input::placeholder { color: var(--muted); }
+.log-meta-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; align-items: center; }
+.log-cat-select { background: var(--surface3); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; color: var(--text); font-family: var(--mono); font-size: 11px; outline: none; cursor: pointer; min-height: 36px; }
+.log-btn { flex: 1; padding: 10px 14px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none; border-radius: 8px; color: #000; font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: 0.05em; cursor: pointer; transition: opacity 0.2s; min-height: 44px; }
+.log-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.log-entry { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+.log-entry-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; gap: 8px; }
+.log-entry-meta { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.log-entry-date { font-size: 10px; font-family: var(--mono); color: var(--muted2); }
+.log-entry-cat { font-size: 9px; font-family: var(--mono); padding: 2px 7px; border-radius: 8px; background: rgba(0,217,255,0.12); color: var(--accent); border: 1px solid rgba(0,217,255,0.25); }
+.log-entry-body { font-size: 13px; line-height: 1.6; color: var(--text); white-space: pre-wrap; word-break: break-word; }
+.log-del-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 14px; padding: 2px 4px; min-width: 28px; min-height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 4px; }
+.log-del-btn:hover, .log-del-btn:active { color: var(--danger); }
+/* AUDIT LOG */
+.audit-entry { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+.audit-entry-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 6px; }
+.audit-wk-label { font-family: var(--mono); font-size: 11px; color: var(--accent); font-weight: 700; }
+.audit-date-label { font-family: var(--mono); font-size: 10px; color: var(--muted2); }
+.audit-pills { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+.audit-pill { font-family: var(--mono); font-size: 9px; padding: 3px 8px; border-radius: 10px; letter-spacing: 0.05em; }
+.pill-green { background: rgba(34,197,94,0.12); color: var(--accent2); border: 1px solid rgba(34,197,94,0.3); }
+.pill-yellow { background: rgba(234,179,8,0.12); color: var(--warn); border: 1px solid rgba(234,179,8,0.3); }
+.pill-red { background: rgba(239,68,68,0.12); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
+.audit-section { margin-bottom: 8px; }
+.audit-section-label { font-family: var(--mono); font-size: 10px; color: var(--muted2); text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 3px; }
+.audit-section-body { font-size: 12px; line-height: 1.6; color: var(--text); }
+.audit-risks { background: rgba(234,179,8,0.06); border-left: 2px solid var(--warn); padding: 8px 10px; border-radius: 0 6px 6px 0; margin-bottom: 8px; font-size: 12px; line-height: 1.5; }
+.audit-actions { background: rgba(0,217,255,0.06); border-left: 2px solid var(--accent); padding: 8px 10px; border-radius: 0 6px 6px 0; font-size: 12px; line-height: 1.5; }
+/* MODAL */
+.modal-overlay { display: none; position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); align-items: flex-end; justify-content: center; }
+.modal-overlay.open { display: flex; animation: fadein 0.2s ease; }
+.modal { background: var(--surface); border: 1px solid var(--border-light); border-radius: 14px 14px 0 0; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; padding: 20px; animation: slideup 0.25s ease; -webkit-overflow-scrolling: touch; }
+@keyframes slideup { from{transform:translateY(40px);opacity:0} to{transform:none;opacity:1} }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.modal-title { font-family: var(--mono); font-size: 12px; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; }
+.modal-close { background: var(--surface2); border: 1px solid var(--border); width: 32px; height: 32px; border-radius: 16px; color: var(--muted2); font-size: 16px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.field { margin-bottom: 12px; }
+.field-label { display: block; font-family: var(--mono); font-size: 10px; color: var(--muted2); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.08em; }
+.field-input, .field-textarea, .field-select { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text); font-family: var(--font); font-size: 13px; outline: none; transition: border-color 0.15s; -webkit-appearance: none; }
+.field-textarea { font-family: var(--mono); font-size: 12px; line-height: 1.5; resize: vertical; min-height: 80px; }
+.field-input:focus, .field-textarea:focus, .field-select:focus { border-color: var(--accent); }
+.field-row { display: flex; gap: 8px; }
+.field-row .field { flex: 1; }
+.field-toggle { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; min-height: 44px; }
+.toggle-switch { width: 36px; height: 20px; background: var(--border); border-radius: 10px; position: relative; transition: background 0.2s; flex-shrink: 0; }
+.toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: var(--text); border-radius: 50%; transition: transform 0.2s; }
+.field-toggle.on .toggle-switch { background: var(--accent2); }
+.field-toggle.on .toggle-switch::after { transform: translateX(16px); background: var(--bg); }
+.toggle-label { font-size: 13px; flex: 1; }
+.modal-actions { display: flex; gap: 8px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+.btn { flex: 1; padding: 12px 14px; border-radius: 8px; font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: 0.05em; cursor: pointer; border: none; transition: opacity 0.15s; text-transform: uppercase; min-height: 44px; }
+.btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #000; }
+.btn-secondary { background: var(--surface2); border: 1px solid var(--border); color: var(--text); }
+.btn-danger { background: var(--surface2); border: 1px solid var(--danger); color: var(--danger); }
+.btn:active { opacity: 0.7; }
+.settings-section { border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px; }
+.settings-section-title { font-family: var(--mono); font-size: 10px; color: var(--muted2); margin-bottom: 10px; letter-spacing: 0.1em; text-transform: uppercase; }
+.settings-row { display: flex; gap: 8px; margin-bottom: 8px; }
+/* PICKER */
+.picker-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.picker-chip { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 7px 11px; font-size: 11px; cursor: pointer; font-family: var(--mono); transition: all 0.15s; min-height: 36px; display: flex; align-items: center; }
+.picker-chip.selected.tag-red { background: rgba(239,68,68,0.2); border-color: var(--danger); color: var(--danger); }
+.picker-chip.selected.tag-yellow { background: rgba(234,179,8,0.2); border-color: var(--warn); color: var(--warn); }
+.picker-chip.selected.tag-green { background: rgba(34,197,94,0.2); border-color: var(--accent2); color: var(--accent2); }
+.picker-chip.selected.tag-blue { background: rgba(0,217,255,0.2); border-color: var(--accent); color: var(--accent); }
+/* TOAST */
+.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--accent2); border-radius: 8px; padding: 10px 18px; color: var(--accent2); font-family: var(--mono); font-size: 12px; z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.25s; box-shadow: 0 4px 20px rgba(34,197,94,0.15); white-space: nowrap; }
+.toast.show { opacity: 1; }
+/* EMPTY */
+.empty-state { text-align: center; color: var(--muted); font-size: 12px; padding: 24px 0; font-style: italic; }
+/* REMINDER BANNER */
+.reminder-banner { background: rgba(234,179,8,0.07); border: 1px solid rgba(234,179,8,0.25); border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; font-size: 12px; line-height: 1.6; }
+.reminder-banner strong { color: var(--warn); font-family: var(--mono); font-size: 11px; }
+/* EXPORT TEXT AREA */
+.export-area { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px; color: var(--muted2); font-family: var(--mono); font-size: 11px; line-height: 1.5; resize: vertical; min-height: 120px; outline: none; }
+/* LEARNING FILTER PILLS */
+.filter-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.filter-pill { background: var(--surface2); border: 1px solid var(--border); border-radius: 16px; padding: 5px 12px; font-size: 11px; font-family: var(--mono); color: var(--muted2); cursor: pointer; transition: all 0.15s; white-space: nowrap; min-height: 32px; display: flex; align-items: center; }
+.filter-pill:hover { border-color: var(--accent); color: var(--accent); }
+.filter-pill.active { background: rgba(0,217,255,0.12); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+/* LEARNING RICH BODY ELEMENTS */
+.tldr-box { background: rgba(0,217,255,0.06); border: 1px solid rgba(0,217,255,0.35); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; font-size: 13px; line-height: 1.6; color: var(--text); }
+.tldr-box .tldr-label { font-family: var(--mono); font-size: 9px; color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 4px; display: block; }
+.section-label { font-family: var(--mono); font-size: 9px; color: var(--muted2); letter-spacing: 0.12em; text-transform: uppercase; margin: 14px 0 6px; display: block; }
+.in-project { background: rgba(34,197,94,0.05); border-left: 3px solid var(--accent2); padding: 10px 12px; border-radius: 0 6px 6px 0; margin: 8px 0; font-size: 12px; line-height: 1.6; color: var(--text); }
+.exercise-box { background: rgba(234,179,8,0.05); border-left: 3px solid var(--warn); padding: 10px 12px; border-radius: 0 6px 6px 0; margin: 8px 0; font-size: 12px; line-height: 1.6; color: var(--text); }
+.code-wrap { position: relative; margin: 8px 0; }
+.code-wrap pre { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 10px 10px 10px 12px; overflow-x: auto; font-family: var(--mono); font-size: 11px; color: var(--accent2); line-height: 1.6; }
+.copy-btn { position: absolute; top: 6px; right: 6px; background: var(--surface3); border: 1px solid var(--border); border-radius: 4px; padding: 3px 8px; font-size: 9px; font-family: var(--mono); color: var(--muted2); cursor: pointer; transition: all 0.15s; }
+.copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+.qa-list { margin: 8px 0; }
+.qa-item { background: var(--surface3); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 6px; overflow: hidden; }
+.qa-question { padding: 8px 12px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: var(--text); min-height: 40px; }
+.qa-question::after { content: 'Reveal'; font-family: var(--mono); font-size: 9px; color: var(--accent); background: rgba(0,217,255,0.1); border: 1px solid rgba(0,217,255,0.25); border-radius: 8px; padding: 2px 7px; flex-shrink: 0; margin-left: 8px; }
+.qa-item.open .qa-question::after { content: 'Hide'; }
+.qa-answer { display: none; padding: 8px 12px 10px; font-size: 12px; color: var(--muted2); line-height: 1.6; border-top: 1px solid var(--border); background: rgba(0,217,255,0.03); }
+.qa-item.open .qa-answer { display: block; }
+/* TODAY TAB ENHANCEMENTS */
+.today-dateline { font-family: var(--mono); font-size: 11px; color: var(--accent); text-align: center; padding: 8px 0 4px; letter-spacing: 0.06em; }
+.today-stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
+.today-stat { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 6px; text-align: center; }
+.today-stat-num { font-family: var(--mono); font-size: 18px; font-weight: 700; color: var(--accent); line-height: 1; }
+.today-stat-label { font-family: var(--mono); font-size: 9px; color: var(--muted2); text-transform: uppercase; letter-spacing: 0.07em; margin-top: 3px; }
+.today-top-tasks { margin-bottom: 12px; }
+.today-task-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 6px; background: var(--surface2); }
+.today-task-row.priority { border-left: 3px solid var(--danger); }
+.today-task-row.done { opacity: 0.45; }
+.today-task-row.done .today-task-text { text-decoration: line-through; }
+.today-task-check { width: 22px; height: 22px; border-radius: 5px; border: 1px solid var(--muted); flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
+.today-task-row.done .today-task-check { background: var(--accent2); border-color: var(--accent2); }
+.today-task-check svg { display: none; }
+.today-task-row.done .today-task-check svg { display: block; }
+.today-task-text { font-size: 13px; line-height: 1.4; flex: 1; }
+.cotd-card { background: rgba(0,217,255,0.05); border: 1px solid rgba(0,217,255,0.2); border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; }
+.cotd-label { font-family: var(--mono); font-size: 9px; color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 6px; }
+.cotd-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; color: var(--text); }
+.cotd-week { font-family: var(--mono); font-size: 11px; color: var(--muted2); margin-bottom: 8px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div class="logo">
+      <div class="logo-dot"></div>
+      ASV HUB v3
+    </div>
+    <div class="header-right">
+      <div class="week-badge" id="weekBadge">W<span class="w-num">-</span>/11 <span class="deadline">· - days</span></div>
+      <button class="gear-btn" onclick="openSettings()" aria-label="Settings">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9z"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" data-tab="today" onclick="switchTab('today',this)">Today</button>
+    <button class="tab" data-tab="tasks" onclick="switchTab('tasks',this)">Tasks <span class="tab-count" id="count-tasks">0</span></button>
+    <button class="tab" data-tab="timeline" onclick="switchTab('timeline',this)">Timeline</button>
+    <button class="tab" data-tab="learning" onclick="switchTab('learning',this)">Learning</button>
+    <button class="tab" data-tab="parts" onclick="switchTab('parts',this)">Parts <span class="tab-count" id="count-parts">0</span></button>
+    <button class="tab" data-tab="log" onclick="switchTab('log',this)">Log <span class="tab-count" id="count-log">0</span></button>
+    <button class="tab" data-tab="audit" onclick="switchTab('audit',this)">Audit</button>
+  </div>
+</div>
+
+<main>
+
+  <!-- TODAY PANEL -->
+  <div id="panel-today" class="panel active">
+    <div id="todayDateline" class="today-dateline"></div>
+    <div class="today-stats-row" id="todayStatsRow"></div>
+    <div class="card">
+      <div class="card-title">Project Status</div>
+      <div class="status-grid" id="statusGrid">
+        <!-- rendered by JS -->
+      </div>
+      <div style="display:flex;gap:6px;margin-top:6px">
+        <button class="mini-btn" style="flex:1" onclick="openStatusEditor()">Edit Status</button>
+        <button class="mini-btn" style="flex:1" onclick="switchTab('audit',document.querySelector('[data-tab=audit]'))">View Audits</button>
+      </div>
+    </div>
+    <div class="crit-banner">
+      <div class="cb-title">Critical Path</div>
+      <div class="cb-text" id="critPathText">FPGA matched filter — Weeks 3-6 priority. Write .cst timing constraints immediately to unblock all downstream synthesis work.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Countdown to Demo Day</div>
+      <div class="countdown-row" id="countdownRow"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Current Week Focus</div>
+      <div id="todayWeekInfo"></div>
+    </div>
+    <div id="todayCotd"></div>
+    <div id="todayTopTasks"></div>
+    <div id="todayFocusBanner"></div>
+  </div>
+
+  <!-- TASKS PANEL -->
+  <div id="panel-tasks" class="panel">
+    <div class="card">
+      <div class="card-title" id="weekTitle">Week Progress</div>
+      <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+      <div class="progress-label"><span id="progressDone">0 done</span><span id="progressPct">0%</span></div>
+    </div>
+    <div class="add-row">
+      <button class="add-btn" onclick="openTaskEditor(null)">+ Add Task</button>
+    </div>
+    <div id="taskGroups"></div>
+  </div>
+
+  <!-- TIMELINE PANEL -->
+  <div id="panel-timeline" class="panel">
+    <div id="timelineContainer"></div>
+  </div>
+
+  <!-- LEARNING PANEL -->
+  <div id="panel-learning" class="panel">
+    <div class="add-row">
+      <button class="add-btn" onclick="openConceptEditor(null)">+ Add Concept</button>
+    </div>
+    <div class="filter-pills" id="learningFilterPills"></div>
+    <div id="learningContainer"></div>
+  </div>
+
+  <!-- PARTS PANEL -->
+  <div id="panel-parts" class="panel">
+    <div class="add-row">
+      <button class="add-btn" onclick="openPartEditor(null)">+ Add Part</button>
+    </div>
+    <div id="partsContainer"></div>
+  </div>
+
+  <!-- LOG PANEL -->
+  <div id="panel-log" class="panel">
+    <div class="card">
+      <div class="card-title">Build Notes / Progress Log</div>
+      <div class="log-input-wrap">
+        <textarea class="log-input" id="logInput" placeholder="What did you build, test, or learn today? Be specific — include module names, test results, readings."></textarea>
+        <div class="log-meta-row">
+          <select class="log-cat-select" id="logCat">
+            <option value="FPGA">FPGA</option>
+            <option value="ROS2">ROS2</option>
+            <option value="MCU">MCU</option>
+            <option value="Hull">Hull</option>
+            <option value="Parts">Parts</option>
+            <option value="Testing">Testing</option>
+            <option value="General" selected>General</option>
+          </select>
+          <button class="log-btn" id="logBtn" onclick="submitLog()">+ Save Note</button>
+        </div>
+      </div>
+    </div>
+    <div id="logEntries"></div>
+  </div>
+
+  <!-- AUDIT PANEL -->
+  <div id="panel-audit" class="panel">
+    <div class="add-row">
+      <button class="add-btn" onclick="openAuditEditor(null)">+ New Weekly Audit</button>
+      <button class="add-btn" style="color:var(--warn);border-color:rgba(234,179,8,0.4)" onclick="exportAudits()">Export Text</button>
+    </div>
+    <div id="auditContainer"></div>
+  </div>
+
+</main>
+
+<!-- MODALS -->
+
+<!-- Task Modal -->
+<div class="modal-overlay" id="modal-task">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="taskModalTitle">Add Task</div>
+      <button class="modal-close" onclick="closeModal('modal-task')">x</button>
+    </div>
+    <div class="field">
+      <label class="field-label">Task</label>
+      <textarea class="field-textarea" id="taskText" style="min-height:60px" placeholder="What needs doing?"></textarea>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label class="field-label">Tag</label>
+        <input class="field-input" id="taskTag" placeholder="FPGA / Pi / Order / Dad">
+      </div>
+      <div class="field">
+        <label class="field-label">Week</label>
+        <select class="field-select" id="taskWeek"><option value="carryover">Carryover</option></select>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">Tag Color</label>
+      <div class="picker-row" id="taskColorPicker">
+        <div class="picker-chip tag-red" data-color="red" onclick="pickColor('red')">RED</div>
+        <div class="picker-chip tag-yellow" data-color="yellow" onclick="pickColor('yellow')">YELLOW</div>
+        <div class="picker-chip tag-green" data-color="green" onclick="pickColor('green')">GREEN</div>
+        <div class="picker-chip tag-blue" data-color="blue" onclick="pickColor('blue')">BLUE</div>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">Group</label>
+      <input class="field-input" id="taskGroup" placeholder="e.g. Week 3 - FPGA Work">
+    </div>
+    <div class="field-toggle" id="taskPriorityToggle" onclick="togglePriority()">
+      <div class="toggle-switch"></div>
+      <div class="toggle-label">Priority (red border)</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="taskDelete" onclick="deleteTaskFromModal()" style="display:none">Delete</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-task')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTask()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Part Modal -->
+<div class="modal-overlay" id="modal-part">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="partModalTitle">Add Part</div>
+      <button class="modal-close" onclick="closeModal('modal-part')">x</button>
+    </div>
+    <div class="field">
+      <label class="field-label">Name</label>
+      <input class="field-input" id="partName" placeholder="e.g. MAX9814 Pre-amp">
+    </div>
+    <div class="field">
+      <label class="field-label">Detail</label>
+      <input class="field-input" id="partDetail" placeholder="e.g. Auto gain · Between TCT40R and AD9226">
+    </div>
+    <div class="field">
+      <label class="field-label">Status</label>
+      <div class="picker-row" id="partStatusPicker">
+        <div class="picker-chip" data-status="arrived" onclick="pickPartStatus('arrived')">Arrived</div>
+        <div class="picker-chip" data-status="owned" onclick="pickPartStatus('owned')">Owned</div>
+        <div class="picker-chip" data-status="ordered" onclick="pickPartStatus('ordered')">Ordered</div>
+        <div class="picker-chip" data-status="pending" onclick="pickPartStatus('pending')">Pending</div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="partDelete" onclick="deletePartFromModal()" style="display:none">Delete</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-part')">Cancel</button>
+      <button class="btn btn-primary" onclick="savePart()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Concept Modal -->
+<div class="modal-overlay" id="modal-concept">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="conceptModalTitle">Add Concept</div>
+      <button class="modal-close" onclick="closeModal('modal-concept')">x</button>
+    </div>
+    <div class="field-row">
+      <div class="field" style="max-width:80px">
+        <label class="field-label">Emoji</label>
+        <input class="field-input" id="conceptEmoji" placeholder="📘" maxlength="4">
+      </div>
+      <div class="field">
+        <label class="field-label">Title</label>
+        <input class="field-input" id="conceptTitle" placeholder="e.g. EKF Basics">
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">Phase</label>
+      <select class="field-select" id="conceptPhase">
+        <option>Phase 1 - Toolchain &amp; Interface</option>
+        <option>Phase 2 - Signal Processing</option>
+        <option>Phase 3 - ROS 2 &amp; Integration</option>
+        <option>Phase 4 - Test &amp; Deploy</option>
+      </select>
+    </div>
+    <div class="field">
+      <label class="field-label">Week / Tag Label</label>
+      <input class="field-input" id="conceptWeek" placeholder="e.g. Wk 7 · Reference">
+    </div>
+    <div class="field">
+      <label class="field-label">Body (HTML supported)</label>
+      <textarea class="field-textarea" id="conceptBody" style="min-height:140px" placeholder="<p>Explanation. Wrap code in pre tags.</p>"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="conceptDelete" onclick="deleteConceptFromModal()" style="display:none">Delete</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-concept')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveConcept()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Audit Modal -->
+<div class="modal-overlay" id="modal-audit">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="auditModalTitle">Weekly Audit</div>
+      <button class="modal-close" onclick="closeModal('modal-audit')">x</button>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label class="field-label">Week #</label>
+        <select class="field-select" id="auditWeek"></select>
+      </div>
+      <div class="field">
+        <label class="field-label">Date</label>
+        <input type="date" class="field-input" id="auditDate">
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">Technical Status</label>
+      <div class="picker-row" id="techStatusPicker">
+        <div class="picker-chip tag-green" data-val="GREEN" onclick="pickAuditStatus('technical','GREEN')">GREEN</div>
+        <div class="picker-chip tag-yellow" data-val="YELLOW" onclick="pickAuditStatus('technical','YELLOW')">YELLOW</div>
+        <div class="picker-chip tag-red" data-val="RED" onclick="pickAuditStatus('technical','RED')">RED</div>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">Cost Status</label>
+      <div class="picker-row" id="costStatusPicker">
+        <div class="picker-chip tag-green" data-val="GREEN" onclick="pickAuditStatus('cost','GREEN')">GREEN</div>
+        <div class="picker-chip tag-yellow" data-val="YELLOW" onclick="pickAuditStatus('cost','YELLOW')">YELLOW</div>
+        <div class="picker-chip tag-red" data-val="RED" onclick="pickAuditStatus('cost','RED')">RED</div>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">Career Status</label>
+      <div class="picker-row" id="careerStatusPicker">
+        <div class="picker-chip tag-green" data-val="GREEN" onclick="pickAuditStatus('career','GREEN')">GREEN</div>
+        <div class="picker-chip tag-yellow" data-val="YELLOW" onclick="pickAuditStatus('career','YELLOW')">YELLOW</div>
+        <div class="picker-chip tag-red" data-val="RED" onclick="pickAuditStatus('career','RED')">RED</div>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">What was done vs planned</label>
+      <textarea class="field-textarea" id="auditDone" placeholder="Completed: ...\nPlanned but not done: ..."></textarea>
+    </div>
+    <div class="field">
+      <label class="field-label">Top 3 Risks</label>
+      <textarea class="field-textarea" id="auditRisks" placeholder="1. ...\n2. ...\n3. ..."></textarea>
+    </div>
+    <div class="field">
+      <label class="field-label">Recommended Actions (next 48h)</label>
+      <textarea class="field-textarea" id="auditActions" placeholder="1. ...\n2. ...\n3. ..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="auditDelete" onclick="deleteAuditFromModal()" style="display:none">Delete</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-audit')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAudit()">Save Audit</button>
+    </div>
+  </div>
+</div>
+
+<!-- Status Editor Modal -->
+<div class="modal-overlay" id="modal-status">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Edit Status</div>
+      <button class="modal-close" onclick="closeModal('modal-status')">x</button>
+    </div>
+    <div class="field">
+      <label class="field-label">Technical</label>
+      <div class="picker-row" id="editTechPicker">
+        <div class="picker-chip tag-green" data-val="GREEN" onclick="pickEditStatus('technical','GREEN')">GREEN</div>
+        <div class="picker-chip tag-yellow" data-val="YELLOW" onclick="pickEditStatus('technical','YELLOW')">YELLOW</div>
+        <div class="picker-chip tag-red" data-val="RED" onclick="pickEditStatus('technical','RED')">RED</div>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">Cost</label>
+      <div class="picker-row" id="editCostPicker">
+        <div class="picker-chip tag-green" data-val="GREEN" onclick="pickEditStatus('cost','GREEN')">GREEN</div>
+        <div class="picker-chip tag-yellow" data-val="YELLOW" onclick="pickEditStatus('cost','YELLOW')">YELLOW</div>
+        <div class="picker-chip tag-red" data-val="RED" onclick="pickEditStatus('cost','RED')">RED</div>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">Career</label>
+      <div class="picker-row" id="editCareerPicker">
+        <div class="picker-chip tag-green" data-val="GREEN" onclick="pickEditStatus('career','GREEN')">GREEN</div>
+        <div class="picker-chip tag-yellow" data-val="YELLOW" onclick="pickEditStatus('career','YELLOW')">YELLOW</div>
+        <div class="picker-chip tag-red" data-val="RED" onclick="pickEditStatus('career','RED')">RED</div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-status')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveStatusEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="modal-settings">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Settings</div>
+      <button class="modal-close" onclick="closeModal('modal-settings')">x</button>
+    </div>
+    <div class="settings-section-title">Project Dates</div>
+    <div class="field">
+      <label class="field-label">Start Date (Week 1)</label>
+      <input type="date" class="field-input" id="settingStartDate">
+    </div>
+    <div class="field">
+      <label class="field-label">Deadline</label>
+      <input type="date" class="field-input" id="settingDeadline">
+    </div>
+    <div class="field">
+      <label class="field-label">Manual Week Override</label>
+      <select class="field-select" id="settingWeekOverride">
+        <option value="">Auto (compute from today)</option>
+      </select>
+    </div>
+    <div class="settings-section">
+      <div class="settings-section-title">Data Management</div>
+      <div class="settings-row">
+        <button class="btn btn-secondary" onclick="exportData()">Export JSON</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">Import JSON</button>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+      </div>
+      <div class="settings-row">
+        <button class="btn btn-secondary" onclick="copySnapshot()">Sync Snapshot</button>
+        <button class="btn btn-danger" onclick="resetData()">Reset All Data</button>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-section-title">Notifications</div>
+      <div class="field">
+        <div class="field-toggle" id="notifToggle" onclick="toggleNotifications()">
+          <div class="toggle-switch"></div>
+          <div class="toggle-label">Enable daily reminders (9am &amp; 7pm)</div>
+        </div>
+      </div>
+      <div class="settings-row">
+        <button class="btn btn-secondary" onclick="testNotification()">Test Notification</button>
+      </div>
+      <div id="notifStatus" style="font-family:var(--mono);font-size:10px;color:var(--muted2);margin-top:6px;min-height:16px"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+    </div>
+  </div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal-overlay" id="modal-export">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Audit Export</div>
+      <button class="modal-close" onclick="closeModal('modal-export')">x</button>
+    </div>
+    <p style="font-size:12px;color:var(--muted2);margin-bottom:10px">Copy the text below or use the button.</p>
+    <textarea class="export-area" id="exportArea" readonly></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-export')">Close</button>
+      <button class="btn btn-primary" onclick="copyExport()">Copy to Clipboard</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ================================================================
+// STORAGE KEYS
+// ================================================================
+var STORAGE_KEY = 'asv_state_v3';
+var AUDITS_KEY  = 'asv_audits';
+
+// ================================================================
+// TIMELINE DATA
+// ================================================================
+var TIMELINE = [
+  { w:1,  start:'2026-05-25', end:'2026-05-31', title:'Foundation + Ordering',            milestone:'Pi setup · Tang Nano hello-world · Parts ordered' },
+  { w:2,  start:'2026-06-01', end:'2026-06-07', title:'Gowin Toolchain + Wave 2 Parts',   milestone:'Gowin EDA running · AD9226 ordered · Pi UART config' },
+  { w:3,  start:'2026-06-08', end:'2026-06-14', title:'Timing Closure + Hull Start',       milestone:'Tang Nano .cst clean · Hull materials · Propulsion ordered' },
+  { w:4,  start:'2026-06-15', end:'2026-06-21', title:'AD9226 Interface + Bench Test',     milestone:'AD9226 simulated & bench-verified · Hull frame assembled' },
+  { w:5,  start:'2026-06-22', end:'2026-06-28', title:'Single FIR Matched Filter',         milestone:'32-tap FIR detecting chirp at 1-4m · Waterproofing started' },
+  { w:6,  start:'2026-06-29', end:'2026-07-05', title:'Dual Filter Banks + Buoy TX',       milestone:'FPGA discriminates Buoy 1 vs Buoy 2 · Thrusters mounted' },
+  { w:7,  start:'2026-07-06', end:'2026-07-12', title:'ESP32 micro-ROS + Buoy Build',      milestone:'All ROS topics live · Both buoys assembled' },
+  { w:8,  start:'2026-07-13', end:'2026-07-19', title:'State Machine + EKF',               milestone:'Homing controller responds · Shore display working' },
+  { w:9,  start:'2026-07-20', end:'2026-07-26', title:'Full Bench Integration',            milestone:'Complete dry-run mission · All nodes synchronized' },
+  { w:10, start:'2026-07-27', end:'2026-08-02', title:'Pool Test #1',                      milestone:'Waterproofing holds · Acoustic ranging calibrated' },
+  { w:11, start:'2026-08-03', end:'2026-08-09', title:'Pool Test #2 + Demo Polish',        milestone:'Autonomous homing on both buoys · Demo recorded · DEADLINE Aug 10' },
+];
+
+// ================================================================
+// DEFAULT STATE
+// ================================================================
+var DEFAULT_STATE = {
+  config: {
+    startDate: '2026-05-25',
+    deadline: '2026-08-10',
+    weekOverride: null,
+    weekStatuses: {},
+    projectStatus: { technical: 'YELLOW', cost: 'GREEN', career: 'GREEN' }
+  },
+  tasks: [
+    { id:'t_cst',      text:'Write .cst timing constraints + synthesize onto Tang Nano — get positive slack in timing report', tag:'FPGA', tagColor:'red',    priority:true,  done:false, week:'carryover', group:'Carryover - Do First' },
+    { id:'t_pipe',     text:'Study Verilog pipelining — registered MAC stages, valid/ready handshaking', tag:'Learn',  tagColor:'blue',   priority:true,  done:false, week:'carryover', group:'Carryover - Do First' },
+    { id:'t_ord_thr',  text:'Order brushed DC thrusters x2 — search "545 brushed motor underwater thruster 12V RC boat" on Amazon', tag:'Order', tagColor:'red', priority:true, done:false, week:'carryover', group:'Carryover - Orders' },
+    { id:'t_ord_l298', text:'Order L298N dual H-bridge module — $5-7 Amazon, blue heatsink variant', tag:'Order', tagColor:'red', priority:true, done:false, week:'carryover', group:'Carryover - Orders' },
+    { id:'t_ord_enc',  text:'Order waterproof enclosure IP65 + M12 cable glands + standoffs + 14AWG wire', tag:'Order', tagColor:'red', priority:false, done:false, week:'carryover', group:'Carryover - Orders' },
+    { id:'t_ord_max',  text:'Order MAX9814 pre-amp module — auto gain, between TCT40-16R and AD9226', tag:'Order', tagColor:'red', priority:false, done:false, week:'carryover', group:'Carryover - Orders' },
+    { id:'t_ord_jsn',  text:'Order JSN-SR04T waterproof ultrasonic sensor — collision avoidance on ESP32', tag:'Order', tagColor:'red', priority:false, done:false, week:'carryover', group:'Carryover - Orders' },
+    { id:'t_w3_sim',   text:'Write AD9226 parallel interface module in Verilog — simulate in Icarus + GTKWave before chip arrives', tag:'FPGA', tagColor:'yellow', priority:false, done:false, week:3, group:'Week 3 - FPGA Work' },
+    { id:'t_w3_lfm',   text:'Study LFM chirp math — generation equation, matched filter as cross-correlation, ToF formula', tag:'Learn', tagColor:'blue', priority:false, done:false, week:3, group:'Week 3 - FPGA Work' },
+    { id:'t_w3_hd',    text:'Home Depot run — 4in PVC pipe, end caps, L-brackets, epoxy, silicone, acrylic', tag:'Dad', tagColor:'yellow', priority:false, done:false, week:3, group:'Week 3 - Hull (Dad)' },
+    { id:'t_w3_pvc',   text:'Cut PVC pontoons to 70cm, drill cross-member holes, fit L-brackets, begin cement bonding', tag:'Dad', tagColor:'yellow', priority:false, done:false, week:3, group:'Week 3 - Hull (Dad)' },
+  ],
+  parts: [
+    { id:'p_pi',      name:'Raspberry Pi 4 1GB',              detail:'Ubuntu 24.04 · ROS 2 Jazzy · SSH working',          status:'arrived' },
+    { id:'p_heat',    name:'Pi Heatsink Kit',                  detail:'44.3C idle · No throttling',                         status:'arrived' },
+    { id:'p_lipo',    name:'Hosim 3S 5000mAh LiPo x2',         detail:'11.1V 30C XT60',                                     status:'arrived' },
+    { id:'p_charger', name:'B6 AC 80W Balance Charger',        detail:'Built-in AC · XT60 cable included',                  status:'arrived' },
+    { id:'p_imu',     name:'MPU-6050 IMU (HiLetgo GY-521)',    detail:'I2C · Vehicle dead reckoning',                       status:'arrived' },
+    { id:'p_xt60',    name:'XT60 Connectors + 14AWG wire',     detail:'Cecicebb 5-pair',                                    status:'arrived' },
+    { id:'p_fuse',    name:'Inline Fuse Holder + 20A Fuses',   detail:'LiPo safety',                                        status:'arrived' },
+    { id:'p_tct40',   name:'hiBCTR TCT40-16R/T Pack',           detail:'10TX + 10RX · 40kHz transducers',                   status:'arrived' },
+    { id:'p_owned1',  name:'Tang Nano 20K · ESP32 x2 · Arduino R4', detail:'UART TX done · Gowin EDA confirmed',             status:'owned' },
+    { id:'p_owned2',  name:'MOSFETs · Buck converters · Passives', detail:'Already owned',                                  status:'owned' },
+    { id:'p_ad9226',  name:'AD9226 12-bit 65MSPS ADC',          detail:'AliExpress · Est. Jun 14-21',                        status:'ordered' },
+    { id:'p_thrust',  name:'Brushed DC Thrusters x2',           detail:'545 12V underwater · ORDER NOW',                    status:'pending' },
+    { id:'p_l298n',   name:'L298N Dual H-Bridge Module',        detail:'$5-7 · Blue heatsink block',                         status:'pending' },
+    { id:'p_enc',     name:'Waterproof Enclosure + M12 Glands', detail:'IP65 · Electronics bay',                             status:'pending' },
+    { id:'p_max',     name:'MAX9814 Pre-amp Module',            detail:'Auto gain · Between TCT40-16R and AD9226',           status:'pending' },
+    { id:'p_jsn',     name:'JSN-SR04T Waterproof Ultrasonic',   detail:'Collision avoidance · ESP32',                        status:'pending' },
+    { id:'p_hardware',name:'PVC + Hardware (Home Depot)',        detail:'4in pipe, end caps, L-brackets, epoxy, silicone',   status:'pending' },
+  ],
+  learning: [
+    { id:'l_timing', emoji:'', title:'Gowin EDA - Timing Constraints (.cst)', phase:'Phase 1 - Toolchain & Interface', week:'W1-2', weekNum:1,
+      body:'<div class="tldr-box"><span class="tldr-label">TL;DR</span>Timing constraints tell Gowin how fast your logic must run. Without them P&amp;R guesses — your design may silently malfunction at speed.</div>' +
+      '<span class="section-label">Theory</span>' +
+      '<p>Gowin EDA uses proprietary .cst files (NOT .xdc or .ucf). The <code>create_clock</code> directive sets the target period. Place-and-route then tries to close timing — meeting that period on every combinational path. After synthesis, open the timing report and look for <strong>slack</strong>: positive slack = safe margin, negative slack = path fails and bit errors will occur in hardware.</p>' +
+      '<p>Period for 27MHz = 1/27,000,000 = 37.037ns. Waveform {0 18.518} means rising at 0ns, falling at half-period.</p>' +
+      '<span class="section-label">Code</span>' +
+      '<div class="code-wrap"><pre id="code_timing"># counter.cst — Tang Nano 20K timing constraints\ncreate_clock -name sys_clk -period 37.037 -waveform {0 18.518} [get_ports clk]\n\n# Pin assignments (Tang Nano 20K physical pins)\nIO_LOC "clk"  45;     # 27MHz oscillator input\nIO_LOC "rst"  15;     # User button S1\nIO_LOC "led0"  10;    # RGB LED red channel\nIO_PORT "clk"  IO_TYPE=LVCMOS33;\nIO_PORT "rst"  IO_TYPE=LVCMOS33 PULL_MODE=UP;\nIO_PORT "led0" IO_TYPE=LVCMOS33 DRIVE=8;</pre><button class="copy-btn" onclick="copyCode(\'code_timing\')">Copy</button></div>' +
+      '<span class="section-label">In Your Project</span>' +
+      '<div class="in-project">Your FPGA pipeline runs at 27MHz throughout. The matched filter accumulates 32 taps per sample — this is a long combinational chain that NEEDS a .cst to verify it closes timing. Write counter.cst first, confirm positive slack, then use same template for uart_tx.cst.</div>' +
+      '<span class="section-label">Exercise</span>' +
+      '<div class="exercise-box">Synthesize a 24-bit counter onto Tang Nano with counter.cst. Open the Gowin timing report. Find the "Worst Negative Slack" value. If it is positive you are done. If negative, add a pipeline register stage to break the path.</div>' +
+      '<span class="section-label">Self-Check Q&amp;A</span>' +
+      '<div class="qa-list">' +
+      '<div class="qa-item"><div class="qa-question" onclick="this.parentElement.classList.toggle(\'open\')">Why does Gowin use .cst and not .xdc?</div><div class="qa-answer">Gowin is a proprietary FPGA family. .xdc is Xilinx format, .ucf is legacy Xilinx. Gowin has its own toolchain with .cst constraint files. They are functionally similar but not interchangeable.</div></div>' +
+      '<div class="qa-item"><div class="qa-question" onclick="this.parentElement.classList.toggle(\'open\')">What does negative slack mean?</div><div class="qa-answer">Negative slack means a combinational path is too slow to meet the target clock period. The flip-flop downstream samples invalid data. Your design will produce incorrect outputs. You must break the path with a register stage.</div></div>' +
+      '<div class="qa-item"><div class="qa-question" onclick="this.parentElement.classList.toggle(\'open\')">Why 37.037ns period for 27MHz?</div><div class="qa-answer">Period = 1 / frequency. 1 / 27,000,000 Hz = 37.037 x 10^-9 seconds = 37.037ns. The Tang Nano 20K has a 27MHz oscillator onboard. You are constraining the synthesis tool to meet this exact period.</div></div>' +
+      '</div>' },
+
+    { id:'l_pipeline', emoji:'', title:'Verilog Pipelining — Registered MAC Stages', phase:'Phase 1 - Toolchain & Interface', week:'W2-3', weekNum:2,
+      body:'<div class="tldr-box"><span class="tldr-label">TL;DR</span>Break multiply-accumulate chains across clock registers. Each stage adds one cycle of latency but lets the 27MHz clock close timing on every 32-tap FIR path.</div>' +
+      '<span class="section-label">Theory</span>' +
+      '<p>A 32-tap FIR filter does 32 multiply-accumulate (MAC) operations per input sample. If you chain these combinationally the path is far too long at 27MHz — timing will fail. Pipelining inserts registers (<code>always @(posedge clk)</code> with &lt;=) to chop the path into short stages.</p>' +
+      '<p><strong>valid/ready handshaking:</strong> Carry a 1-bit <code>valid</code> signal through the same pipeline registers. When valid is high, the output is meaningful. This allows downstream modules to ignore outputs during pipeline fill cycles.</p>' +
+      '<span class="section-label">Code</span>' +
+      '<div class="code-wrap"><pre id="code_pipeline">// 2-stage pipelined MAC — non-blocking assignments required\nmodule mac_stage (\n  input  wire        clk,\n  input  wire        valid_in,\n  input  wire [15:0] data_in,\n  input  wire [15:0] coeff,\n  output reg  [31:0] accum_out,\n  output reg         valid_out\n);\n  reg [31:0] mult_reg;\n  reg        mult_valid;\n\n  // Stage 1: register the multiply\n  always @(posedge clk) begin\n    mult_reg   &lt;= $signed(data_in) * $signed(coeff);  // Q1.15 x Q1.15 = Q2.30\n    mult_valid &lt;= valid_in;\n  end\n\n  // Stage 2: accumulate\n  always @(posedge clk) begin\n    if (mult_valid)\n      accum_out &lt;= accum_out + mult_reg;\n    valid_out &lt;= mult_valid;\n  end\nendmodule</pre><button class="copy-btn" onclick="copyCode(\'code_pipeline\')">Copy</button></div>' +
+      '<span class="section-label">In Your Project</span>' +
+      '<div class="in-project">Your 32-tap FIR banks and matched filter correlator are pure MAC chains. Each tap must be a registered pipeline stage. Plan for ~4-8 clock cycles of pipeline latency — this is fine at 400kSPS input rate. Always propagate <code>valid</code> through every stage.</div>' +
+      '<span class="section-label">Exercise</span>' +
+      '<div class="exercise-box">Write a 4-tap FIR in Verilog with pipelined MACs. Write a testbench that sends a step input and verifies the output after the pipeline fills. Check for X states in GTKWave — any X means an uninitialized register.</div>' +
+      '<span class="section-label">Self-Check Q&amp;A</span>' +
+      '<div class="qa-list">' +
+      '<div class="qa-item"><div class="qa-question" onclick="this.parentElement.classList.toggle(\'open\')">Why non-blocking (&lt;=) in clocked always blocks?</div><div class="qa-answer">Non-blocking assignments (<=) all evaluate in the same time step but update at the end. This models flip-flop behavior correctly. Using blocking (=) in clocked blocks creates race conditions and simulation mismatches.</div></div>' +
+      '<div class="qa-item"><div class="qa-question" onclick="this.parentElement.classList.toggle(\'open\')">What is pipeline latency and why is it acceptable?</div><div class="qa-answer">Latency is the delay from input to valid output, measured in clock cycles. For a 32-tap FIR with 2-stage MAC = ~64 cycles of latency. At 27MHz that is 2.4 microseconds. Your chirp is 2ms long so latency is negligible relative to the signal duration.</div></div>' +
+      '</div>' },
+
+    { id:'l_ad9226', emoji:'', title:'AD9226 Parallel ADC Interface', phase:'Phase 1 - Toolchain & Interface', week:'W3-4', weekNum:3,
+      body:'<div class="tldr-box"><span class="tldr-label">TL;DR</span>AD9226 outputs 12-bit parallel data on D[11:0] at up to 65MSPS. Latch on rising edge of ENCODE clock. Watch OTR pin for clipping. Do not simulate until chip arrives for bench verification.</div>' +
+      '<span class="section-label">Theory</span>' +
+      '<p>Unlike SPI/I2C, the AD9226 is a parallel interface. There is no chip select. Your FPGA drives the ENCODE (CLK) pin — on each rising edge the ADC samples the analog input and outputs the digitized value on D[11:0] with a fixed pipeline latency of 3 clock cycles.</p>' +
+      '<p><strong>Key specs:</strong> 12-bit, 65MSPS max, +/-1V input range (with VREF=1.0V), 3-cycle pipeline delay. OTR = Over-Range flag means the input exceeded the ADC range and the output is clamped.</p>' +
+      '<p><strong>VREF:</strong> The AD9226 reference voltage sets full-scale. With VREF=1.0V, the 12-bit output maps linearly: 0x000 = -1V, 0x7FF = 0V, 0xFFF = +1V.</p>' +
+      '<span class="section-label">Code</span>' +
+      '<div class="code-wrap"><pre id="code_adc">// AD9226 capture module — 65MSPS parallel ADC interface\nmodule adc_capture (\n  input  wire        clk,        // 65MHz FPGA-generated clock to ADC ENCODE pin\n  input  wire [11:0] adc_data,   // D[11:0] parallel bus from ADC\n  input  wire        otr,        // Over-range flag (active HIGH)\n  output reg  [11:0] sample,     // Registered sample output\n  output reg         sample_valid\n);\n  // Pipeline registers to account for 3-cycle ADC latency\n  reg [11:0] pipe1, pipe2;\n  reg        v1, v2;\n\n  always @(posedge clk) begin\n    // Stage 1: capture raw ADC data\n    pipe1 &lt;= otr ? 12\'h7FF : adc_data;  // clamp on overrange\n    v1    &lt;= 1\'b1;\n    // Stage 2: pipeline register\n    pipe2 &lt;= pipe1;  v2 &lt;= v1;\n    // Stage 3: output\n    sample       &lt;= pipe2;\n    sample_valid &lt;= v2;\n  end\nendmodule</pre><button class="copy-btn" onclick="copyCode(\'code_adc\')">Copy</button></div>' +
+      '<span class="section-label">In Your Project</span>' +
+      '<div class="in-project">The AD9226 arrives Jun 14-21 (Week 4). Before it arrives, write the Verilog module and simulate with Icarus using a test stimulus that mimics a 36kHz chirp. When the chip arrives, bench test at 1MHz first to verify capture before going to 65MHz.</div>' +
+      '<span class="section-label">Exercise</span>' +
+      '<div class="exercise-box">Write adc_capture.v and tb_adc_capture.v. In the testbench, generate a 65MHz clock and a counter-based stimulus on adc_data[11:0]. Verify in GTKWave that sample_valid goes high after exactly 3 cycles and sample tracks adc_data with that latency.</div>' +
+      '<span class="section-label">Self-Check Q&amp;A</span>' +
+      '<div class="qa-list">' +
+      '<div class="qa-item"><div class="qa-question" onclick="this.parentElement.classList.toggle(\'open\')">Why does the FPGA drive the ADC clock rather than the ADC driving itself?</div><div class="qa-answer">You need the ADC sample clock to be phase-aligned with your FPGA fabric so you can reliably latch D[11:0]. If the ADC had its own clock you would need a CDC (clock domain crossing) — much more complex. FPGA-driven ENCODE keeps everything in one clock domain.</div></div>' +
+      '<div class="qa-item"><div class="qa-question" onclick="this.parentElement.classList.toggle(\'open\')">What does OTR = 1 mean for your acoustic signal?</div><div class="qa-answer">OTR means the transducer+preamp output exceeded the ADC input range (+/-1V with VREF=1V). This clips the waveform. For matched filter performance, clipping is bad — it distorts the chirp and reduces correlation peak accuracy. Check MAX9814 gain setting.</div></div>' +
+      '</div>' },
+
+    { id:'l_lfm', emoji:'', title:'LFM Chirp + Matched Filter Theory', phase:'Phase 2 - Signal Processing', week:'W3-4', weekNum:3,
+      body:'<div class="tldr-box"><span class="tldr-label">TL;DR</span>A chirp sweeps frequency over time. The matched filter cross-correlates the received signal with a stored reference. Correlation peak position = time of flight = range / (343 m/s / 2).</div>' +
+      '<span class="section-label">Theory</span>' +
+      '<p>A Linear Frequency Modulated (LFM) chirp sweeps frequency linearly: Buoy 1 sweeps 34kHz to 38kHz over 2ms, Buoy 2 sweeps 42kHz to 46kHz. This gives Doppler tolerance and sharp range resolution.</p>' +
+      '<p><strong>Chirp equation:</strong> s(t) = cos(2π(f0·t + k/2·t²)) where k = (f1 - f0) / T is the chirp rate. For Buoy 1: k = (38000-34000)/0.002 = 2,000,000 Hz/s.</p>' +
+      '<p><strong>Matched filter = cross-correlation.</strong> You store 800 samples of the reference chirp in BSRAM. For each incoming 800-sample window, compute the dot product with the reference. The result is highest when the received signal aligns with the reference — this alignment position is the time of arrival.</p>' +
+      '<p><strong>Range formula:</strong> range = ToF × v_sound / 2 = ToF × 343 / 2. Division by 2 because the sound travels to the buoy and back.</p>' +
+      '<span class="section-label">Code</span>' +
+      '<div class="code-wrap"><pre id="code_lfm">// Python: generate 800-sample reference chirp for Buoy 1\nimport numpy as np\n\nfs = 400e3          # 400 kSPS after CIC decimation\nT  = 2e-3           # 2ms chirp duration\nN  = int(fs * T)    # 800 samples\nf0, f1 = 34e3, 38e3 # Buoy 1 frequency range\n\nt = np.linspace(0, T, N, endpoint=False)\nk = (f1 - f0) / T\nchirp = np.cos(2 * np.pi * (f0*t + k/2 * t**2))\n\n# Quantize to Q1.15 for BSRAM storage\nq15 = np.round(chirp * 32767).astype(np.int16)\nprint(", ".join(f"16\'sh{v &amp; 0xFFFF:04X}" for v in q15))</pre><button class="copy-btn" onclick="copyCode(\'code_lfm\')">Copy</button></div>' +
+      '<span class="section-label">In Your Project</span>' +
+      '<div class="in-project">Run this Python script to generate the 800-sample reference arrays. Paste the hex output into your Verilog BSRAM initialization. Two chirp banks (Buoy 1: 34-38kHz, Buoy 2: 42-46kHz). Store in separate BSRAM blocks — each 800 x 16-bit = 12.5 kbits, well within the 46x18kbit available.</div>' +
+      '<span class="section-label">Exercise</span>' +
+      '<div class="exercise-box">In Python: generate a 2ms chirp, add Gaussian noise (SNR=10dB), compute cross-correlation with the clean reference using np.correlate. Plot the result. Observe the peak location and measure its position in samples. Convert samples to meters using fs=400kSPS and v=343m/s.</div>' +
+      '<span class="section-label">Self-Check Q&amp;A</span>' +
+      '<div class="qa-list">' +
+      '<div class="qa-item"><div class="qa-question" onclick="this.parentElement.classList.toggle(\'open\')">Why use a chirp instead of a single-frequency pulse?</div><div class="qa-answer">A chirp has much higher time-bandwidth product. The matched filter compresses the chirp into a sharp correlation peak — this is pulse compression. A single tone gives a sinusoidal correlation with many ambiguous peaks. The chirp also provides Doppler tolerance since frequency content spreads across time.</div></div>' +
+      '<div class="qa-item"><div class="qa-question" onclick="this.parentElement.classList.toggle(\'open\')">Why 800 samples at 400kSPS?</div><div class="qa-answer">Chirp duration = 2ms. Samples = 2ms × 400,000 samples/sec = 800 samples. This is the correlation window. The 400kSPS rate comes from CIC decimation of 65MSPS by factor ~160, which preserves the 34-46kHz band (Nyquist = 200kHz >> 46kHz).</div></div>' +
+      '</div>' },
+
+    { id:'l_qmath', emoji:'', title:'Fixed-Point Arithmetic — Q1.15 Format', phase:'Phase 2 - Signal Processing', week:'W3-4', weekNum:3,
+      body:'<div class="tldr-box"><span class="tldr-label">TL;DR</span>Q1.15 = 1 sign bit + 15 fractional bits. Range [-1, +1). Multiply two Q1.15 values and shift right 15 bits to get Q1.15 output. Always saturate on overflow — never wrap.</div>' +
+      '<span class="section-label">Theory</span>' +
+      '<p>FPGAs do not have floating point hardware natively. For DSP you use fixed-point: Q1.15 notation means 1 sign bit and 15 fractional bits. The value 1.0 is represented as 0x7FFF (32767), -1.0 as 0x8000 (-32768). Resolution = 1/32768 ≈ 0.003%.</p>' +
+      '<p>When you multiply two Q1.15 numbers you get a Q2.30 result (double the bits). To get back to Q1.15 you discard the bottom 15 bits (shift right 15) and take the upper 16 bits. Watch the overflow bit — if the result needs the extra sign bit, saturate rather than wrap.</p>' +
+      '<span class="section-label">Code</span>' +
+      '<div class="code-wrap"><pre id="code_qmath">// Q1.15 multiply with saturation\nmodule q15_mult (\n  input  wire signed [15:0] a, b,\n  output reg  signed [15:0] result\n);\n  wire signed [31:0] full_product;\n  assign full_product = a * b;  // Q2.30 result\n\n  always @(*) begin\n    // Check for overflow: Q2.30 bits [31:30] should both be 0 (pos) or both 1 (neg)\n    if (full_product[31] != full_product[30]) begin\n      // Saturate\n      result = full_product[31] ? 16\'sh8000 : 16\'sh7FFF;\n    end else begin\n      // Normal case: take bits [30:15] to get Q1.15\n      result = full_product[30:15];\n    end\n  end\nendmodule</pre><button class="copy-btn" onclick="copyCode(\'code_qmath\')">Copy</button></div>' +
+      '<span class="section-label">In Your Project</span>' +
+      '<div class="in-project">Every FIR coefficient and matched filter sample must be in Q1.15. The Python script from the LFM concept generates the chirp in Q1.15 already. Use q15_mult as your MAC building block. Load FIR coefficients from BSRAM initialized with Q1.15 hex values.</div>' +
+      '<span class="section-label">Exercise</span>' +
+      '<div class="exercise-box">In Verilog testbench: multiply 0.5 (0x4000) by 0.5 (0x4000). Expected result = 0.25 (0x2000). Multiply 0.9 (0x7333) by 0.9 (0x7333). Verify no overflow. Now try 0x7FFF * 0x7FFF — verify saturation to 0x7FFF.</div>' +
+      '<span class="section-label">Self-Check Q&amp;A</span>' +
+      '<div class="qa-list">' +
+      '<div class="qa-item"><div class="qa-question" onclick="this.parentElement.classList.toggle(\'open\')">Why saturate instead of wrap on overflow?</div><div class="qa-answer">Wrapping on overflow causes a large positive value to suddenly become large negative (or vice versa). In a filter, that creates a spurious large correlation spike that your peak detector would falsely report as a target. Saturation clips to max/min — it distorts less and does not create false spikes.</div></div>' +
+      '<div class="qa-item"><div class="qa-question" onclick="this.parentElement.classList.toggle(\'open\')">How many Gowin BSRAM blocks do you need for two 800-sample chirp banks?</div><div class="qa-answer">Each sample = 16 bits. 800 samples × 16 bits = 12,800 bits per bank. 2 banks = 25,600 bits. Each Gowin 18kbit BSRAM = 18,432 bits. So 2 BSRAM blocks total (one per chirp bank). You have 46 available — plenty of headroom.</div></div>' +
+      '</div>' },
+
+    { id:'l_cic', emoji:'', title:'CIC Decimation Filter (65MSPS to 400kSPS)', phase:'Phase 2 - Signal Processing', week:'W4', weekNum:4,
+      body:'<div class="tldr-box"><span class="tldr-label">TL;DR</span>CIC decimator reduces 65MSPS to ~400kSPS (factor ~160) using only adders and subtractors — no multipliers needed. Integrator stages accumulate, then comb stages differentiate after the downsample.</div>' +
+      '<span class="section-label">Theory</span>' +
+      '<p>A CIC (Cascaded Integrator-Comb) filter is the ideal first decimation stage because it uses zero multipliers — just adders operating on integer data. For a decimation factor R=160 with N=3 stages, the -3dB bandwidth is approximately 0.262×fs_out = ~105kHz, which covers your 34-46kHz chirp band easily.</p>' +
+      '<p><strong>Structure:</strong> N integrator stages at 65MHz → downsample by R → N comb stages at 400kSPS. Integrators use BSRAM accumulators (wide bit-width: log2(R^N) + input_bits = log2(160^3) + 12 ≈ 35 bits).</p>' +
+      '<p><strong>Droop:</strong> CIC has frequency droop near fs_out/2. For your application the chirp bands are far from Nyquist so droop is negligible. A follow-up FIR compensator is optional.</p>' +
+      '<span class="section-label">Code</span>' +
+      '<div class="code-wrap"><pre id="code_cic">// 3-stage CIC decimator: 65MSPS -> ~400kSPS, R=163\n// Bit growth = N * log2(R) = 3 * 7.3 = 22 extra bits\n// Total width = 12 + 22 = 34 bits\nmodule cic_decimator #(\n  parameter R = 163,  // decimation ratio\n  parameter N = 3,    // stages\n  parameter W = 34    // accumulator width\n)(\n  input  wire        clk_fast,   // 65MHz\n  input  wire        clk_slow,   // 400kSPS strobe (1 pulse per R cycles)\n  input  wire        rst,\n  input  wire [11:0] data_in,    // from AD9226\n  output reg  [11:0] data_out,   // decimated output\n  output reg         valid\n);\n  // Integrators (run at clk_fast)\n  reg signed [W-1:0] intg [0:N-1];\n  integer i;\n  always @(posedge clk_fast or posedge rst) begin\n    if (rst) for (i=0; i&lt;N; i=i+1) intg[i] &lt;= 0;\n    else begin\n      intg[0] &lt;= intg[0] + {{(W-12){data_in[11]}}, data_in};\n      for (i=1; i&lt;N; i=i+1) intg[i] &lt;= intg[i] + intg[i-1];\n    end\n  end\n  // Comb stages (run at clk_slow strobe)\n  reg signed [W-1:0] comb_d [0:N-1], comb_q [0:N-1];\n  always @(posedge clk_fast) begin\n    if (clk_slow) begin\n      comb_d[0] &lt;= intg[N-1]; comb_q[0] &lt;= intg[N-1] - comb_d[0];\n      for (i=1; i&lt;N; i=i+1) begin\n        comb_d[i] &lt;= comb_q[i-1]; comb_q[i] &lt;= comb_q[i-1] - comb_d[i];\n      end\n      data_out &lt;= comb_q[N-1][W-1 -: 12]; // take top 12 bits\n      valid    &lt;= 1\'b1;\n    end else valid &lt;= 1\'b0;\n  end\nendmodule</pre><button class="copy-btn" onclick="copyCode(\'code_cic\')">Copy</button></div>' +
+      '<span class="section-label">In Your Project</span>' +
+      '<div class="in-project">This is the first stage after the AD9226. It runs at 65MHz internally with BSRAM-based accumulators. Simulate it first: input a 36kHz sine at 65MSPS, verify the output at 400kSPS preserves the 36kHz frequency. Then synthesize and check timing closure at 27MHz (you will likely need to pipeline the integrator path).</div>' +
+      '<span class="section-label">Exercise</span>' +
+      '<div class="exercise-box">Write tb_cic_decimator.v: send 65M samples/sec of a 36kHz sine wave. Capture the output. Plot input and output FFT. Verify the 36kHz component is preserved. Measure the actual decimation ratio from your timing.</div>' +
+      '<span class="section-label">Self-Check Q&amp;A</span>' +
+      '<div class="qa-list">' +
+      '<div class="qa-item"><div class="qa-question" onclick="this.parentElement.classList.toggle(\'open\')">Why does the accumulator need 34 bits for R=163, N=3?</div><div class="qa-answer">Each integrator stage multiplies the signal dynamic range by R. For N stages the maximum gain is R^N = 163^3 ≈ 4.3 million. log2(4.3M) ≈ 22 bits of growth. Add to 12 input bits = 34 total. Under-sizing the accumulator causes overflow and corrupts the output.</div></div>' +
+      '<div class="qa-item"><div class="qa-question" onclick="this.parentElement.classList.toggle(\'open\')">Why use BSRAM for the accumulator?</div><div class="qa-answer">34-bit wide accumulators at 65MHz in distributed LUTs would consume hundreds of LUT4s. The Tang Nano 20K has 46x18kbit BSRAM blocks that are ideal for wide, fast registers. Using BSRAM keeps LUT usage low for the FIR and correlator downstream.</div></div>' +
+      '</div>' },
+
+    { id:'l_fir', emoji:'', title:'FIR Filter Bank Design (32-tap, Two Bands)', phase:'Phase 2 - Signal Processing', week:'W4-5', weekNum:4,
+      body:'<div class="tldr-box"><span class="tldr-label">TL;DR</span>Two parallel 32-tap FIR bandpass filters. Bank 1 passes 34-38kHz (Buoy 1), Bank 2 passes 42-46kHz (Buoy 2). Coefficients in BSRAM, loadable via UART. Uses 32 of 48 hardware multipliers.</div>' +
+      '<span class="section-label">Theory</span>' +
+      '<p>A FIR filter with N taps computes output y[n] = sum(h[k] * x[n-k]) for k=0..N-1. The coefficients h[k] determine the frequency response. A windowed-sinc bandpass filter in Q1.15 gives excellent stopband rejection.</p>' +
+      '<p><strong>Gowin hardware multipliers:</strong> The Tang Nano 20K has 48 dedicated 18x18 hardware multipliers. Each FIR tap needs one multiplier. 32 taps × 2 banks = 64 multipliers — over budget. Solution: time-share with systolic folded architecture (16 multipliers per bank, 2 cycles per tap at 400kSPS gives plenty of time).</p>' +
+      '<p><strong>Coefficient loading:</strong> Coefficients stored in BSRAM (32 × 16-bit = 512 bits per bank). The Pi sends updated coefficients via UART to allow runtime tuning without FPGA resynthesis.</p>' +
+      '<span class="section-label">Code</span>' +
+      '<div class="code-wrap"><pre id="code_fir"># Python: design 32-tap bandpass FIR for Buoy 1 (34-38 kHz)\nimport numpy as np\nfrom scipy import signal\n\nfs    = 400e3       # 400 kSPS\nN     = 32          # taps\nfreqs = [34e3, 38e3]\n\n# Normalized cutoffs (fraction of Nyquist = fs/2)\nWn = [f / (fs/2) for f in freqs]\n\n# Windowed-sinc design\nb = signal.firwin(N, Wn, pass_zero=False, window=\'hamming\')\n\n# Quantize to Q1.15\nq15 = np.round(b * 32767).astype(np.int16)\nprint("// FIR coefficients Buoy 1, 32-tap Q1.15")\nprint(", ".join(f"16\'sh{v &amp; 0xFFFF:04X}" for v in q15))\n\n# Verify: compute frequency response\nw, h = signal.freqz(b, worN=8192, fs=fs)\nimport matplotlib.pyplot as plt\nplt.plot(w/1e3, 20*np.log10(np.abs(h)))\nplt.xlabel(\'kHz\'); plt.ylabel(\'dB\'); plt.grid(); plt.show()</pre><button class="copy-btn" onclick="copyCode(\'code_fir\')">Copy</button></div>' +
+      '<span class="section-label">In Your Project</span>' +
+      '<div class="in-project">Run this Python code first to design and verify the coefficients. Plot the frequency response to confirm the 34-38kHz passband. Then paste the Q1.15 hex values into your Verilog BSRAM init. Design both banks (Bank 2 uses freqs=[42e3, 46e3]). The folded architecture lets you stay within 32 HW multipliers.</div>' +
+      '<span class="section-label">Exercise</span>' +
+      '<div class="exercise-box">Write the FIR coefficient generation script for both buoys. Plot both frequency responses on the same graph. Verify at least 40dB separation between the two passbands. Verify stopband attenuation is >30dB. These specs determine whether the FPGA can discriminate Buoy 1 from Buoy 2.</div>' +
+      '<span class="section-label">Self-Check Q&amp;A</span>' +
+      '<div class="qa-list">' +
+      '<div class="qa-item"><div class="qa-question" onclick="this.parentElement.classList.toggle(\'open\')">Why time-share multipliers instead of using 64?</div><div class="qa-answer">The Tang Nano 20K has only 48 hardware multipliers total. 64 taps needs 64 mults — impossible. Instead, a systolic or folded architecture processes 2 taps per multiplier per input sample. At 400kSPS the slow sample rate gives you thousands of 27MHz cycles per sample to run the multiplier multiple times.</div></div>' +
+      '<div class="qa-item"><div class="qa-question" onclick="this.parentElement.classList.toggle(\'open\')">Why load coefficients via UART at runtime?</div><div class="qa-answer">BSRAM can be initialized at bitstream load but the Pi can also write to it over UART. This means you can update FIR coefficients without reflashing the FPGA — useful for tuning the passband center frequency if the transducer response shifts slightly at different temperatures.</div></div>' +
+      '</div>' },
+
+    { id:'l_correlator', emoji:'', title:'Matched Filter Correlator in Verilog', phase:'Phase 2 - Signal Processing', week:'W5', weekNum:5,
+      body:'<div class="tldr-box"><span class="tldr-label">TL;DR</span>The correlator slides a 800-sample window over the incoming FIR-filtered stream and computes the dot product with the stored reference chirp each step. Maximum output position = time of flight.</div>' +
+      '<span class="section-label">Theory</span>' +
+      '<p>After the FIR bank extracts the chirp band, the matched filter correlator finds the time at which the chirp was transmitted. It computes: corr[n] = sum(x[n+k] * ref[k]) for k=0..799 for each n. This is a sliding window dot product.</p>' +
+      '<p><strong>Implementation:</strong> Shift register of 800 samples (in BSRAM), multiplied element-wise with the reference chirp (also in BSRAM), accumulated into one 32-bit sum. The peak detector watches this running sum and records the position of the maximum over a search window.</p>' +
+      '<p><strong>Timing:</strong> At 400kSPS, 800 samples = 2ms of data. One full correlation every sample (slide by 1) = 800 MACs per step. At 27MHz that is 27,000 / 400 = 67 clock cycles per sample — enough for a pipelined 800-MAC computation if properly folded.</p>' +
+      '<span class="section-label">Code</span>' +
+      '<div class="code-wrap"><pre id="code_corr">// Simplified matched filter: accumulate 800 MACs per output sample\n// (real impl uses BSRAM + pipeline; this shows the algorithm)\nmodule matched_filter #(parameter TAPS = 800, W = 16) (\n  input  wire           clk,\n  input  wire           valid_in,\n  input  wire [W-1:0]   sample_in,\n  output reg  [31:0]    corr_out,\n  output reg            corr_valid\n);\n  // Shift register (use BSRAM in synthesis)\n  reg [W-1:0] delay_line [0:TAPS-1];\n  // Reference chirp (load from BSRAM init)\n  reg [W-1:0] reference  [0:TAPS-1];\n  initial $readmemh("chirp_b1.hex", reference);\n\n  integer k;\n  reg [31:0] accum;\n\n  always @(posedge clk) begin\n    if (valid_in) begin\n      // Shift in new sample\n      delay_line[0] &lt;= sample_in;\n      for (k=1; k&lt;TAPS; k=k+1)\n        delay_line[k] &lt;= delay_line[k-1];\n      // Accumulate correlation\n      accum = 0;\n      for (k=0; k&lt;TAPS; k=k+1)\n        accum = accum + $signed(delay_line[k]) * $signed(reference[k]);\n      corr_out   &lt;= accum[46:15];  // take Q1.15 result\n      corr_valid &lt;= 1\'b1;\n    end else corr_valid &lt;= 1\'b0;\n  end\nendmodule</pre><button class="copy-btn" onclick="copyCode(\'code_corr\')">Copy</button></div>' +
+      '<span class="section-label">In Your Project</span>' +
+      '<div class="in-project">This is the core of the acoustic homing system. Synthesize one correlator first, verify timing closure, then duplicate for Buoy 2. The ACTIVE_TARGET selector downstream picks which correlator output to route to the UART TX packet based on mission state.</div>' +
+      '<span class="section-label">Exercise</span>' +
+      '<div class="exercise-box">Simulate matched_filter with a Buoy 1 chirp delayed by exactly 200 samples (0.5ms ToF = 0.5ms × 343m/s / 2 = 0.086m range). Verify the correlation peak occurs at sample 200. Then test with SNR=10dB noise. Verify the peak is still detectable.</div>' +
+      '<span class="section-label">Self-Check Q&amp;A</span>' +
+      '<div class="qa-list">' +
+      '<div class="qa-item"><div class="qa-question" onclick="this.parentElement.classList.toggle(\'open\')">How do you convert peak position to range in meters?</div><div class="qa-answer">Peak position N_peak (in samples). ToF = N_peak / 400,000 seconds. Range = ToF × 343 / 2 meters. Example: peak at sample 400 → ToF = 1ms → range = 0.001 × 343 / 2 = 0.172m.</div></div>' +
+      '<div class="qa-item"><div class="qa-question" onclick="this.parentElement.classList.toggle(\'open\')">Why does the FPGA packet send range_cm as 2 bytes (uint16)?</div><div class="qa-answer">Maximum range ~10m = 1000cm. uint16 max = 65535. 2 bytes is plenty with room for longer ranges. Range in cm (not meters) avoids needing floating point in the packet. The Pi reconstructs: range_m = range_cm / 100.0.</div></div>' +
+      '</div>' },
+
+    { id:'l_peakdet', emoji:'', title:'Peak Detector + TOF Calculator', phase:'Phase 2 - Signal Processing', week:'W5', weekNum:5,
+      body:'<div class="tldr-box"><span class="tldr-label">TL;DR</span>Track the maximum correlation output over a search window (2ms). When window ends, peak position / 400kSPS = ToF. Multiply by 343/2 for range in meters.</div>' +
+      '<span class="section-label">Theory</span>' +
+      '<p>After the matched filter outputs corr[n], the peak detector must find the maximum value within a reasonable search window. The search window should be at least as long as the expected maximum range: 10m → ToF = 10/(343/2) = 58ms → 23,200 samples at 400kSPS. That is too many samples to store — instead use a running max tracker.</p>' +
+      '<p><strong>Running max algorithm:</strong> Maintain <code>max_val</code> and <code>max_pos</code> registers. Each new correlation output: if corr_out > max_val, update both registers. A separate timeout counter triggers a "frame done" signal every N_window samples, which outputs the current max and resets.</p>' +
+      '<p><strong>Noise floor check:</strong> Gate the output — only report range if max_val > THRESHOLD. Threshold prevents false detections in noisy environments. Compute SNR = max_val / mean_val for the frame.</p>' +
+      '<span class="section-label">Code</span>' +
+      '<div class="code-wrap"><pre id="code_peak">// Peak detector with TOF output\nmodule peak_detector #(\n  parameter WINDOW = 23200,  // ~58ms search window at 400kSPS\n  parameter THRESH = 32\'h00100000  // detection threshold\n)(\n  input  wire        clk,\n  input  wire        valid_in,\n  input  wire [31:0] corr_in,\n  output reg  [15:0] range_cm,  // output in cm\n  output reg         range_valid\n);\n  reg [31:0] max_val;\n  reg [14:0] max_pos;  // position in samples\n  reg [14:0] sample_cnt;\n\n  // v_sound/2 constant: 343/2 * 100 cm/m = 17150\n  // range_cm = max_pos * 17150 / 400000 = max_pos * 171.5 / 4000\n  // Fixed-point: range_cm = (max_pos * 17150) >> 17 (divide by 131072 ~= 400000/3)\n\n  always @(posedge clk) begin\n    range_valid &lt;= 1\'b0;\n    if (valid_in) begin\n      if (corr_in > max_val) begin\n        max_val &lt;= corr_in;\n        max_pos &lt;= sample_cnt;\n      end\n      sample_cnt &lt;= sample_cnt + 1;\n      if (sample_cnt == WINDOW - 1) begin\n        if (max_val > THRESH) begin\n          // range_cm = max_pos * 343 * 100 / 2 / 400000\n          range_cm    &lt;= (max_pos * 17150) / 400000;\n          range_valid &lt;= 1\'b1;\n        end\n        // Reset window\n        max_val    &lt;= 0;  max_pos    &lt;= 0;\n        sample_cnt &lt;= 0;\n      end\n    end\n  end\nendmodule</pre><button class="copy-btn" onclick="copyCode(\'code_peak\')">Copy</button></div>' +
+      '<span class="section-label">In Your Project</span>' +
+      '<div class="in-project">The peak_detector feeds the UART TX module. Its output is range_cm (uint16) and an SNR byte. These fill bytes 2-4 of the 8-byte packet. Gate on range_valid before sending — do not transmit garbage readings.</div>' +
+      '<span class="section-label">Exercise</span>' +
+      '<div class="exercise-box">Testbench: inject correlation outputs with a peak at position 4000 (= 1cm ToF → 1cm × 400000/(343*100/2) = 4000 samples, or range = 4000 * 343 / 2 / 400000 = 1.7m). Verify range_cm output = 171 (1.71m ≈ 171cm). Inject noise at 50% of threshold — verify no false range_valid.</div>' +
+      '<span class="section-label">Self-Check Q&amp;A</span>' +
+      '<div class="qa-list">' +
+      '<div class="qa-item"><div class="qa-question" onclick="this.parentElement.classList.toggle(\'open\')">Why reset the window after each frame instead of using a sliding window max?</div><div class="qa-answer">A sliding window max requires storing all N_window correlation values (23200 × 32-bit = 740kbits). That exceeds available BSRAM. A fixed frame reset is simpler and works fine at 400kSPS update rate — a new range estimate every 58ms is fast enough for acoustic homing at walking speed.</div></div>' +
+      '</div>' },
+
+    { id:'l_microros', emoji:'', title:'micro-ROS on ESP32', phase:'Phase 3 - ROS 2 & Integration', week:'W6', weekNum:6,
+      body:'<div class="tldr-box"><span class="tldr-label">TL;DR</span>micro-ROS runs ROS 2 on microcontrollers. ESP32 publishes /imu/data and /odom, subscribes to /cmd_vel. Uses a micro-ROS agent on the Pi as transport bridge over UART or UDP.</div>' +
+      '<span class="section-label">Theory</span>' +
+      '<p>micro-ROS is a stripped-down ROS 2 client library for microcontrollers. The ESP32 cannot run full ROS 2 — instead it runs the micro-ROS client library (C) and connects to a micro-ROS Agent running on the Pi. The agent bridges between micro-ROS and the full ROS 2 DDS layer.</p>' +
+      '<p><strong>Transport:</strong> ESP32 connects via UART at 115200 baud to the Pi. The micro-ROS agent on the Pi creates virtual ROS 2 topics that appear on the network like normal nodes. Latency is ~1ms.</p>' +
+      '<p><strong>Vehicle ESP32 topics:</strong> publishes <code>/imu/data</code> (sensor_msgs/Imu at 100Hz), <code>/odom</code> (estimated from PWM duty), subscribes <code>/cmd_vel</code> (geometry_msgs/Twist) and drives L298N.</p>' +
+      '<span class="section-label">Code</span>' +
+      '<div class="code-wrap"><pre id="code_uros">// ESP32 micro-ROS: IMU publisher + cmd_vel subscriber\n#include &lt;micro_ros_arduino.h&gt;\n#include &lt;rcl/rcl.h&gt;\n#include &lt;sensor_msgs/msg/imu.h&gt;\n#include &lt;geometry_msgs/msg/twist.h&gt;\n\nrcl_publisher_t    imu_pub;\nrcl_subscription_t vel_sub;\nsensor_msgs__msg__Imu       imu_msg;\ngeometry_msgs__msg__Twist   vel_msg;\n\nvoid vel_callback(const void * msg) {\n  auto * twist = (geometry_msgs__msg__Twist *) msg;\n  float left  = twist->linear.x - twist->angular.z * 0.1;\n  float right = twist->linear.x + twist->angular.z * 0.1;\n  set_motor_pwm(left, right);  // drive L298N\n}\n\nvoid setup() {\n  set_microros_serial_transports(Serial);  // UART to Pi agent\n  rcl_node_t node;\n  rclc_node_init_default(&amp;node, "esp32_vehicle", "", &amp;support);\n  rclc_publisher_init_default(&amp;imu_pub, &amp;node,\n    ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Imu), "/imu/data");\n  rclc_subscription_init_default(&amp;vel_sub, &amp;node,\n    ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist), "/cmd_vel",\n    &amp;vel_msg, &amp;vel_callback);\n}</pre><button class="copy-btn" onclick="copyCode(\'code_uros\')">Copy</button></div>' +
+      '<span class="section-label">In Your Project</span>' +
+      '<div class="in-project">Install micro-ROS Arduino library in PlatformIO. Plug ESP32 UART TX/RX into Pi GPIO14/15 (not /dev/ttyAMA0 which is reserved for FPGA). Run micro-ROS agent: ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyUSB0. Verify /imu/data appears: ros2 topic echo /imu/data.</div>' +
+      '<span class="section-label">Exercise</span>' +
+      '<div class="exercise-box">Flash the ESP32 with a minimal IMU publisher using MPU-6050 on I2C. Verify /imu/data appears on the Pi with ros2 topic hz /imu/data at ~100Hz. Check that accelerometer values change when you tilt the ESP32. Verify /cmd_vel commands translate to L298N PWM changes.</div>' +
+      '<span class="section-label">Self-Check Q&amp;A</span>' +
+      '<div class="qa-list">' +
+      '<div class="qa-item"><div class="qa-question" onclick="this.parentElement.classList.toggle(\'open\')">Why not run full ROS 2 on the ESP32?</div><div class="qa-answer">Full ROS 2 requires Linux, ~128MB RAM, and a multi-core processor. The ESP32 has 520KB SRAM and no OS. micro-ROS provides just the RMW (middleware) layer needed for publishers and subscribers — it fits in ~50KB flash.</div></div>' +
+      '<div class="qa-item"><div class="qa-question" onclick="this.parentElement.classList.toggle(\'open\')">Why UART and not WiFi for micro-ROS transport?</div><div class="qa-answer">UART has deterministic ~1ms latency and works without network configuration. WiFi UDP transport is also supported but adds WiFi join time, DHCP, and variable latency. For the vehicle ESP32 tethered to the Pi, UART is simpler and more reliable.</div></div>' +
+      '</div>' },
+
+    { id:'l_uart_proto', emoji:'', title:'UART Packet Protocol — 8-Byte Format', phase:'Phase 3 - ROS 2 & Integration', week:'W6', weekNum:6,
+      body:'<div class="tldr-box"><span class="tldr-label">TL;DR</span>The FPGA sends 8-byte packets at 115200 baud over /dev/ttyAMA0. Byte 0 = target ID, bytes 1-2 = range_cm, bytes 3-4 = correlation peak, byte 5 = SNR, byte 6 = checksum, byte 7 = 0xFF frame marker.</div>' +
+      '<span class="section-label">Theory</span>' +
+      '<p>UART (Universal Asynchronous Receiver-Transmitter) framing: idle line is HIGH. Each byte is preceded by a start bit (LOW) and followed by a stop bit (HIGH). At 115200 baud, one bit = 8.68 microseconds. One byte = 10 bits = 86.8 microseconds. 8 bytes = 694 microseconds ≈ 1.44kHz max packet rate.</p>' +
+      '<p><strong>Packet format (8 bytes):</strong></p>' +
+      '<p>Byte 0: target_id (0x01 = Buoy 1, 0x02 = Buoy 2) | Byte 1-2: range_cm (uint16 big-endian) | Byte 3-4: corr_peak (uint16 big-endian) | Byte 5: snr_db (uint8, 0-255) | Byte 6: checksum (XOR bytes 0-5) | Byte 7: 0xFF (frame end marker)</p>' +
+      '<p><strong>Pi parser:</strong> Scan for 0xFF, then read backwards 7 bytes, verify checksum. Publish to /acoustic/range_m and /acoustic/snr.</p>' +
+      '<span class="section-label">Code</span>' +
+      '<div class="code-wrap"><pre id="code_uart">// Python: ROS 2 fpga_uart_node.py\nimport serial, struct\nimport rclpy\nfrom rclpy.node import Node\nfrom std_msgs.msg import Float32\n\nclass FpgaUartNode(Node):\n  def __init__(self):\n    super().__init__(\'fpga_uart_node\')\n    self.ser = serial.Serial(\'/dev/ttyAMA0\', 115200, timeout=0.1)\n    self.range_pub = self.create_publisher(Float32, \'/acoustic/range_m\', 10)\n    self.snr_pub   = self.create_publisher(Float32, \'/acoustic/snr\',     10)\n    self.create_timer(0.01, self.read_packet)  # 100Hz timer\n\n  def read_packet(self):\n    # Read until 0xFF frame marker\n    data = self.ser.read(32)\n    idx = data.rfind(b\'\\xFF\')\n    if idx &lt; 7: return\n    pkt = data[idx-7:idx+1]\n    # Verify checksum (XOR of bytes 0-5)\n    chk = 0\n    for b in pkt[:6]: chk ^= b\n    if chk != pkt[6]: return  # bad packet\n    target_id = pkt[0]\n    range_cm  = struct.unpack(\'&gt;H\', pkt[1:3])[0]\n    snr       = pkt[5]\n    self.range_pub.publish(Float32(data=range_cm / 100.0))\n    self.snr_pub.publish(Float32(data=float(snr)))</pre><button class="copy-btn" onclick="copyCode(\'code_uart\')">Copy</button></div>' +
+      '<span class="section-label">In Your Project</span>' +
+      '<div class="in-project">The FPGA uart_tx.v module is already done (Week 2). Now you need to build the 8-byte packet assembler in Verilog that feeds uart_tx. The Pi fpga_uart_node.py parses the packets and publishes ROS 2 topics. Test with a loopback: short TX to RX on Tang Nano, verify packets parse correctly.</div>' +
+      '<span class="section-label">Exercise</span>' +
+      '<div class="exercise-box">Write a Python script that opens /dev/ttyAMA0 at 115200 baud and prints any received bytes as hex. Connect the Tang Nano UART TX to Pi RX. Verify the 0xFF frame marker arrives at the expected rate. Use scope or logic analyzer to verify 115200 baud timing.</div>' +
+      '<span class="section-label">Self-Check Q&amp;A</span>' +
+      '<div class="qa-list">' +
+      '<div class="qa-item"><div class="qa-question" onclick="this.parentElement.classList.toggle(\'open\')">Why is 0xFF used as a frame end marker rather than start?</div><div class="qa-answer">UART has no inherent framing — you can miss the start if you connect mid-stream. Using 0xFF as an end marker lets the parser scan backwards from the most recently received 0xFF. Since none of the data bytes should normally reach 0xFF (range max ~1000cm = 0x03E8, SNR max 100), the 0xFF is unambiguous.</div></div>' +
+      '<div class="qa-item"><div class="qa-question" onclick="this.parentElement.classList.toggle(\'open\')">Why XOR checksum and not CRC?</div><div class="qa-answer">XOR checksum is 1 byte and trivially computed in Verilog (just XOR all bytes). It detects single-bit errors in each bit position. CRC-8 would be stronger but requires more Verilog. For a 6-byte payload at ~20Hz update rate, XOR is sufficient — a corrupt packet is discarded and the next one (50ms later) will be used.</div></div>' +
+      '</div>' },
+
+    { id:'l_ros2_nodes', emoji:'', title:'ROS 2 Node Structure + QoS Policies', phase:'Phase 3 - ROS 2 & Integration', week:'W7', weekNum:7,
+      body:'<div class="tldr-box"><span class="tldr-label">TL;DR</span>Each ROS 2 node is an executor context. Sensor streams use BEST_EFFORT QoS (drop if slow). Commands use RELIABLE QoS (guaranteed delivery). Always set ROS_DOMAIN_ID consistently.</div>' +
+      '<span class="section-label">Theory</span>' +
+      '<p>A ROS 2 node is a unit of computation that publishes and subscribes to topics. The DDS middleware handles discovery and transport. QoS (Quality of Service) controls what happens when the subscriber cannot keep up with the publisher.</p>' +
+      '<p><strong>BEST_EFFORT:</strong> Publisher drops messages if subscriber is busy. Use for sensor streams (/imu/data, /acoustic/range_m) where newest data matters more than completeness. No retransmission overhead.</p>' +
+      '<p><strong>RELIABLE:</strong> Publisher retransmits until subscriber acknowledges. Use for commands (/cmd_vel, state transitions) where every message must arrive. Adds latency but guarantees delivery.</p>' +
+      '<p><strong>ROS_DOMAIN_ID:</strong> Nodes only communicate within the same domain. Set <code>export ROS_DOMAIN_ID=42</code> in every terminal and in /etc/environment on the Pi.</p>' +
+      '<span class="section-label">Code</span>' +
+      '<div class="code-wrap"><pre id="code_ros2">// ROS 2 Jazzy node template: acoustic_homing_node.py\nimport rclpy\nfrom rclpy.node import Node\nfrom rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy\nfrom std_msgs.msg import Float32\nfrom geometry_msgs.msg import Twist\n\nSENSOR_QOS = QoSProfile(\n  reliability=ReliabilityPolicy.BEST_EFFORT,\n  history=HistoryPolicy.KEEP_LAST, depth=5)\n\nCMD_QOS = QoSProfile(\n  reliability=ReliabilityPolicy.RELIABLE,\n  history=HistoryPolicy.KEEP_LAST, depth=10)\n\nclass AcousticHomingNode(Node):\n  def __init__(self):\n    super().__init__(\'acoustic_homing_node\')\n    self.range_sub = self.create_subscription(\n      Float32, \'/acoustic/range_m\', self.range_cb, SENSOR_QOS)\n    self.cmd_pub = self.create_publisher(Twist, \'/cmd_vel\', CMD_QOS)\n    self.state = \'SCANNING\'\n\n  def range_cb(self, msg):\n    if self.state == \'HOMING\':\n      error = msg.data - 0.4  # target: 0.4m\n      twist = Twist()\n      twist.linear.x = max(0.0, min(0.3, error * 0.5))  # P gain\n      self.cmd_pub.publish(twist)</pre><button class="copy-btn" onclick="copyCode(\'code_ros2\')">Copy</button></div>' +
+      '<span class="section-label">In Your Project</span>' +
+      '<div class="in-project">Create a ROS 2 workspace: mkdir -p ~/ros2_ws/src. Each subsystem gets a package: fpga_uart_node, acoustic_homing_node, mission_state_machine, collision_safety_node, motor_driver_node. Build with colcon build. Source ~/ros2_ws/install/setup.bash in every shell.</div>' +
+      '<span class="section-label">Exercise</span>' +
+      '<div class="exercise-box">Create a minimal ROS 2 package with two nodes: a publisher that sends Float32 on /test/value at 10Hz using BEST_EFFORT QoS, and a subscriber that prints the value. Verify with ros2 topic hz and ros2 topic echo. Then change the publisher to RELIABLE and observe that the subscriber still works but with different QoS negotiation logs.</div>' +
+      '<span class="section-label">Self-Check Q&amp;A</span>' +
+      '<div class="qa-list">' +
+      '<div class="qa-item"><div class="qa-question" onclick="this.parentElement.classList.toggle(\'open\')">What happens if publisher uses RELIABLE but subscriber uses BEST_EFFORT?</div><div class="qa-answer">ROS 2 DDS uses the weaker QoS when they differ. The communication degrades to BEST_EFFORT — messages may be dropped. Always match QoS between publishers and subscribers. Use ros2 topic info -v to inspect QoS settings.</div></div>' +
+      '<div class="qa-item"><div class="qa-question" onclick="this.parentElement.classList.toggle(\'open\')">Why set ROS_DOMAIN_ID and not just use default?</div><div class="qa-answer">The default domain ID is 0. If another ROS 2 robot or laptop is on the same network, their nodes will appear in your node graph and may publish conflicting /cmd_vel messages. A custom domain ID (e.g. 42) namespaces all your nodes to prevent cross-contamination.</div></div>' +
+      '</div>' },
+
+    { id:'l_ekf', emoji:'', title:'EKF Dead Reckoning (robot_localization)', phase:'Phase 3 - ROS 2 & Integration', week:'W7', weekNum:7,
+      body:'<div class="tldr-box"><span class="tldr-label">TL;DR</span>The robot_localization EKF fuses IMU + odometry to estimate position between sparse acoustic range updates. It outputs /odometry/filtered at 50Hz for the homing controller to use.</div>' +
+      '<span class="section-label">Theory</span>' +
+      '<p>An Extended Kalman Filter (EKF) is a recursive state estimator for nonlinear systems. It maintains a state estimate (x, y, heading, velocities) and a covariance matrix (uncertainty). Each sensor measurement reduces uncertainty; between measurements the model predicts forward (dead reckoning).</p>' +
+      '<p><strong>robot_localization package:</strong> A ROS 2 package that implements EKF/UKF. Configure via YAML: specify which sensor topics to fuse and which state dimensions they observe. For ASV: IMU measures angular velocity and linear acceleration; wheel odometry measures linear velocity. The EKF combines these to track 2D pose.</p>' +
+      '<p><strong>Acoustic updates:</strong> Your acoustic range gives range but not bearing (V1 is range-only). Use range as a constraint: if acoustic range is decreasing, the vehicle is moving toward the buoy. The EKF provides dead reckoning between acoustic pings (every ~100ms).</p>' +
+      '<span class="section-label">Code</span>' +
+      '<div class="code-wrap"><pre id="code_ekf"># ekf.yaml — robot_localization config for ASV\nekf_filter_node:\n  ros__parameters:\n    frequency: 50.0       # Hz, filter output rate\n    sensor_timeout: 0.1   # seconds before sensor considered stale\n    two_d_mode: true      # constrain to 2D (pool surface)\n    odom_frame: odom\n    base_link_frame: base_link\n    world_frame: odom\n\n    # IMU: observe angular velocity (yaw rate) + linear accel\n    imu0: /imu/data\n    imu0_config: [false, false, false,   # x,y,z position\n                  false, false, false,   # roll,pitch,yaw\n                  false, false, false,   # vx,vy,vz\n                  false, false, true,    # vroll,vpitch,vyaw  &lt;-- use yaw rate\n                  true,  true,  false]   # ax,ay,az  &lt;-- use accel\n    imu0_differential: false\n\n    # Wheel odometry: observe forward velocity\n    odom0: /wheel/velocity\n    odom0_config: [false, false, false,\n                   false, false, false,\n                   true,  false, false,   # vx only\n                   false, false, false,\n                   false, false, false]</pre><button class="copy-btn" onclick="copyCode(\'code_ekf\')">Copy</button></div>' +
+      '<span class="section-label">In Your Project</span>' +
+      '<div class="in-project">Install robot_localization: sudo apt install ros-jazzy-robot-localization. Create config/ekf.yaml in your package. Launch with ekf_node --ros-args --params-file ekf.yaml. Verify /odometry/filtered appears and heading updates when you rotate the vehicle manually.</div>' +
+      '<span class="section-label">Exercise</span>' +
+      '<div class="exercise-box">Set up the EKF with only the MPU-6050 IMU. Publish synthetic /wheel/velocity = 0 (stationary). Observe that /odometry/filtered stays at origin with slowly growing covariance (position uncertainty grows without wheel odometry). Then add wheel odometry and see position tracking improve.</div>' +
+      '<span class="section-label">Self-Check Q&amp;A</span>' +
+      '<div class="qa-list">' +
+      '<div class="qa-item"><div class="qa-question" onclick="this.parentElement.classList.toggle(\'open\')">Why does the EKF covariance grow without sensor updates?</div><div class="qa-answer">The process noise model adds uncertainty each prediction step — this models the fact that dead reckoning accumulates drift. Without a measurement to correct against, the filter honestly admits increasing uncertainty. This is correct behavior — your homing controller should weight acoustic range corrections more when covariance is large.</div></div>' +
+      '<div class="qa-item"><div class="qa-question" onclick="this.parentElement.classList.toggle(\'open\')">Why is nav2 wrong for this project?</div><div class="qa-answer">nav2 requires a map (occupancy grid or costmap) and a navigation goal in global coordinates. Your vehicle uses range-only acoustic homing — it does not have a map, does not know its absolute position, and navigates purely by decreasing acoustic range. Custom state machine is the correct architecture.</div></div>' +
+      '</div>' },
+
+    { id:'l_pid', emoji:'', title:'PID Homing Controller', phase:'Phase 3 - ROS 2 & Integration', week:'W7', weekNum:7,
+      body:'<div class="tldr-box"><span class="tldr-label">TL;DR</span>PID on acoustic range error drives differential thrust. P gain: move forward proportional to range. D gain: damp oscillation. I gain: zero steady-state error. Clamp output to L298N PWM limits.</div>' +
+      '<span class="section-label">Theory</span>' +
+      '<p>A PID controller computes: u(t) = Kp*e(t) + Ki*integral(e) + Kd*d(e)/dt where e(t) = range_measured - range_target (target = 0.4m). For homing, the control output u drives the forward thrust of both motors equally. Differential thrust is used for scanning rotation.</p>' +
+      '<p><strong>Tuning strategy:</strong> Start with Kp only (Ki=Kd=0). Increase Kp until the vehicle oscillates around the target. Set Kd = Kp/10 to damp oscillations. Add small Ki only if there is persistent steady-state error. For pool testing, typical values: Kp=0.3, Ki=0.01, Kd=0.05.</p>' +
+      '<p><strong>Anti-windup:</strong> Clamp the integrator when the output is saturated (at max PWM). Without anti-windup, the integrator winds up to a huge value during approach and causes massive overshoot.</p>' +
+      '<span class="section-label">Code</span>' +
+      '<div class="code-wrap"><pre id="code_pid">// PID homing controller in Python ROS 2 node\nclass PidController:\n  def __init__(self, kp, ki, kd, output_max):\n    self.kp, self.ki, self.kd = kp, ki, kd\n    self.output_max = output_max\n    self.integral = 0.0\n    self.prev_error = 0.0\n\n  def compute(self, error, dt):\n    self.integral += error * dt\n    # Anti-windup clamp\n    self.integral = max(-self.output_max/self.ki,\n                       min(self.output_max/self.ki, self.integral))\n    derivative = (error - self.prev_error) / dt if dt > 0 else 0\n    self.prev_error = error\n    output = self.kp*error + self.ki*self.integral + self.kd*derivative\n    return max(-self.output_max, min(self.output_max, output))\n\n# In acoustic_homing_node range callback:\npid = PidController(kp=0.3, ki=0.01, kd=0.05, output_max=0.5)\n\ndef range_cb(msg):\n  target = 0.4  # meters\n  error  = msg.data - target\n  thrust = pid.compute(error, dt=0.05)  # 20Hz acoustic rate\n  twist = Twist()\n  twist.linear.x = max(0.0, thrust)  # only forward thrust\n  cmd_pub.publish(twist)</pre><button class="copy-btn" onclick="copyCode(\'code_pid\')">Copy</button></div>' +
+      '<span class="section-label">In Your Project</span>' +
+      '<div class="in-project">Start PID tuning in simulation (Python script with simulated range). Then test in air on the bench: hold the transducer at various distances and verify thrust direction is correct. Final pool tuning: start with Kp=0.1, increase until the vehicle actually moves toward the buoy.</div>' +
+      '<span class="section-label">Exercise</span>' +
+      '<div class="exercise-box">Write a Python simulation: simulate the vehicle as a 1D mass (position, velocity). Apply thrust from the PID controller each 50ms step. Simulate acoustic range measurement with 5cm noise. Plot position vs time for Kp=0.1, 0.3, 0.5. Identify where oscillation starts.</div>' +
+      '<span class="section-label">Self-Check Q&amp;A</span>' +
+      '<div class="qa-list">' +
+      '<div class="qa-item"><div class="qa-question" onclick="this.parentElement.classList.toggle(\'open\')">Why only forward thrust in the homing controller?</div><div class="qa-answer">You only have range — no bearing. You do not know which direction the buoy is. During HOMING state the scanning phase has already oriented the vehicle toward the buoy. Forward thrust decreases range. The EKF heading provides dead reckoning to keep the vehicle pointed in approximately the right direction.</div></div>' +
+      '<div class="qa-item"><div class="qa-question" onclick="this.parentElement.classList.toggle(\'open\')">What causes integrator windup and how does anti-windup fix it?</div><div class="qa-answer">During long approach, error is large and positive for many seconds. The integrator accumulates a huge value. When range finally gets small, the integral term still drives full forward thrust even though error is now near zero — causing overshoot past the target. Anti-windup clamps the integral so it cannot exceed output_max/ki.</div></div>' +
+      '</div>' },
+
+    { id:'l_statemachine', emoji:'', title:'Mission State Machine', phase:'Phase 3 - ROS 2 & Integration', week:'W8', weekNum:8,
+      body:'<div class="tldr-box"><span class="tldr-label">TL;DR</span>7 states: INIT → SCAN_1 → HOMING_1 → ARRIVED_1 → SCAN_2 → HOMING_2 → ARRIVED_2. State transitions driven by acoustic SNR threshold, range threshold, and timer conditions.</div>' +
+      '<span class="section-label">Theory</span>' +
+      '<p>The mission state machine orchestrates the entire homing sequence. It is a separate ROS 2 node that subscribes to acoustic range+SNR and odometry, and publishes state updates that the homing controller and motor driver respond to.</p>' +
+      '<p><strong>State transitions:</strong></p>' +
+      '<p>INIT → SCAN_1: on startup, begin rotating 360 degrees | SCAN_1 → HOMING_1: SNR > SCAN_THRESH for 3 consecutive readings | HOMING_1 → ARRIVED_1: range_m < 0.4m for 3 consecutive readings | ARRIVED_1 → SCAN_2: immediately | SCAN_2 → HOMING_2: same as above for Buoy 2 | HOMING_2 → ARRIVED_2: mission complete</p>' +
+      '<p><strong>Safety:</strong> Any state → ESTOP if /collision/range_cm < 25. The collision_safety_node handles this as an override on /cmd_vel rather than a state transition.</p>' +
+      '<span class="section-label">Code</span>' +
+      '<div class="code-wrap"><pre id="code_sm">// mission_state_machine.py\nfrom enum import IntEnum, auto\n\nclass State(IntEnum):\n  INIT      = auto()\n  SCAN_1    = auto()\n  HOMING_1  = auto()\n  ARRIVED_1 = auto()\n  SCAN_2    = auto()\n  HOMING_2  = auto()\n  ARRIVED_2 = auto()\n\nSCAN_THRESH   = 50    # SNR threshold to lock on buoy\nARRIVED_DIST  = 0.4  # meters\nCONSEC_NEEDED = 3\n\nstate = State.INIT\nconsec_count = 0\ntarget_buoy  = 1  # active buoy ID\n\ndef update(range_m, snr, target_id):\n  global state, consec_count, target_buoy\n\n  if state == State.INIT:\n    state = State.SCAN_1; target_buoy = 1\n\n  elif state == State.SCAN_1:\n    if target_id == 1 and snr > SCAN_THRESH:\n      consec_count += 1\n      if consec_count >= CONSEC_NEEDED:\n        state = State.HOMING_1; consec_count = 0\n    else: consec_count = 0\n\n  elif state == State.HOMING_1:\n    if range_m < ARRIVED_DIST:\n      consec_count += 1\n      if consec_count >= CONSEC_NEEDED:\n        state = State.ARRIVED_1; consec_count = 0\n    else: consec_count = 0\n\n  elif state == State.ARRIVED_1:\n    state = State.SCAN_2; target_buoy = 2  # switch to Buoy 2</pre><button class="copy-btn" onclick="copyCode(\'code_sm\')">Copy</button></div>' +
+      '<span class="section-label">In Your Project</span>' +
+      '<div class="in-project">The state machine node publishes a custom /mission/state String message. The homing controller subscribes and only activates PID when state is HOMING_1 or HOMING_2. The UART node filters packets by target_buoy ID. Log every state transition with timestamp for post-mission analysis.</div>' +
+      '<span class="section-label">Exercise</span>' +
+      '<div class="exercise-box">Write a unit test (pure Python, no ROS) for the state machine logic. Feed a sequence of (range_m, snr, target_id) tuples. Verify transitions happen at correct times. Test edge cases: SNR dips below threshold during SCANNING (consec_count should reset). Test that 3 consecutive ARRIVED readings (not just 1) are required before transitioning.</div>' +
+      '<span class="section-label">Self-Check Q&amp;A</span>' +
+      '<div class="qa-list">' +
+      '<div class="qa-item"><div class="qa-question" onclick="this.parentElement.classList.toggle(\'open\')">Why require 3 consecutive readings for transitions?</div><div class="qa-answer">Acoustic signals can be momentarily noisy — a single above-threshold SNR reading could be a false echo or interference. Requiring 3 consecutive readings (~150ms at 20Hz) ensures the detection is real and stable before committing to a state change. Same logic applies to ARRIVED: range noise could briefly drop below 0.4m.</div></div>' +
+      '<div class="qa-item"><div class="qa-question" onclick="this.parentElement.classList.toggle(\'open\')">What happens if the vehicle loses acoustic lock during HOMING?</div><div class="qa-answer">The acoustic range topic stops publishing valid readings. The homing node should detect staleness (last message >200ms ago) and command the vehicle to stop or rotate slowly to re-acquire. Add a timeout transition: HOMING → SCAN if no valid range for 5 seconds.</div></div>' +
+      '</div>' },
+
+    { id:'l_collision', emoji:'', title:'ROS 2 Safety — Collision Avoidance Node', phase:'Phase 3 - ROS 2 & Integration', week:'W8', weekNum:8,
+      body:'<div class="tldr-box"><span class="tldr-label">TL;DR</span>collision_safety_node subscribes to /collision/range_cm from the JSN-SR04T. If range < 25cm it publishes a zero-velocity Twist override on /cmd_vel at the highest priority. Hard ESTOP — overrides everything.</div>' +
+      '<span class="section-label">Theory</span>' +
+      '<p>Safety in ROS 2 is implemented as a separate node that sits between the homing controller and the motor driver. It subscribes to both the homing node\'s cmd_vel and the ultrasonic range. When an obstacle is detected, it publishes a stop command on /cmd_vel, overriding the homing command.</p>' +
+      '<p><strong>Override pattern:</strong> Use a multiplexer node (mux) that takes multiple /cmd_vel sources and a priority selector. Alternatively, the collision_safety_node can remap: homing_node publishes to /cmd_vel/request, safety_node subscribes to both and republishes to /cmd_vel. When safe: pass through. When unsafe: publish zero.</p>' +
+      '<p><strong>JSN-SR04T:</strong> Waterproof ultrasonic sensor. Trigger pulse &gt;10us on TRIG pin → measure pulse width on ECHO pin. Pulse width (us) × 0.034 / 2 = distance in cm. At 10Hz update rate, the collision node has ~100ms response time.</p>' +
+      '<span class="section-label">Code</span>' +
+      '<div class="code-wrap"><pre id="code_safety">// collision_safety_node.py — hard ESTOP override\nfrom rclpy.node import Node\nfrom std_msgs.msg import Float32\nfrom geometry_msgs.msg import Twist\n\nESTOP_DIST_CM = 25.0  # trigger threshold\n\nclass CollisionSafetyNode(Node):\n  def __init__(self):\n    super().__init__(\'collision_safety_node\')\n    self.estop = False\n    self.collision_sub = self.create_subscription(\n      Float32, \'/collision/range_cm\', self.collision_cb,\n      qos_profile=10)\n    self.homing_sub = self.create_subscription(\n      Twist, \'/cmd_vel/request\', self.cmd_cb, qos_profile=10)\n    self.cmd_pub = self.create_publisher(Twist, \'/cmd_vel\', 10)\n    self.create_timer(0.1, self.safety_heartbeat)\n\n  def collision_cb(self, msg):\n    self.estop = msg.data < ESTOP_DIST_CM\n    if self.estop:\n      self.get_logger().warn(f\'ESTOP: obstacle {msg.data:.0f}cm\')\n      self.cmd_pub.publish(Twist())  # immediate zero velocity\n\n  def cmd_cb(self, msg):\n    if not self.estop:\n      self.cmd_pub.publish(msg)  # pass through when safe\n\n  def safety_heartbeat(self):\n    if self.estop:\n      self.cmd_pub.publish(Twist())  # keep sending zero at 10Hz</pre><button class="copy-btn" onclick="copyCode(\'code_safety\')">Copy</button></div>' +
+      '<span class="section-label">In Your Project</span>' +
+      '<div class="in-project">Change all nodes that send movement commands to publish on /cmd_vel/request instead of /cmd_vel. Only collision_safety_node publishes to /cmd_vel. This means safety is a physical layer — the motor driver only sees safe commands. Test by bringing your hand within 25cm of the JSN-SR04T and verifying the vehicle would stop.</div>' +
+      '<span class="section-label">Exercise</span>' +
+      '<div class="exercise-box">Wire the JSN-SR04T to the ESP32 (TRIG to GPIO27, ECHO to GPIO26). Write an Arduino sketch that measures distance and publishes /collision/range_cm as a micro-ROS Float32. Verify readings with ros2 topic echo /collision/range_cm. Test that collision_safety_node stops the vehicle when you block the sensor at under 25cm.</div>' +
+      '<span class="section-label">Self-Check Q&amp;A</span>' +
+      '<div class="qa-list">' +
+      '<div class="qa-item"><div class="qa-question" onclick="this.parentElement.classList.toggle(\'open\')">Why is the safety heartbeat needed at 10Hz?</div><div class="qa-answer">If the collision_safety_node only published once on detection, the motor driver might timeout and resume motion. The heartbeat keeps sending Twist() (zero velocity) at 10Hz while ESTOP is active, ensuring the motor driver continuously sees stop commands. Without it, a motor watchdog timeout could restart motion mid-obstacle.</div></div>' +
+      '<div class="qa-item"><div class="qa-question" onclick="this.parentElement.classList.toggle(\'open\')">What is the maximum reaction distance at full thrust?</div><div class="qa-answer">Reaction chain: JSN-SR04T measures at 10Hz (100ms) → ESP32 micro-ROS publish (~1ms) → collision_safety_node callback (~2ms) → /cmd_vel zero → motor driver receives (~2ms) → motor decelerates (~50-200ms mechanical). Total: ~300ms. At max speed ~0.3m/s: 300ms × 0.3m/s = 9cm travel before stop. Set ESTOP threshold to 25cm for a safe margin.</div></div>' +
+      '</div>' },
+  ],
+  logs: []
+};
+
+var DEFAULT_AUDITS = [];
+
+// ================================================================
+// STATE
+// ================================================================
+var state = loadState();
+var audits = loadAudits();
+
+function loadState() {
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return deepClone(DEFAULT_STATE);
+    var parsed = JSON.parse(raw);
+    if (!parsed.config) parsed.config = deepClone(DEFAULT_STATE.config);
+    if (!parsed.config.weekStatuses) parsed.config.weekStatuses = {};
+    if (!parsed.config.projectStatus) parsed.config.projectStatus = { technical:'YELLOW', cost:'GREEN', career:'GREEN' };
+    if (!parsed.tasks) parsed.tasks = [];
+    if (!parsed.parts) parsed.parts = [];
+    if (!parsed.learning) parsed.learning = [];
+    if (!parsed.logs) parsed.logs = [];
+    // Migration: merge in any default concepts not already present (by id)
+    var existingIds = parsed.learning.map(function(c) { return c.id; });
+    DEFAULT_STATE.learning.forEach(function(dc) {
+      if (existingIds.indexOf(dc.id) === -1) {
+        parsed.learning.push(deepClone(dc));
+      } else {
+        // Update body of existing default concept (in case it was upgraded)
+        var idx = parsed.learning.findIndex(function(c) { return c.id === dc.id; });
+        if (idx >= 0 && parsed.learning[idx].body && parsed.learning[idx].body.indexOf('tldr-box') === -1) {
+          // Old format body — replace with rich version
+          parsed.learning[idx] = deepClone(dc);
+        }
+      }
+    });
+    return parsed;
+  } catch(e) { return deepClone(DEFAULT_STATE); }
+}
+
+function loadAudits() {
+  try {
+    var raw = localStorage.getItem(AUDITS_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw);
+  } catch(e) { return []; }
+}
+
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  catch(e) { toast('Storage full — export data', 'red'); }
+}
+
+function saveAudits() {
+  try { localStorage.setItem(AUDITS_KEY, JSON.stringify(audits)); }
+  catch(e) { toast('Storage full', 'red'); }
+}
+
+function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
+
+function uid(prefix) {
+  return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+}
+
+// ================================================================
+// DATE UTILS
+// ================================================================
+function todayISO() {
+  var d = new Date();
+  var y = d.getFullYear();
+  var m = String(d.getMonth()+1).padStart(2,'0');
+  var day = String(d.getDate()).padStart(2,'0');
+  return y + '-' + m + '-' + day;
+}
+
+function daysBetween(startISO, endISO) {
+  var sp = startISO.split('-').map(Number);
+  var ep = endISO.split('-').map(Number);
+  return Math.floor((Date.UTC(ep[0],ep[1]-1,ep[2]) - Date.UTC(sp[0],sp[1]-1,sp[2])) / 86400000);
+}
+
+function getCurrentWeek() {
+  if (state.config.weekOverride) return Number(state.config.weekOverride);
+  var days = daysBetween(state.config.startDate, todayISO());
+  return Math.max(1, Math.min(11, Math.floor(days/7)+1));
+}
+
+function daysToDeadline() { return daysBetween(todayISO(), state.config.deadline); }
+
+function fmtDateRange(s, e) {
+  var opts = { month:'short', day:'numeric' };
+  var sd = new Date(s + 'T12:00:00').toLocaleDateString('en-US', opts);
+  var ed = new Date(e + 'T12:00:00').toLocaleDateString('en-US', opts);
+  return sd + ' - ' + ed;
+}
+
+function escapeHTML(s) {
+  if (s == null) return '';
+  return String(s).replace(/[&<>"']/g, function(c) {
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+// ================================================================
+// RENDER ALL
+// ================================================================
+function renderAll() {
+  renderHeader();
+  renderToday();
+  renderTasks();
+  renderTimeline();
+  renderLearning();
+  renderParts();
+  renderLogs();
+  renderAudits();
+  updateTabCounts();
+}
+
+// ================================================================
+// HEADER
+// ================================================================
+function renderHeader() {
+  var wk = getCurrentWeek();
+  var dl = daysToDeadline();
+  var dlText = dl > 0 ? '· ' + dl + 'd to demo' : (dl === 0 ? '· DEMO DAY' : '· past deadline');
+  document.getElementById('weekBadge').innerHTML =
+    'W<span class="w-num">' + wk + '</span>/11 <span class="deadline">' + dlText + '</span>';
+}
+
+// ================================================================
+// TODAY PANEL
+// ================================================================
+function getDayOfWeek() {
+  // Returns day number (1-7) within current project week
+  var days = daysBetween(state.config.startDate, todayISO());
+  var dayInWeek = (days % 7) + 1;
+  return Math.max(1, Math.min(7, dayInWeek));
+}
+
+function fmtTodayLong() {
+  var d = new Date(todayISO() + 'T12:00:00');
+  return d.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+}
+
+function renderToday() {
+  var wk = getCurrentWeek();
+  var dayNum = getDayOfWeek();
+  var dl = daysToDeadline();
+  var ps = state.config.projectStatus;
+
+  // Dateline
+  var dl_el = document.getElementById('todayDateline');
+  if (dl_el) {
+    dl_el.textContent = 'Week ' + wk + ' Day ' + dayNum + '  ·  ' + fmtTodayLong() + '  ·  ' + dl + ' days to August 10';
+  }
+
+  // Quick stats row
+  var allVisible = state.tasks.filter(function(t) { return t.week === 'carryover' || t.week === wk; });
+  var doneCnt = allVisible.filter(function(t) { return t.done; }).length;
+  var totalCnt = allVisible.length;
+  var pendingParts = state.parts.filter(function(p) { return p.status === 'pending'; }).length;
+  var sr = document.getElementById('todayStatsRow');
+  if (sr) {
+    sr.innerHTML =
+      '<div class="today-stat"><div class="today-stat-num">' + doneCnt + '/' + totalCnt + '</div><div class="today-stat-label">Tasks Done</div></div>' +
+      '<div class="today-stat"><div class="today-stat-num" style="color:var(--danger)">' + pendingParts + '</div><div class="today-stat-label">Parts Pending</div></div>' +
+      '<div class="today-stat"><div class="today-stat-num" style="color:var(--warn)">' + wk + '/11</div><div class="today-stat-label">Week</div></div>' +
+      '<div class="today-stat"><div class="today-stat-num" style="color:var(--danger)">' + dl + '</div><div class="today-stat-label">Days Left</div></div>';
+  }
+
+  // Status lights
+  var slData = [
+    { key:'technical', label:'Technical', icon:statusIcon(ps.technical) },
+    { key:'cost',      label:'Cost',      icon:statusIcon(ps.cost) },
+    { key:'career',    label:'Career',    icon:statusIcon(ps.career) }
+  ];
+  var grid = document.getElementById('statusGrid');
+  grid.innerHTML = slData.map(function(d) {
+    var v = ps[d.key] || 'YELLOW';
+    var cls = v === 'GREEN' ? 'sl-green' : v === 'RED' ? 'sl-red' : 'sl-yellow';
+    return '<div class="status-light ' + cls + '" onclick="openStatusEditor()">' +
+      '<div class="sl-icon">' + d.icon + '</div>' +
+      '<span class="sl-label">' + d.label + '</span>' +
+      '<div class="sl-val">' + v + '</div>' +
+      '</div>';
+  }).join('');
+
+  // Countdown
+  var cr = document.getElementById('countdownRow');
+  cr.innerHTML =
+    '<div class="countdown-cell"><div class="cc-num" style="color:var(--danger)">' + dl + '</div><div class="cc-label">Days Left</div></div>' +
+    '<div class="countdown-cell"><div class="cc-num">' + wk + '</div><div class="cc-label">Week Now</div></div>' +
+    '<div class="countdown-cell"><div class="cc-num" style="color:var(--muted2)">' + (11-wk) + '</div><div class="cc-label">Wks Left</div></div>';
+
+  // Week info
+  var tw = TIMELINE.find(function(t) { return t.w === wk; });
+  var wi = document.getElementById('todayWeekInfo');
+  if (tw) {
+    wi.innerHTML =
+      '<div style="font-size:14px;font-weight:600;margin-bottom:4px">' + escapeHTML(tw.title) + '</div>' +
+      '<div style="font-family:var(--mono);font-size:11px;color:var(--muted2);margin-bottom:8px">' + fmtDateRange(tw.start, tw.end) + '</div>' +
+      '<div style="font-size:12px;color:var(--muted2);line-height:1.5">' + escapeHTML(tw.milestone) + '</div>';
+  }
+
+  // Concept of the Day: first unlearned concept from current or nearby week
+  var cotd_el = document.getElementById('todayCotd');
+  if (cotd_el) {
+    var learnedIds = state.learnedConcepts || [];
+    var cotd = state.learning.filter(function(c) {
+      return learnedIds.indexOf(c.id) === -1 && (c.weekNum === wk || c.weekNum === wk-1 || c.weekNum === wk+1);
+    })[0];
+    if (!cotd) cotd = state.learning.filter(function(c) { return learnedIds.indexOf(c.id) === -1; })[0];
+    if (cotd) {
+      cotd_el.innerHTML = '<div class="cotd-card">' +
+        '<div class="cotd-label">Concept of the Day</div>' +
+        '<div class="cotd-title">' + escapeHTML(cotd.title) + '</div>' +
+        '<div class="cotd-week">' + escapeHTML(cotd.week||'') + '</div>' +
+        '<div style="display:flex;gap:8px">' +
+        '<button class="mini-btn" style="flex:1" onclick="switchTab(\'learning\',document.querySelector(\'[data-tab=learning]\')); setTimeout(function(){toggleConcept(\'' + cotd.id + '\')},100)">Study Now</button>' +
+        '<button class="mini-btn" onclick="markConceptLearned(\'' + cotd.id + '\')">Mark Learned</button>' +
+        '</div></div>';
+    } else {
+      cotd_el.innerHTML = '<div class="cotd-card"><div class="cotd-label">Concept of the Day</div><div class="cotd-title" style="color:var(--accent2)">All current concepts marked as learned!</div></div>';
+    }
+  }
+
+  // Top 3 priority tasks with one-tap checkboxes
+  var top3 = state.tasks.filter(function(t) {
+    return t.priority && !t.done && (t.week === 'carryover' || t.week === wk);
+  }).slice(0,3);
+  var tt_el = document.getElementById('todayTopTasks');
+  if (tt_el) {
+    if (top3.length > 0) {
+      tt_el.innerHTML = '<div class="card"><div class="card-title">Top Priority Tasks</div>' +
+        top3.map(function(t) {
+          return '<div class="today-task-row priority' + (t.done?' done':'') + '" id="today-task-' + t.id + '">' +
+            '<div class="today-task-check" onclick="toggleTask(\'' + t.id + '\')">' +
+            '<svg width="10" height="8" viewBox="0 0 10 8"><polyline points="1,4 4,7 9,1" fill="none" stroke="#080B12" stroke-width="2" stroke-linecap="round"/></svg>' +
+            '</div>' +
+            '<div class="today-task-text">' + escapeHTML(t.text.slice(0,100) + (t.text.length>100?'...':'')) + '</div>' +
+            (t.tag ? '<span class="task-tag tag-' + (t.tagColor||'red') + '">' + escapeHTML(t.tag) + '</span>' : '') +
+            '</div>';
+        }).join('') +
+        '</div>';
+    } else {
+      tt_el.innerHTML = '';
+    }
+  }
+
+  // Focus banner
+  var focus = state.tasks.filter(function(t) { return t.priority && !t.done && (t.week === 'carryover' || t.week === wk); });
+  var fb = document.getElementById('todayFocusBanner');
+  if (focus.length > 0) {
+    fb.innerHTML = '<div class="reminder-banner"><strong>CRITICAL PATH — FPGA WEEKS 3-6</strong><br>Write .cst timing constraints immediately to unblock all downstream synthesis work.</div>';
+  } else {
+    fb.innerHTML = '<div class="reminder-banner" style="border-color:rgba(34,197,94,0.3);background:rgba(34,197,94,0.05)"><strong style="color:var(--accent2)">All priority tasks done for this week.</strong></div>';
+  }
+}
+
+function markConceptLearned(id) {
+  if (!state.learnedConcepts) state.learnedConcepts = [];
+  if (state.learnedConcepts.indexOf(id) === -1) state.learnedConcepts.push(id);
+  saveState(); renderToday();
+  toast('Marked as learned', 'green');
+}
+
+function statusIcon(v) {
+  if (v === 'GREEN') return '<svg width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="rgba(34,197,94,0.2)" stroke="#22c55e" stroke-width="1.5"/><circle cx="10" cy="10" r="5" fill="#22c55e"/></svg>';
+  if (v === 'RED')   return '<svg width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="rgba(239,68,68,0.2)" stroke="#ef4444" stroke-width="1.5"/><circle cx="10" cy="10" r="5" fill="#ef4444"/></svg>';
+  return '<svg width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="rgba(234,179,8,0.2)" stroke="#eab308" stroke-width="1.5"/><circle cx="10" cy="10" r="5" fill="#eab308"/></svg>';
+}
+
+// ================================================================
+// TASKS
+// ================================================================
+function renderTasks() {
+  var wk = getCurrentWeek();
+  var tw = TIMELINE.find(function(t) { return t.w === wk; });
+  document.getElementById('weekTitle').textContent = 'Week ' + wk + ' Progress' + (tw ? ' · ' + tw.title : '');
+
+  var visible = state.tasks.filter(function(t) { return t.week === 'carryover' || t.week === wk; });
+  var groups = {};
+  visible.forEach(function(t) {
+    var g = t.group || 'Tasks';
+    if (!groups[g]) groups[g] = [];
+    groups[g].push(t);
+  });
+
+  var groupOrder = Object.keys(groups).sort(function(a,b) {
+    var aP = groups[a].some(function(t) { return t.priority && !t.done; });
+    var bP = groups[b].some(function(t) { return t.priority && !t.done; });
+    if (aP !== bP) return aP ? -1 : 1;
+    return a.localeCompare(b);
+  });
+
+  var container = document.getElementById('taskGroups');
+  if (visible.length === 0) {
+    container.innerHTML = '<div class="empty-state">No tasks for this week. Tap + Add Task.</div>';
+  } else {
+    container.innerHTML = groupOrder.map(function(gName) {
+      var sorted = groups[gName].slice().sort(function(a,b) {
+        return (Number(b.priority||0) - Number(a.priority||0)) + (Number(a.done) - Number(b.done))*2;
+      });
+      return '<div class="task-group">' +
+        '<div class="task-group-label">' + escapeHTML(gName) + '</div>' +
+        sorted.map(function(t) {
+          return '<div class="task-item' + (t.done?' done':'') + (t.priority?' priority':'') + '" id="task-' + t.id + '">' +
+            '<div class="task-check" onclick="toggleTask(\'' + t.id + '\')">' +
+            '<svg width="10" height="8" viewBox="0 0 10 8"><polyline points="1,4 4,7 9,1" fill="none" stroke="#080B12" stroke-width="2" stroke-linecap="round"/></svg>' +
+            '</div>' +
+            '<div class="task-text" onclick="toggleTask(\'' + t.id + '\')">' + escapeHTML(t.text) + '</div>' +
+            (t.tag ? '<span class="task-tag tag-' + (t.tagColor||'blue') + '">' + escapeHTML(t.tag) + '</span>' : '') +
+            '<button class="kebab" onclick="openTaskEditor(\'' + t.id + '\')" aria-label="Edit">...</button>' +
+            '</div>';
+        }).join('') +
+        '</div>';
+    }).join('');
+  }
+
+  var done = visible.filter(function(t) { return t.done; }).length;
+  var total = visible.length;
+  var pct = total ? Math.round((done/total)*100) : 0;
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressDone').textContent = done + ' / ' + total + ' done';
+  document.getElementById('progressPct').textContent = pct + '%';
+}
+
+// ================================================================
+// TIMELINE
+// ================================================================
+function renderTimeline() {
+  var wk = getCurrentWeek();
+  var c = document.getElementById('timelineContainer');
+  c.innerHTML = TIMELINE.map(function(t) {
+    var isPast = t.w < wk;
+    var isCurrent = t.w === wk;
+    var status = state.config.weekStatuses[t.w] || (isPast ? 'green' : isCurrent ? 'yellow' : 'grey');
+    return '<div class="timeline-week' + (isCurrent?' current':'') + (isPast?' past':'') + '">' +
+      '<div class="week-num">W' + t.w + '</div>' +
+      '<div class="week-info">' +
+      '<div class="week-title">' + escapeHTML(t.title) + '</div>' +
+      '<div class="week-dates">' + fmtDateRange(t.start, t.end) + '</div>' +
+      '<div class="week-milestone">' + escapeHTML(t.milestone) + '</div>' +
+      '</div>' +
+      '<div class="week-status status-' + status + '" onclick="cycleWeekStatus(' + t.w + ')" title="Tap to cycle status"></div>' +
+      '</div>';
+  }).join('');
+}
+
+function cycleWeekStatus(w) {
+  var cycle = ['grey','yellow','green','red'];
+  var cur = state.config.weekStatuses[w] || 'grey';
+  state.config.weekStatuses[w] = cycle[(cycle.indexOf(cur)+1) % cycle.length];
+  saveState(); renderTimeline();
+}
+
+// ================================================================
+// LEARNING
+// ================================================================
+var learningWeekFilter = 'all';
+
+function renderLearningFilterPills() {
+  var weeks = ['all'];
+  state.learning.forEach(function(c) {
+    if (c.weekNum && weeks.indexOf('W'+c.weekNum) === -1) weeks.push('W'+c.weekNum);
+  });
+  weeks.sort(function(a,b) {
+    if (a === 'all') return -1;
+    if (b === 'all') return 1;
+    return parseInt(a.slice(1)) - parseInt(b.slice(1));
+  });
+  var el = document.getElementById('learningFilterPills');
+  if (!el) return;
+  el.innerHTML = weeks.map(function(w) {
+    var label = w === 'all' ? 'All' : w;
+    return '<button class="filter-pill' + (learningWeekFilter === w ? ' active' : '') +
+      '" onclick="setLearningFilter(\'' + w + '\')">' + label + '</button>';
+  }).join('');
+}
+
+function setLearningFilter(w) {
+  learningWeekFilter = w;
+  renderLearningFilterPills();
+  renderLearning();
+}
+
+function renderLearning() {
+  renderLearningFilterPills();
+  var visible = state.learning.filter(function(c) {
+    if (learningWeekFilter === 'all') return true;
+    var wn = parseInt(learningWeekFilter.slice(1));
+    return c.weekNum === wn;
+  });
+  var phases = {};
+  visible.forEach(function(c) {
+    var p = c.phase || 'Other';
+    if (!phases[p]) phases[p] = [];
+    phases[p].push(c);
+  });
+  var phaseOrder = Object.keys(phases).sort();
+  var container = document.getElementById('learningContainer');
+  if (state.learning.length === 0) {
+    container.innerHTML = '<div class="empty-state">No concepts yet. Tap + Add Concept.</div>';
+    return;
+  }
+  if (visible.length === 0) {
+    container.innerHTML = '<div class="empty-state">No concepts for this week filter.</div>';
+    return;
+  }
+  container.innerHTML = phaseOrder.map(function(p) {
+    return '<div class="phase-divider">' + escapeHTML(p) + '</div>' +
+      phases[p].map(function(c) {
+        return '<div class="concept-card" id="concept-' + c.id + '">' +
+          '<div class="concept-header" onclick="toggleConcept(\'' + c.id + '\')">' +
+          '<div class="concept-info">' +
+          '<div class="concept-title">' + escapeHTML(c.title) + '</div>' +
+          '<div class="concept-week">' + escapeHTML(c.week||'') + '</div>' +
+          '</div>' +
+          '<span class="concept-arrow">&#8250;</span>' +
+          '</div>' +
+          '<div class="concept-body">' + (c.body||'') +
+          '<div class="concept-actions">' +
+          '<button class="mini-btn" onclick="event.stopPropagation();openConceptEditor(\'' + c.id + '\')">Edit</button>' +
+          '<button class="mini-btn danger" onclick="event.stopPropagation();deleteConcept(\'' + c.id + '\')">Delete</button>' +
+          '</div></div></div>';
+      }).join('');
+  }).join('');
+}
+
+function toggleConcept(id) {
+  var el = document.getElementById('concept-' + id);
+  if (el) el.classList.toggle('open');
+}
+
+function copyCode(preId) {
+  var pre = document.getElementById(preId);
+  if (!pre) return;
+  var text = pre.textContent || pre.innerText;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(function() { toast('Code copied', 'green'); }).catch(function() { fallbackCopy(text); });
+  } else { fallbackCopy(text); }
+}
+
+function fallbackCopy(text) {
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); toast('Code copied', 'green'); } catch(e) { toast('Copy failed — use long press', 'red'); }
+  document.body.removeChild(ta);
+}
+
+// ================================================================
+// PARTS
+// ================================================================
+function renderParts() {
+  var order = ['arrived','owned','ordered','pending'];
+  var labels = { arrived:'Arrived', owned:'Owned', ordered:'Ordered - In Transit', pending:'Still Need to Order' };
+  var grouped = {};
+  state.parts.forEach(function(p) {
+    if (!grouped[p.status]) grouped[p.status] = [];
+    grouped[p.status].push(p);
+  });
+  var c = document.getElementById('partsContainer');
+  if (state.parts.length === 0) {
+    c.innerHTML = '<div class="empty-state">No parts tracked yet.</div>';
+    return;
+  }
+  c.innerHTML = order.filter(function(s) { return grouped[s]; }).map(function(s) {
+    return '<div class="phase-divider">' + escapeHTML(labels[s]) + '</div>' +
+      grouped[s].map(function(p) {
+        var dotCls = (s==='arrived'||s==='owned') ? 'status-green' : s==='ordered' ? 'status-yellow' : 'status-red';
+        var badgeLabel = s==='arrived'?'Arrived':s==='owned'?'Owned':s==='ordered'?'In Transit':'Order Now';
+        return '<div class="part-row" id="part-' + p.id + '">' +
+          '<div class="part-status-dot ' + dotCls + '" onclick="cyclePartStatus(\'' + p.id + '\')"></div>' +
+          '<div class="part-info"><div class="part-name">' + escapeHTML(p.name) + '</div>' +
+          '<div class="part-detail">' + escapeHTML(p.detail||'') + '</div></div>' +
+          '<span class="part-badge badge-' + s + '" onclick="cyclePartStatus(\'' + p.id + '\')">' + badgeLabel + '</span>' +
+          '<button class="kebab" onclick="openPartEditor(\'' + p.id + '\')" aria-label="Edit">...</button>' +
+          '</div>';
+      }).join('');
+  }).join('');
+}
+
+function cyclePartStatus(id) {
+  var part = state.parts.find(function(p) { return p.id === id; });
+  if (!part) return;
+  var cycle = ['pending','ordered','arrived','owned'];
+  part.status = cycle[(cycle.indexOf(part.status)+1) % cycle.length];
+  saveState(); renderParts(); updateTabCounts();
+  flash('part-' + id);
+  toast('Marked: ' + part.status, 'green');
+}
+
+// ================================================================
+// LOG
+// ================================================================
+function renderLogs() {
+  var c = document.getElementById('logEntries');
+  if (!state.logs.length) {
+    c.innerHTML = '<div class="empty-state">No notes yet. Add your first build note above.</div>';
+    return;
+  }
+  c.innerHTML = state.logs.map(function(e) {
+    return '<div class="log-entry" id="log-' + e.id + '">' +
+      '<div class="log-entry-header">' +
+      '<div class="log-entry-meta">' +
+      '<span class="log-entry-date">' + escapeHTML(e.date) + '</span>' +
+      (e.cat ? '<span class="log-entry-cat">' + escapeHTML(e.cat) + '</span>' : '') +
+      '</div>' +
+      '<button class="log-del-btn" onclick="deleteLog(\'' + e.id + '\')" title="Delete">x</button>' +
+      '</div>' +
+      '<div class="log-entry-body">' + escapeHTML(e.text) + '</div>' +
+      '</div>';
+  }).join('');
+}
+
+function submitLog() {
+  var input = document.getElementById('logInput');
+  var text = input.value.trim();
+  if (!text) { toast('Enter a note first', 'red'); return; }
+  var cat = document.getElementById('logCat').value;
+  var entry = {
+    id: uid('log'),
+    date: nowLabel(),
+    cat: cat,
+    text: text
+  };
+  state.logs.unshift(entry);
+  if (state.logs.length > 100) state.logs = state.logs.slice(0,100);
+  saveState();
+  input.value = '';
+  renderLogs(); updateTabCounts();
+  toast('Note saved', 'green');
+}
+
+function deleteLog(id) {
+  if (!confirm('Delete this note?')) return;
+  state.logs = state.logs.filter(function(e) { return e.id !== id; });
+  saveState(); renderLogs(); updateTabCounts();
+  toast('Note deleted', 'green');
+}
+
+function nowLabel() {
+  return new Date().toLocaleDateString('en-US', {
+    weekday:'short', month:'short', day:'numeric',
+    hour:'2-digit', minute:'2-digit'
+  });
+}
+
+// ================================================================
+// AUDIT LOG
+// ================================================================
+var editingAuditId = null;
+var auditStatusSelections = { technical:'YELLOW', cost:'GREEN', career:'GREEN' };
+
+function renderAudits() {
+  var c = document.getElementById('auditContainer');
+  if (!audits.length) {
+    c.innerHTML = '<div class="empty-state">No weekly audits yet. Tap + New Weekly Audit.</div>';
+    return;
+  }
+  var sorted = audits.slice().sort(function(a,b) { return b.week - a.week; });
+  c.innerHTML = sorted.map(function(a) {
+    var ts = a.status || {};
+    return '<div class="audit-entry" id="audit-' + a.id + '">' +
+      '<div class="audit-entry-header">' +
+      '<span class="audit-wk-label">Week ' + a.week + '</span>' +
+      '<span class="audit-date-label">' + escapeHTML(a.date||'') + '</span>' +
+      '<button class="kebab" onclick="openAuditEditor(\'' + a.id + '\')" aria-label="Edit">...</button>' +
+      '</div>' +
+      '<div class="audit-pills">' +
+      auditPill('TECH', ts.technical) +
+      auditPill('COST', ts.cost) +
+      auditPill('CAREER', ts.career) +
+      '</div>' +
+      (a.done ? '<div class="audit-section"><span class="audit-section-label">Done vs Planned</span><div class="audit-section-body">' + escapeHTML(a.done) + '</div></div>' : '') +
+      (a.risks ? '<div class="audit-risks"><span class="audit-section-label">Risks</span>' + escapeHTML(a.risks) + '</div>' : '') +
+      (a.actions ? '<div class="audit-actions"><span class="audit-section-label">Next 48h Actions</span>' + escapeHTML(a.actions) + '</div>' : '') +
+      '</div>';
+  }).join('');
+}
+
+function auditPill(label, color) {
+  if (!color) return '';
+  var c = String(color).toUpperCase();
+  var cls = c==='GREEN' ? 'pill-green' : c==='RED' ? 'pill-red' : 'pill-yellow';
+  return '<span class="audit-pill ' + cls + '">' + label + ': ' + c + '</span>';
+}
+
+function openAuditEditor(id) {
+  editingAuditId = id;
+  var sel = document.getElementById('auditWeek');
+  sel.innerHTML = '';
+  TIMELINE.forEach(function(t) {
+    var opt = document.createElement('option');
+    opt.value = t.w;
+    opt.textContent = 'Week ' + t.w + ' · ' + t.title;
+    sel.appendChild(opt);
+  });
+
+  if (id) {
+    var a = audits.find(function(x) { return x.id === id; });
+    if (!a) return;
+    document.getElementById('auditModalTitle').textContent = 'Edit Audit';
+    sel.value = a.week;
+    document.getElementById('auditDate').value = a.date || '';
+    document.getElementById('auditDone').value = a.done || '';
+    document.getElementById('auditRisks').value = a.risks || '';
+    document.getElementById('auditActions').value = a.actions || '';
+    auditStatusSelections = deepClone(a.status || { technical:'YELLOW', cost:'GREEN', career:'GREEN' });
+    document.getElementById('auditDelete').style.display = '';
+  } else {
+    document.getElementById('auditModalTitle').textContent = 'New Weekly Audit';
+    sel.value = getCurrentWeek();
+    document.getElementById('auditDate').value = todayISO();
+    document.getElementById('auditDone').value = '';
+    document.getElementById('auditRisks').value = '';
+    document.getElementById('auditActions').value = '';
+    auditStatusSelections = { technical:'YELLOW', cost:'GREEN', career:'GREEN' };
+    document.getElementById('auditDelete').style.display = 'none';
+  }
+  refreshAuditPickers();
+  openModal('modal-audit');
+}
+
+function pickAuditStatus(key, val) {
+  auditStatusSelections[key] = val;
+  refreshAuditPickers();
+}
+
+function refreshAuditPickers() {
+  ['technical','cost','career'].forEach(function(key) {
+    var pickerId = key === 'technical' ? 'techStatusPicker' : key === 'cost' ? 'costStatusPicker' : 'careerStatusPicker';
+    var val = auditStatusSelections[key];
+    document.querySelectorAll('#' + pickerId + ' .picker-chip').forEach(function(chip) {
+      chip.classList.remove('selected');
+      var v = chip.dataset.val;
+      if (v === val) {
+        chip.classList.add('selected');
+      }
+    });
+  });
+}
+
+function saveAudit() {
+  var data = {
+    id: editingAuditId || uid('audit'),
+    week: Number(document.getElementById('auditWeek').value),
+    date: document.getElementById('auditDate').value,
+    status: deepClone(auditStatusSelections),
+    done: document.getElementById('auditDone').value.trim(),
+    risks: document.getElementById('auditRisks').value.trim(),
+    actions: document.getElementById('auditActions').value.trim()
+  };
+  if (editingAuditId) {
+    var idx = audits.findIndex(function(a) { return a.id === editingAuditId; });
+    if (idx >= 0) audits[idx] = data;
+    toast('Audit updated', 'green');
+  } else {
+    audits.unshift(data);
+    toast('Audit saved', 'green');
+  }
+  saveAudits(); renderAudits();
+  closeModal('modal-audit');
+
+  // Update project status lights from latest audit
+  if (data.status) {
+    state.config.projectStatus = deepClone(data.status);
+    saveState(); renderToday(); renderHeader();
+  }
+}
+
+function deleteAuditFromModal() {
+  if (!editingAuditId) return;
+  if (!confirm('Delete this audit?')) return;
+  audits = audits.filter(function(a) { return a.id !== editingAuditId; });
+  saveAudits(); renderAudits();
+  closeModal('modal-audit');
+  toast('Audit deleted', 'green');
+}
+
+function exportAudits() {
+  var sorted = audits.slice().sort(function(a,b) { return b.week - a.week; });
+  var text = 'ASV PROJECT WEEKLY AUDITS\nExported: ' + todayISO() + '\n\n';
+  sorted.forEach(function(a) {
+    var s = a.status || {};
+    text += '=== WEEK ' + a.week + ' · ' + (a.date||'') + ' ===\n';
+    text += 'TECH: ' + (s.technical||'-') + '  COST: ' + (s.cost||'-') + '  CAREER: ' + (s.career||'-') + '\n\n';
+    if (a.done) text += 'DONE VS PLANNED:\n' + a.done + '\n\n';
+    if (a.risks) text += 'TOP RISKS:\n' + a.risks + '\n\n';
+    if (a.actions) text += 'NEXT 48H ACTIONS:\n' + a.actions + '\n\n';
+    text += '---\n\n';
+  });
+  document.getElementById('exportArea').value = text;
+  openModal('modal-export');
+}
+
+function copyExport() {
+  var ta = document.getElementById('exportArea');
+  ta.select();
+  try {
+    document.execCommand('copy');
+    toast('Copied to clipboard', 'green');
+  } catch(e) {
+    toast('Select text manually and copy', 'red');
+  }
+}
+
+// ================================================================
+// STATUS EDITOR
+// ================================================================
+var editStatusSelections = { technical:'YELLOW', cost:'GREEN', career:'GREEN' };
+
+function openStatusEditor() {
+  editStatusSelections = deepClone(state.config.projectStatus);
+  refreshEditStatusPickers();
+  openModal('modal-status');
+}
+
+function pickEditStatus(key, val) {
+  editStatusSelections[key] = val;
+  refreshEditStatusPickers();
+}
+
+function refreshEditStatusPickers() {
+  var map = { technical:'editTechPicker', cost:'editCostPicker', career:'editCareerPicker' };
+  Object.keys(map).forEach(function(key) {
+    var val = editStatusSelections[key];
+    document.querySelectorAll('#' + map[key] + ' .picker-chip').forEach(function(chip) {
+      chip.classList.remove('selected');
+      if (chip.dataset.val === val) chip.classList.add('selected');
+    });
+  });
+}
+
+function saveStatusEdit() {
+  state.config.projectStatus = deepClone(editStatusSelections);
+  saveState();
+  renderToday();
+  closeModal('modal-status');
+  toast('Status updated', 'green');
+}
+
+// ================================================================
+// TAB SWITCHING
+// ================================================================
+function switchTab(name, btn) {
+  document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+  var panel = document.getElementById('panel-' + name);
+  if (panel) panel.classList.add('active');
+  if (btn && btn.classList) btn.classList.add('active');
+}
+
+// ================================================================
+// TAB COUNTS
+// ================================================================
+function updateTabCounts() {
+  var wk = getCurrentWeek();
+  var visible = state.tasks.filter(function(t) { return t.week === 'carryover' || t.week === wk; });
+  document.getElementById('count-tasks').textContent = visible.filter(function(t) { return !t.done; }).length;
+  document.getElementById('count-parts').textContent = state.parts.filter(function(p) { return p.status === 'pending'; }).length;
+  document.getElementById('count-log').textContent = state.logs.length;
+}
+
+// ================================================================
+// FLASH / TOAST
+// ================================================================
+function flash(elId) {
+  var el = document.getElementById(elId);
+  if (el) {
+    el.classList.add('flash');
+    setTimeout(function() { el.classList.remove('flash'); }, 1200);
+  }
+}
+
+var toastTimer;
+function toast(msg, color) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.color = color === 'red' ? 'var(--danger)' : 'var(--accent2)';
+  el.style.borderColor = color === 'red' ? 'var(--danger)' : 'var(--accent2)';
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function() { el.classList.remove('show'); }, 2200);
+}
+
+// ================================================================
+// MODALS
+// ================================================================
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// Close modal on overlay click
+(function() {
+  document.querySelectorAll('.modal-overlay').forEach(function(o) {
+    o.addEventListener('click', function(e) { if (e.target === o) closeModal(o.id); });
+  });
+})();
+
+// ================================================================
+// TASK CRUD
+// ================================================================
+var editingTaskId = null;
+var editingTaskColor = 'blue';
+var editingTaskPriority = false;
+
+function toggleTask(id) {
+  var t = state.tasks.find(function(x) { return x.id === id; });
+  if (!t) return;
+  t.done = !t.done;
+  saveState(); renderTasks(); updateTabCounts(); renderToday();
+  if (t.done) { flash('task-' + id); toast('Done!', 'green'); }
+}
+
+function openTaskEditor(id) {
+  editingTaskId = id;
+  populateWeekDropdown('taskWeek');
+  if (id) {
+    var t = state.tasks.find(function(x) { return x.id === id; });
+    if (!t) return;
+    document.getElementById('taskModalTitle').textContent = 'Edit Task';
+    document.getElementById('taskText').value = t.text;
+    document.getElementById('taskTag').value = t.tag || '';
+    document.getElementById('taskWeek').value = t.week;
+    document.getElementById('taskGroup').value = t.group || '';
+    editingTaskColor = t.tagColor || 'blue';
+    editingTaskPriority = !!t.priority;
+    document.getElementById('taskDelete').style.display = '';
+  } else {
+    document.getElementById('taskModalTitle').textContent = 'Add Task';
+    document.getElementById('taskText').value = '';
+    document.getElementById('taskTag').value = '';
+    document.getElementById('taskWeek').value = getCurrentWeek();
+    document.getElementById('taskGroup').value = 'Week ' + getCurrentWeek() + ' - ';
+    editingTaskColor = 'blue';
+    editingTaskPriority = false;
+    document.getElementById('taskDelete').style.display = 'none';
+  }
+  refreshTaskColor(); refreshTaskPriority();
+  openModal('modal-task');
+}
+
+function pickColor(color) {
+  editingTaskColor = color;
+  refreshTaskColor();
+}
+
+function refreshTaskColor() {
+  document.querySelectorAll('#taskColorPicker .picker-chip').forEach(function(c) {
+    c.classList.toggle('selected', c.dataset.color === editingTaskColor);
+  });
+}
+
+function togglePriority() {
+  editingTaskPriority = !editingTaskPriority;
+  refreshTaskPriority();
+}
+
+function refreshTaskPriority() {
+  document.getElementById('taskPriorityToggle').classList.toggle('on', editingTaskPriority);
+}
+
+function saveTask() {
+  var text = document.getElementById('taskText').value.trim();
+  if (!text) { toast('Task text required', 'red'); return; }
+  var wkVal = document.getElementById('taskWeek').value;
+  var week = wkVal === 'carryover' ? 'carryover' : Number(wkVal);
+  var data = {
+    text: text,
+    tag: document.getElementById('taskTag').value.trim(),
+    tagColor: editingTaskColor,
+    priority: editingTaskPriority,
+    week: week,
+    group: document.getElementById('taskGroup').value.trim() || 'Tasks'
+  };
+  if (editingTaskId) {
+    var t = state.tasks.find(function(x) { return x.id === editingTaskId; });
+    if (t) Object.assign(t, data);
+    toast('Task updated', 'green');
+  } else {
+    state.tasks.push(Object.assign({ id: uid('t'), done: false }, data));
+    toast('Task added', 'green');
+  }
+  saveState(); renderTasks(); updateTabCounts(); renderToday();
+  closeModal('modal-task');
+}
+
+function deleteTaskFromModal() {
+  if (!editingTaskId) return;
+  if (!confirm('Delete this task?')) return;
+  state.tasks = state.tasks.filter(function(t) { return t.id !== editingTaskId; });
+  saveState(); renderTasks(); updateTabCounts(); renderToday();
+  closeModal('modal-task');
+  toast('Task deleted', 'green');
+}
+
+function populateWeekDropdown(id) {
+  var sel = document.getElementById(id);
+  sel.innerHTML = '<option value="carryover">Carryover (always shown)</option>';
+  TIMELINE.forEach(function(t) {
+    var opt = document.createElement('option');
+    opt.value = t.w;
+    opt.textContent = 'Week ' + t.w + ' · ' + t.title;
+    sel.appendChild(opt);
+  });
+}
+
+// ================================================================
+// PART CRUD
+// ================================================================
+var editingPartId = null;
+var editingPartStatus = 'pending';
+
+function openPartEditor(id) {
+  editingPartId = id;
+  if (id) {
+    var p = state.parts.find(function(x) { return x.id === id; });
+    if (!p) return;
+    document.getElementById('partModalTitle').textContent = 'Edit Part';
+    document.getElementById('partName').value = p.name;
+    document.getElementById('partDetail').value = p.detail || '';
+    editingPartStatus = p.status;
+    document.getElementById('partDelete').style.display = '';
+  } else {
+    document.getElementById('partModalTitle').textContent = 'Add Part';
+    document.getElementById('partName').value = '';
+    document.getElementById('partDetail').value = '';
+    editingPartStatus = 'pending';
+    document.getElementById('partDelete').style.display = 'none';
+  }
+  refreshPartStatus();
+  openModal('modal-part');
+}
+
+function pickPartStatus(status) {
+  editingPartStatus = status;
+  refreshPartStatus();
+}
+
+function refreshPartStatus() {
+  document.querySelectorAll('#partStatusPicker .picker-chip').forEach(function(c) {
+    var s = c.dataset.status;
+    c.classList.remove('tag-red','tag-yellow','tag-green','tag-blue','selected');
+    if (s === editingPartStatus) {
+      c.classList.add('selected');
+      c.classList.add(s==='arrived'||s==='owned'?'tag-green':s==='ordered'?'tag-yellow':'tag-red');
+    }
+  });
+}
+
+function savePart() {
+  var name = document.getElementById('partName').value.trim();
+  if (!name) { toast('Name required', 'red'); return; }
+  var data = { name: name, detail: document.getElementById('partDetail').value.trim(), status: editingPartStatus };
+  if (editingPartId) {
+    var p = state.parts.find(function(x) { return x.id === editingPartId; });
+    if (p) Object.assign(p, data);
+    toast('Part updated', 'green');
+  } else {
+    state.parts.push(Object.assign({ id: uid('p') }, data));
+    toast('Part added', 'green');
+  }
+  saveState(); renderParts(); updateTabCounts();
+  closeModal('modal-part');
+}
+
+function deletePartFromModal() {
+  if (!editingPartId) return;
+  if (!confirm('Delete this part?')) return;
+  state.parts = state.parts.filter(function(p) { return p.id !== editingPartId; });
+  saveState(); renderParts(); updateTabCounts();
+  closeModal('modal-part');
+  toast('Part deleted', 'green');
+}
+
+// ================================================================
+// CONCEPT CRUD
+// ================================================================
+var editingConceptId = null;
+
+function openConceptEditor(id) {
+  editingConceptId = id;
+  if (id) {
+    var c = state.learning.find(function(x) { return x.id === id; });
+    if (!c) return;
+    document.getElementById('conceptModalTitle').textContent = 'Edit Concept';
+    document.getElementById('conceptEmoji').value = c.emoji || '';
+    document.getElementById('conceptTitle').value = c.title;
+    document.getElementById('conceptPhase').value = c.phase || 'Phase 1 - Toolchain & Interface';
+    document.getElementById('conceptWeek').value = c.week || '';
+    document.getElementById('conceptBody').value = c.body || '';
+    document.getElementById('conceptDelete').style.display = '';
+  } else {
+    document.getElementById('conceptModalTitle').textContent = 'Add Concept';
+    document.getElementById('conceptEmoji').value = '';
+    document.getElementById('conceptTitle').value = '';
+    document.getElementById('conceptPhase').value = 'Phase 1 - Toolchain & Interface';
+    document.getElementById('conceptWeek').value = 'Wk ' + getCurrentWeek() + ' · Reference';
+    document.getElementById('conceptBody').value = '<p></p>';
+    document.getElementById('conceptDelete').style.display = 'none';
+  }
+  openModal('modal-concept');
+}
+
+function saveConcept() {
+  var title = document.getElementById('conceptTitle').value.trim();
+  if (!title) { toast('Title required', 'red'); return; }
+  var data = {
+    emoji: document.getElementById('conceptEmoji').value.trim(),
+    title: title,
+    phase: document.getElementById('conceptPhase').value,
+    week: document.getElementById('conceptWeek').value.trim(),
+    body: document.getElementById('conceptBody').value
+  };
+  if (editingConceptId) {
+    var c = state.learning.find(function(x) { return x.id === editingConceptId; });
+    if (c) Object.assign(c, data);
+    toast('Concept updated', 'green');
+  } else {
+    state.learning.push(Object.assign({ id: uid('l') }, data));
+    toast('Concept added', 'green');
+  }
+  saveState(); renderLearning();
+  closeModal('modal-concept');
+}
+
+function deleteConcept(id) {
+  if (!confirm('Delete this concept?')) return;
+  state.learning = state.learning.filter(function(c) { return c.id !== id; });
+  saveState(); renderLearning();
+  toast('Concept deleted', 'green');
+}
+
+function deleteConceptFromModal() {
+  if (editingConceptId) { deleteConcept(editingConceptId); closeModal('modal-concept'); }
+}
+
+// ================================================================
+// SETTINGS
+// ================================================================
+function openSettings() {
+  document.getElementById('settingStartDate').value = state.config.startDate;
+  document.getElementById('settingDeadline').value = state.config.deadline;
+  var sel = document.getElementById('settingWeekOverride');
+  sel.innerHTML = '<option value="">Auto (compute from today)</option>';
+  TIMELINE.forEach(function(t) {
+    var opt = document.createElement('option');
+    opt.value = t.w;
+    opt.textContent = 'Force Week ' + t.w;
+    sel.appendChild(opt);
+  });
+  sel.value = state.config.weekOverride || '';
+  // Notifications toggle
+  var nt = document.getElementById('notifToggle');
+  var enabled = !!(state.config.notificationsEnabled);
+  if (nt) nt.classList.toggle('on', enabled);
+  var ns = document.getElementById('notifStatus');
+  if (ns) {
+    if (!('Notification' in window)) {
+      ns.textContent = 'Notifications not supported in this browser';
+    } else {
+      ns.textContent = 'Permission: ' + Notification.permission;
+    }
+  }
+  openModal('modal-settings');
+}
+
+function toggleNotifications() {
+  if (!('Notification' in window)) { toast('Not supported', 'red'); return; }
+  var enabled = !state.config.notificationsEnabled;
+  if (enabled && Notification.permission !== 'granted') {
+    Notification.requestPermission().then(function(p) {
+      if (p === 'granted') {
+        state.config.notificationsEnabled = true;
+        scheduleNotifications();
+        document.getElementById('notifToggle').classList.add('on');
+        document.getElementById('notifStatus').textContent = 'Permission: granted — reminders scheduled';
+        saveState(); toast('Notifications enabled', 'green');
+      } else {
+        document.getElementById('notifStatus').textContent = 'Permission denied — enable in browser settings';
+        toast('Permission denied', 'red');
+      }
+    });
+  } else {
+    state.config.notificationsEnabled = enabled;
+    if (enabled) scheduleNotifications();
+    document.getElementById('notifToggle').classList.toggle('on', enabled);
+    document.getElementById('notifStatus').textContent = enabled ? 'Reminders enabled' : 'Reminders disabled';
+    saveState(); toast(enabled ? 'Reminders on' : 'Reminders off', 'green');
+  }
+}
+
+function testNotification() {
+  if (!('Notification' in window)) { toast('Not supported', 'red'); return; }
+  if (Notification.permission !== 'granted') {
+    Notification.requestPermission().then(function(p) {
+      if (p === 'granted') fireNotification('ASV Hub Test', 'Notifications are working!');
+      else toast('Permission denied', 'red');
+    });
+  } else {
+    fireNotification('ASV Hub Test', 'Notifications are working! Week ' + getCurrentWeek() + ' · ' + daysToDeadline() + ' days to demo.');
+  }
+}
+
+function fireNotification(title, body) {
+  try {
+    var n = new Notification(title, { body: body, icon: '', badge: '' });
+    setTimeout(function() { n.close(); }, 6000);
+    toast('Notification sent', 'green');
+  } catch(e) { toast('Notification failed: ' + e.message, 'red'); }
+}
+
+function scheduleNotifications() {
+  // Schedule 9am and 7pm daily reminders using setTimeout
+  // Calculates ms until next occurrence
+  function msUntilHour(h) {
+    var now = new Date();
+    var target = new Date();
+    target.setHours(h, 0, 0, 0);
+    if (target <= now) target.setDate(target.getDate() + 1);
+    return target - now;
+  }
+  function scheduleRepeat(h, title, body) {
+    setTimeout(function() {
+      if (state.config.notificationsEnabled && Notification.permission === 'granted') {
+        fireNotification(title, body);
+      }
+      // Reschedule for next day
+      scheduleRepeat(h, title, body);
+    }, msUntilHour(h));
+  }
+  scheduleRepeat(9,  'ASV Hub — Morning Check', 'Week ' + getCurrentWeek() + ' Day ' + getDayOfWeek() + ' · ' + daysToDeadline() + ' days to August 10 demo.');
+  scheduleRepeat(19, 'ASV Hub — Evening Review', 'Log today\'s progress. Check tomorrow\'s tasks. ' + daysToDeadline() + ' days left.');
+}
+
+function copySnapshot() {
+  var wk = getCurrentWeek();
+  var dayNum = getDayOfWeek();
+  var dl = daysToDeadline();
+  var allVisible = state.tasks.filter(function(t) { return t.week === 'carryover' || t.week === wk; });
+  var doneCnt = allVisible.filter(function(t) { return t.done; }).length;
+  var totalCnt = allVisible.length;
+  var pendingParts = state.parts.filter(function(p) { return p.status === 'pending'; }).length;
+  var ps = state.config.projectStatus;
+  var lastLog = state.logs.length > 0 ? state.logs[0] : null;
+
+  var snap = '# ASV Hub Sync Snapshot\n';
+  snap += 'Date: ' + todayISO() + '\n';
+  snap += 'Week ' + wk + ' Day ' + dayNum + ' of 11 · ' + dl + ' days to August 10 2026\n\n';
+  snap += '## Status\n';
+  snap += 'Technical: ' + (ps.technical||'?') + '  |  Cost: ' + (ps.cost||'?') + '  |  Career: ' + (ps.career||'?') + '\n\n';
+  snap += '## Tasks (Week ' + wk + ' + Carryover)\n';
+  snap += 'Done: ' + doneCnt + ' / ' + totalCnt + '\n';
+  var pending = allVisible.filter(function(t) { return !t.done && t.priority; });
+  if (pending.length > 0) {
+    snap += 'Priority outstanding:\n';
+    pending.slice(0,5).forEach(function(t) { snap += '  - [' + (t.tag||'') + '] ' + t.text.slice(0,80) + '\n'; });
+  }
+  snap += '\n## Parts\n';
+  snap += 'Still to order: ' + pendingParts + ' items\n';
+  var orderedParts = state.parts.filter(function(p) { return p.status === 'ordered'; });
+  if (orderedParts.length > 0) snap += 'In transit: ' + orderedParts.map(function(p) { return p.name; }).join(', ') + '\n';
+  if (lastLog) {
+    snap += '\n## Latest Log Entry\n';
+    snap += '[' + (lastLog.cat||'') + '] ' + lastLog.date + '\n' + lastLog.text.slice(0,300) + '\n';
+  }
+  snap += '\n---\nGenerated by ASV Hub v3\n';
+
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(snap).then(function() { toast('Snapshot copied', 'green'); }).catch(function() { fallbackCopyText(snap); });
+  } else { fallbackCopyText(snap); }
+}
+
+function fallbackCopyText(text) {
+  var ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); toast('Snapshot copied', 'green'); } catch(e) { toast('Copy failed', 'red'); }
+  document.body.removeChild(ta);
+}
+
+function saveSettings() {
+  state.config.startDate = document.getElementById('settingStartDate').value || state.config.startDate;
+  state.config.deadline = document.getElementById('settingDeadline').value || state.config.deadline;
+  var wo = document.getElementById('settingWeekOverride').value;
+  state.config.weekOverride = wo ? Number(wo) : null;
+  saveState(); renderAll();
+  closeModal('modal-settings');
+  toast('Settings saved', 'green');
+}
+
+function exportData() {
+  var payload = { state: state, audits: audits };
+  var json = JSON.stringify(payload, null, 2);
+  var b64 = btoa(unescape(encodeURIComponent(json)));
+  var a = document.createElement('a');
+  a.href = 'data:application/json;base64,' + b64;
+  a.download = 'asv_hub_backup_' + todayISO() + '.json';
+  a.click();
+  toast('Backup downloaded', 'green');
+}
+
+function importData(ev) {
+  var file = ev.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var parsed = JSON.parse(e.target.result);
+      // Support both formats: wrapped {state,audits} and raw state
+      var newState = parsed.state || parsed;
+      var newAudits = parsed.audits || [];
+      if (!newState.config || !Array.isArray(newState.tasks)) throw new Error('Invalid backup');
+      if (!confirm('Replace all current data with imported backup?')) return;
+      state = newState;
+      audits = newAudits;
+      saveState(); saveAudits(); renderAll();
+      closeModal('modal-settings');
+      toast('Data imported', 'green');
+    } catch(err) {
+      toast('Invalid backup file', 'red');
+    }
+  };
+  reader.readAsText(file);
+  ev.target.value = '';
+}
+
+function resetData() {
+  if (!confirm('Reset all data to defaults? This erases all progress, notes, and audits.')) return;
+  if (!confirm('Really sure? This cannot be undone.')) return;
+  state = deepClone(DEFAULT_STATE);
+  audits = [];
+  saveState(); saveAudits(); renderAll();
+  closeModal('modal-settings');
+  toast('Reset complete', 'green');
+}
+
+// ================================================================
+// SERVICE WORKER REGISTRATION
+// ================================================================
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    // Minimal inline SW - would need separate file for full offline support
+    // PWA meta tags are present for iOS home screen support
+  });
+}
+
+// ================================================================
+// INIT
+// ================================================================
+renderAll();
+// Schedule notifications if previously enabled
+if (state.config.notificationsEnabled && 'Notification' in window && Notification.permission === 'granted') {
+  scheduleNotifications();
+}
+</script>
+</body>
+</html>

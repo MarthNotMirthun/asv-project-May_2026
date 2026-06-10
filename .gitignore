@@ -1,0 +1,8 @@
+fpga/sim/out.out
+fpga/sim/*.vcd
+__pycache__/
+*.pyc
+docs/daily_briefing.txt
+docs/agent_log.txt
+node_modules/
+.env

@@ -1,0 +1,3 @@
+- [Project Milestones](project_milestones.md) — Completed FPGA/Pi milestones as of 2026-06-10; CIC+FIR+ADC all validated; .cst file is sole remaining blocker
+- [Schedule Risks](project_schedule_risks.md) — .cst carryover now 4 sessions; 5 parts unordered as of 2026-06-10; AD9226 arrives Jun 14-21
+- [User Profile](user_profile.md) — Mirthun Mohan, Texas A&M CompE, intermediate Verilog, solo builder, naval defense portfolio target

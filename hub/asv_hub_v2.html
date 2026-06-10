@@ -1,0 +1,1871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ASV Hub">
+<meta name="theme-color" content="#080B12">
+<title>ASV Project Hub</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg: #080B12;
+  --surface: #0E1320;
+  --surface2: #151C2E;
+  --surface3: #1A2236;
+  --border: #1E2A42;
+  --border-light: #2A3855;
+  --accent: #00E5FF;
+  --accent2: #00FF94;
+  --warn: #FFB800;
+  --danger: #FF4757;
+  --text: #E2EAF4;
+  --muted: #4A5A78;
+  --muted2: #6B7C9C;
+  --mono: 'Space Mono', monospace;
+  --sans: 'DM Sans', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none; z-index: 0;
+}
+
+/* ── HEADER ── */
+.header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(8,11,18,0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px 0;
+}
+.header-top {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 12px; gap: 8px;
+}
+.logo {
+  font-family: var(--mono); font-size: 13px; color: var(--accent);
+  letter-spacing: 0.1em; display: flex; align-items: center; gap: 8px;
+}
+.logo-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--accent2); box-shadow: 0 0 8px var(--accent2);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+.header-right { display: flex; align-items: center; gap: 8px; }
+.week-badge {
+  font-family: var(--mono); font-size: 11px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 20px; padding: 4px 10px; color: var(--muted2);
+}
+.week-badge .w-num { color: var(--warn); font-weight: 700; }
+.week-badge .deadline { color: var(--muted); margin-left: 6px; }
+
+.gear-btn {
+  background: var(--surface2); border: 1px solid var(--border);
+  width: 32px; height: 28px; border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--muted2); transition: all 0.15s;
+}
+.gear-btn:hover, .gear-btn:active { color: var(--accent); border-color: var(--accent); }
+
+/* ── TABS ── */
+.tabs { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  background: none; border: none; border-bottom: 2px solid transparent;
+  color: var(--muted2); font-family: var(--sans); font-size: 12px; font-weight: 500;
+  padding: 8px 14px 10px; cursor: pointer; white-space: nowrap;
+  transition: all 0.2s; letter-spacing: 0.02em;
+}
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab-count {
+  display: inline-block; font-family: var(--mono); font-size: 9px;
+  background: var(--surface3); color: var(--muted2);
+  border-radius: 8px; padding: 1px 5px; margin-left: 4px;
+  vertical-align: 1px;
+}
+.tab.active .tab-count { background: rgba(0,229,255,0.15); color: var(--accent); }
+
+/* ── MAIN ── */
+main { padding: 16px; position: relative; z-index: 1; max-width: 600px; margin: 0 auto; padding-bottom: 80px; }
+.panel { display: none; }
+.panel.active { display: block; animation: fadein 0.2s ease; }
+
+@keyframes fadein { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
+
+/* ── CARDS ── */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px; margin-bottom: 12px;
+}
+.card-title {
+  font-family: var(--mono); font-size: 11px; color: var(--muted2);
+  letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 12px;
+}
+
+/* ── ADD BUTTONS ── */
+.add-row {
+  display: flex; gap: 8px; margin-bottom: 12px;
+}
+.add-btn {
+  flex: 1; background: var(--surface2); border: 1px dashed var(--border-light);
+  border-radius: 10px; padding: 10px; color: var(--accent);
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.05em;
+  cursor: pointer; transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.add-btn:hover, .add-btn:active {
+  background: rgba(0,229,255,0.05); border-color: var(--accent);
+}
+
+/* ── REMINDER BANNER ── */
+.reminder-banner {
+  background: rgba(255,184,0,0.08); border: 1px solid rgba(255,184,0,0.25);
+  border-radius: 10px; padding: 12px 14px; margin-bottom: 12px;
+  font-size: 12px; line-height: 1.6;
+}
+.reminder-banner strong { color: var(--warn); font-family: var(--mono); font-size: 11px; }
+
+/* ── TASKS ── */
+.task-group { margin-bottom: 16px; }
+.task-group-label {
+  font-size: 11px; font-family: var(--mono); color: var(--muted2);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  margin-bottom: 8px; padding-left: 2px;
+}
+.task-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 12px; border-radius: 8px;
+  border: 1px solid var(--border); margin-bottom: 6px;
+  background: var(--surface2);
+  transition: all 0.2s; position: relative;
+}
+.task-item.done { opacity: 0.45; }
+.task-item.done .task-text { text-decoration: line-through; }
+.task-item.priority { border-left: 3px solid var(--danger); }
+.task-item.priority.done { border-left-color: var(--muted); }
+.task-item.flash { animation: flashGreen 1s ease; }
+@keyframes flashGreen {
+  0%,100% { box-shadow: none; }
+  50% { box-shadow: 0 0 16px rgba(0,255,148,0.4); border-color: var(--accent2); }
+}
+
+.task-check {
+  width: 20px; height: 20px; border-radius: 4px;
+  border: 1px solid var(--muted); flex-shrink: 0; margin-top: 1px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s; cursor: pointer;
+}
+.task-item.done .task-check {
+  background: var(--accent2); border-color: var(--accent2);
+}
+.task-check svg { display: none; }
+.task-item.done .task-check svg { display: block; }
+
+.task-text { font-size: 13px; line-height: 1.4; flex: 1; cursor: pointer; padding-top: 2px; }
+.task-tag {
+  font-size: 10px; font-family: var(--mono); padding: 2px 6px;
+  border-radius: 3px; flex-shrink: 0; margin-top: 1px; align-self: flex-start;
+}
+.tag-red { background: rgba(255,71,87,0.15); color: var(--danger); }
+.tag-yellow { background: rgba(255,184,0,0.15); color: var(--warn); }
+.tag-green { background: rgba(0,255,148,0.15); color: var(--accent2); }
+.tag-blue { background: rgba(0,229,255,0.15); color: var(--accent); }
+
+.kebab {
+  background: none; border: none; color: var(--muted); cursor: pointer;
+  padding: 4px 6px; border-radius: 4px; font-size: 16px; line-height: 1;
+  flex-shrink: 0; align-self: flex-start;
+}
+.kebab:hover, .kebab:active { color: var(--accent); background: var(--surface3); }
+
+.progress-bar-wrap {
+  background: var(--surface2); border-radius: 4px; height: 4px;
+  overflow: hidden; margin: 12px 0 4px;
+}
+.progress-bar {
+  height: 100%; background: linear-gradient(90deg, var(--accent2), var(--accent));
+  border-radius: 4px; transition: width 0.4s ease;
+}
+.progress-label {
+  font-size: 11px; font-family: var(--mono); color: var(--muted2);
+  display: flex; justify-content: space-between;
+}
+
+.empty-state {
+  text-align: center; color: var(--muted); font-size: 12px;
+  padding: 24px 0; font-style: italic;
+}
+
+/* ── TIMELINE ── */
+.timeline-week {
+  display: flex; gap: 12px; margin-bottom: 8px;
+  padding: 12px; border-radius: 10px; border: 1px solid var(--border);
+  background: var(--surface2); align-items: flex-start;
+  position: relative; overflow: hidden; transition: all 0.2s;
+}
+.timeline-week.current { border-color: var(--accent); background: rgba(0,229,255,0.04); }
+.timeline-week.current::before {
+  content: 'NOW';
+  position: absolute; top: 8px; right: 8px;
+  font-size: 9px; font-family: var(--mono); color: var(--accent);
+  letter-spacing: 0.1em; font-weight: 700;
+}
+.timeline-week.past { opacity: 0.5; }
+.week-num {
+  font-family: var(--mono); font-size: 10px; color: var(--muted2);
+  min-width: 28px; margin-top: 2px;
+}
+.week-info { flex: 1; }
+.week-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+.week-dates { font-size: 11px; color: var(--muted2); font-family: var(--mono); margin-bottom: 4px; }
+.week-milestone { font-size: 11px; color: var(--muted2); line-height: 1.4; }
+.week-status {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px;
+  cursor: pointer;
+}
+.status-green { background: var(--accent2); box-shadow: 0 0 6px var(--accent2); }
+.status-yellow { background: var(--warn); box-shadow: 0 0 6px var(--warn); }
+.status-red { background: var(--danger); box-shadow: 0 0 6px var(--danger); }
+.status-grey { background: var(--muted); }
+
+/* ── LEARNING ── */
+.concept-card {
+  border-radius: 10px; border: 1px solid var(--border);
+  background: var(--surface2); margin-bottom: 8px; overflow: hidden;
+  transition: all 0.2s;
+}
+.concept-card.flash { animation: flashCyan 1.2s ease; }
+@keyframes flashCyan {
+  0%,100% { box-shadow: none; }
+  50% { box-shadow: 0 0 16px rgba(0,229,255,0.4); border-color: var(--accent); }
+}
+.concept-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 14px; cursor: pointer; gap: 8px;
+}
+.concept-title { font-size: 13px; font-weight: 600; line-height: 1.3; }
+.concept-week { font-size: 10px; font-family: var(--mono); color: var(--muted2); margin-top: 2px; }
+.concept-info { flex: 1; min-width: 0; }
+.concept-arrow { color: var(--muted2); font-size: 18px; transition: transform 0.2s; flex-shrink: 0; }
+.concept-card.open .concept-arrow { transform: rotate(90deg); }
+.concept-body {
+  display: none; padding: 0 14px 14px;
+  font-size: 12px; line-height: 1.7; color: #AAB8CC;
+}
+.concept-card.open .concept-body { display: block; }
+.concept-body p { margin-bottom: 8px; }
+.concept-body a { color: var(--accent); text-decoration: none; }
+.concept-body code {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 4px; padding: 1px 5px; font-family: var(--mono); font-size: 11px;
+  color: var(--accent2);
+}
+.concept-body pre {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 6px; padding: 10px; margin: 8px 0;
+  overflow-x: auto; font-family: var(--mono); font-size: 11px;
+  color: var(--accent2); line-height: 1.6;
+}
+.concept-body strong { color: var(--accent); }
+.concept-actions {
+  display: flex; gap: 8px; margin-top: 12px;
+  padding-top: 10px; border-top: 1px solid var(--border);
+}
+.mini-btn {
+  background: var(--surface3); border: 1px solid var(--border);
+  border-radius: 6px; padding: 4px 10px; color: var(--muted2);
+  font-family: var(--mono); font-size: 10px; cursor: pointer;
+  transition: all 0.15s;
+}
+.mini-btn:hover, .mini-btn:active { color: var(--accent); border-color: var(--accent); }
+.mini-btn.danger:hover, .mini-btn.danger:active { color: var(--danger); border-color: var(--danger); }
+
+.phase-divider {
+  font-size: 10px; font-family: var(--mono); color: var(--muted2);
+  letter-spacing: 0.12em; text-transform: uppercase;
+  margin: 18px 0 10px; display: flex; align-items: center; gap: 8px;
+}
+.phase-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* ── PARTS ── */
+.part-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 8px; margin-bottom: 6px;
+  border: 1px solid var(--border); background: var(--surface2);
+  transition: all 0.2s;
+}
+.part-row.flash { animation: flashGreen 1s ease; }
+.part-status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; cursor: pointer; }
+.part-info { flex: 1; min-width: 0; }
+.part-name { font-size: 13px; font-weight: 500; }
+.part-detail { font-size: 11px; color: var(--muted2); font-family: var(--mono); margin-top: 2px; word-break: break-word; }
+.part-badge {
+  font-size: 10px; font-family: var(--mono); padding: 3px 8px;
+  border-radius: 10px; white-space: nowrap; cursor: pointer;
+}
+.badge-arrived { background: rgba(0,255,148,0.12); color: var(--accent2); border: 1px solid rgba(0,255,148,0.3); }
+.badge-ordered { background: rgba(255,184,0,0.12); color: var(--warn); border: 1px solid rgba(255,184,0,0.3); }
+.badge-pending { background: rgba(255,71,87,0.12); color: var(--danger); border: 1px solid rgba(255,71,87,0.3); }
+.badge-owned { background: rgba(0,229,255,0.12); color: var(--accent); border: 1px solid rgba(0,229,255,0.3); }
+
+/* ── AI LOG ── */
+.log-input-wrap {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px; margin-bottom: 12px;
+}
+.log-input {
+  width: 100%; background: none; border: none; outline: none;
+  color: var(--text); font-family: var(--sans); font-size: 13px;
+  line-height: 1.6; resize: none; min-height: 90px;
+}
+.log-input::placeholder { color: var(--muted); }
+.log-btn {
+  width: 100%; margin-top: 10px; padding: 12px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none; border-radius: 8px; color: #000;
+  font-family: var(--mono); font-size: 12px; font-weight: 700;
+  letter-spacing: 0.05em; cursor: pointer; transition: opacity 0.2s;
+}
+.log-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.log-entry {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px; margin-bottom: 10px;
+}
+.log-entry-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px;
+}
+.log-entry-date {
+  font-size: 10px; font-family: var(--mono); color: var(--muted2);
+}
+.log-entry-raw {
+  font-size: 12px; color: var(--muted2); margin-bottom: 10px;
+  font-style: italic; padding: 8px 10px; background: var(--bg);
+  border-radius: 6px; border-left: 2px solid var(--border-light);
+  line-height: 1.5;
+}
+.log-entry-summary { font-size: 13px; line-height: 1.6; color: var(--text); margin-bottom: 10px; }
+
+.status-pills { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+.status-pill {
+  font-family: var(--mono); font-size: 9px; padding: 3px 8px; border-radius: 10px;
+  letter-spacing: 0.05em;
+}
+.pill-green { background: rgba(0,255,148,0.12); color: var(--accent2); border: 1px solid rgba(0,255,148,0.3); }
+.pill-yellow { background: rgba(255,184,0,0.12); color: var(--warn); border: 1px solid rgba(255,184,0,0.3); }
+.pill-red { background: rgba(255,71,87,0.12); color: var(--danger); border: 1px solid rgba(255,71,87,0.3); }
+
+.log-next, .log-risks, .log-changes {
+  margin-top: 8px; padding: 8px 10px; border-radius: 6px;
+  font-size: 12px; line-height: 1.5;
+}
+.log-next { background: rgba(0,229,255,0.06); border-left: 2px solid var(--accent); }
+.log-risks { background: rgba(255,184,0,0.08); border-left: 2px solid var(--warn); }
+.log-changes { background: rgba(0,255,148,0.06); border-left: 2px solid var(--accent2); }
+.log-section-label {
+  font-family: var(--mono); font-size: 10px; color: var(--muted2);
+  text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px;
+  display: block;
+}
+.log-next ul { margin: 0; padding-left: 18px; }
+.log-next li { margin: 3px 0; }
+.log-changes-item { margin: 3px 0; }
+
+.ai-thinking {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--muted2); font-family: var(--mono);
+  padding: 10px; animation: fadein 0.3s ease;
+}
+.thinking-dots span {
+  display: inline-block; width: 5px; height: 5px; border-radius: 50%;
+  background: var(--accent); margin: 0 1px; animation: blink 1.2s infinite;
+}
+.thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+.thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes blink { 0%,80%,100%{opacity:0.2} 40%{opacity:1} }
+
+.example-prompts {
+  display: flex; flex-direction: column; gap: 6px; margin-top: 10px;
+}
+.example-chip {
+  background: var(--surface3); border: 1px solid var(--border);
+  border-radius: 6px; padding: 8px 10px; font-size: 11px;
+  color: var(--muted2); cursor: pointer; transition: all 0.15s;
+  text-align: left; font-family: var(--sans);
+}
+.example-chip:hover, .example-chip:active {
+  color: var(--text); border-color: var(--accent);
+}
+
+/* ── MODAL ── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+  align-items: flex-end; justify-content: center;
+}
+.modal-overlay.open { display: flex; animation: fadein 0.2s ease; }
+.modal {
+  background: var(--surface); border: 1px solid var(--border-light);
+  border-radius: 14px 14px 0 0;
+  width: 100%; max-width: 600px; max-height: 88vh;
+  overflow-y: auto; padding: 20px;
+  animation: slideup 0.25s ease;
+}
+@keyframes slideup { from{transform:translateY(40px);opacity:0} to{transform:none;opacity:1} }
+
+.modal-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 16px;
+}
+.modal-title {
+  font-family: var(--mono); font-size: 12px; color: var(--accent);
+  letter-spacing: 0.1em; text-transform: uppercase;
+}
+.modal-close {
+  background: var(--surface2); border: 1px solid var(--border);
+  width: 28px; height: 28px; border-radius: 14px; color: var(--muted2);
+  font-size: 16px; line-height: 1; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.field { margin-bottom: 12px; }
+.field-label {
+  display: block; font-family: var(--mono); font-size: 10px;
+  color: var(--muted2); margin-bottom: 4px;
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+.field-input, .field-textarea, .field-select {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 12px; color: var(--text);
+  font-family: var(--sans); font-size: 13px; outline: none;
+  transition: border-color 0.15s;
+}
+.field-textarea { font-family: var(--mono); font-size: 12px; line-height: 1.5; resize: vertical; min-height: 100px; }
+.field-input:focus, .field-textarea:focus, .field-select:focus { border-color: var(--accent); }
+.field-row { display: flex; gap: 8px; }
+.field-row .field { flex: 1; }
+
+.field-toggle {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: 8px; cursor: pointer;
+}
+.toggle-switch {
+  width: 36px; height: 20px; background: var(--border); border-radius: 10px;
+  position: relative; transition: background 0.2s;
+}
+.toggle-switch::after {
+  content: ''; position: absolute; top: 2px; left: 2px;
+  width: 16px; height: 16px; background: var(--text); border-radius: 50%;
+  transition: transform 0.2s;
+}
+.field-toggle.on .toggle-switch { background: var(--accent2); }
+.field-toggle.on .toggle-switch::after { transform: translateX(16px); background: var(--bg); }
+.toggle-label { font-size: 13px; flex: 1; }
+
+.modal-actions {
+  display: flex; gap: 8px; margin-top: 16px; padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.btn {
+  flex: 1; padding: 11px 14px; border-radius: 8px;
+  font-family: var(--mono); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.05em; cursor: pointer; border: none;
+  transition: opacity 0.15s; text-transform: uppercase;
+}
+.btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #000; }
+.btn-secondary { background: var(--surface2); border: 1px solid var(--border); color: var(--text); }
+.btn-danger { background: var(--surface2); border: 1px solid var(--danger); color: var(--danger); }
+.btn:active { opacity: 0.7; }
+
+.settings-section {
+  border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px;
+}
+.settings-section-title {
+  font-family: var(--mono); font-size: 10px; color: var(--muted2);
+  margin-bottom: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+}
+.settings-row { display: flex; gap: 8px; margin-bottom: 8px; }
+
+/* ── TAG / STATUS PICKER ── */
+.picker-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.picker-chip {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 6px 10px; font-size: 11px;
+  cursor: pointer; font-family: var(--mono);
+  transition: all 0.15s;
+}
+.picker-chip.selected.tag-red { background: rgba(255,71,87,0.2); border-color: var(--danger); color: var(--danger); }
+.picker-chip.selected.tag-yellow { background: rgba(255,184,0,0.2); border-color: var(--warn); color: var(--warn); }
+.picker-chip.selected.tag-green { background: rgba(0,255,148,0.2); border-color: var(--accent2); color: var(--accent2); }
+.picker-chip.selected.tag-blue { background: rgba(0,229,255,0.2); border-color: var(--accent); color: var(--accent); }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: var(--surface); border: 1px solid var(--accent2);
+  border-radius: 8px; padding: 10px 18px; color: var(--accent2);
+  font-family: var(--mono); font-size: 12px; z-index: 2000;
+  opacity: 0; pointer-events: none; transition: opacity 0.25s;
+  box-shadow: 0 4px 20px rgba(0,255,148,0.15);
+}
+.toast.show { opacity: 1; }
+
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div class="logo">
+      <div class="logo-dot"></div>
+      ASV HUB
+    </div>
+    <div class="header-right">
+      <div class="week-badge" id="weekBadge">W<span class="w-num">—</span>/11 <span class="deadline">· — days</span></div>
+      <button class="gear-btn" onclick="openSettings()" aria-label="Settings">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" data-tab="tasks" onclick="switchTab('tasks',event)">📋 Tasks <span class="tab-count" id="count-tasks">0</span></button>
+    <button class="tab" data-tab="timeline" onclick="switchTab('timeline',event)">📅 Timeline</button>
+    <button class="tab" data-tab="learning" onclick="switchTab('learning',event)">🧠 Learning</button>
+    <button class="tab" data-tab="parts" onclick="switchTab('parts',event)">📦 Parts <span class="tab-count" id="count-parts">0</span></button>
+    <button class="tab" data-tab="log" onclick="switchTab('log',event)">🤖 AI Log</button>
+  </div>
+</div>
+
+<main>
+
+  <!-- TASKS PANEL -->
+  <div id="panel-tasks" class="panel active">
+    <div id="focusBanner"></div>
+    <div class="card">
+      <div class="card-title" id="weekTitle">Week — Progress</div>
+      <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+      <div class="progress-label">
+        <span id="progressDone">0 done</span>
+        <span id="progressPct">0%</span>
+      </div>
+    </div>
+    <div class="add-row">
+      <button class="add-btn" onclick="openTaskEditor(null)">+ Add Task</button>
+    </div>
+    <div id="taskGroups"></div>
+  </div>
+
+  <!-- TIMELINE PANEL -->
+  <div id="panel-timeline" class="panel">
+    <div id="timelineContainer"></div>
+  </div>
+
+  <!-- LEARNING PANEL -->
+  <div id="panel-learning" class="panel">
+    <div class="add-row">
+      <button class="add-btn" onclick="openConceptEditor(null)">+ Add Concept</button>
+      <button class="add-btn" onclick="askAIForConcept()" style="color:var(--accent2);border-color:rgba(0,255,148,0.4)">⚡ AI Teach Me</button>
+    </div>
+    <div id="learningContainer"></div>
+  </div>
+
+  <!-- PARTS PANEL -->
+  <div id="panel-parts" class="panel">
+    <div class="add-row">
+      <button class="add-btn" onclick="openPartEditor(null)">+ Add Part</button>
+    </div>
+    <div id="partsContainer"></div>
+  </div>
+
+  <!-- AI LOG PANEL -->
+  <div id="panel-log" class="panel">
+    <div class="card">
+      <div class="card-title">Daily Progress Log</div>
+      <div class="log-input-wrap">
+        <textarea class="log-input" id="logInput" placeholder="Tell me what you did today — and what changed.
+
+e.g. 'Finished .cst timing constraints and got positive slack. Ordered the L298N and brushed thrusters from Amazon. Ready to start AD9226 interface module next.'
+
+The AI will mark tasks done, update parts, add learning content, and analyze your status."></textarea>
+        <button class="log-btn" id="logBtn" onclick="submitLog()">⚡ LOG + UPDATE DASHBOARD</button>
+      </div>
+      <div id="logThinking" style="display:none" class="ai-thinking">
+        <div class="thinking-dots"><span></span><span></span><span></span></div>
+        Analyzing your progress and updating the dashboard...
+      </div>
+      <div class="example-prompts">
+        <button class="example-chip" onclick="fillExample(1)">💡 "I want to learn about X" prompt</button>
+        <button class="example-chip" onclick="fillExample(2)">💡 "Generate next week's tasks" prompt</button>
+      </div>
+    </div>
+    <div id="logEntries"></div>
+  </div>
+
+</main>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-task">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="taskModalTitle">Add Task</div>
+      <button class="modal-close" onclick="closeModal('modal-task')">✕</button>
+    </div>
+    <div class="field">
+      <label class="field-label">Task</label>
+      <textarea class="field-textarea" id="taskText" style="min-height:60px" placeholder="What needs doing?"></textarea>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label class="field-label">Tag</label>
+        <input class="field-input" id="taskTag" placeholder="FPGA / Pi / Order / Dad / Learn">
+      </div>
+      <div class="field">
+        <label class="field-label">Week</label>
+        <select class="field-select" id="taskWeek">
+          <option value="carryover">Carryover</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">Tag Color</label>
+      <div class="picker-row" id="taskColorPicker">
+        <div class="picker-chip tag-red" data-color="red" onclick="pickColor('task','red')">RED</div>
+        <div class="picker-chip tag-yellow" data-color="yellow" onclick="pickColor('task','yellow')">YELLOW</div>
+        <div class="picker-chip tag-green" data-color="green" onclick="pickColor('task','green')">GREEN</div>
+        <div class="picker-chip tag-blue" data-color="blue" onclick="pickColor('task','blue')">BLUE</div>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">Group</label>
+      <input class="field-input" id="taskGroup" placeholder="e.g. Week 3 — FPGA Work">
+    </div>
+    <div class="field-toggle" id="taskPriority" onclick="togglePriority()">
+      <div class="toggle-switch"></div>
+      <div class="toggle-label">Priority (red border)</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="taskDelete" onclick="deleteTaskFromModal()" style="display:none">Delete</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-task')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTask()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-part">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="partModalTitle">Add Part</div>
+      <button class="modal-close" onclick="closeModal('modal-part')">✕</button>
+    </div>
+    <div class="field">
+      <label class="field-label">Name</label>
+      <input class="field-input" id="partName" placeholder="e.g. MAX9814 Pre-amp">
+    </div>
+    <div class="field">
+      <label class="field-label">Detail</label>
+      <input class="field-input" id="partDetail" placeholder="e.g. Auto gain · Between TCT40R and AD9226">
+    </div>
+    <div class="field">
+      <label class="field-label">Status</label>
+      <div class="picker-row" id="partStatusPicker">
+        <div class="picker-chip" data-status="arrived" onclick="pickStatus('arrived')">Arrived</div>
+        <div class="picker-chip" data-status="owned" onclick="pickStatus('owned')">Owned</div>
+        <div class="picker-chip" data-status="ordered" onclick="pickStatus('ordered')">Ordered</div>
+        <div class="picker-chip" data-status="pending" onclick="pickStatus('pending')">Pending</div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="partDelete" onclick="deletePartFromModal()" style="display:none">Delete</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-part')">Cancel</button>
+      <button class="btn btn-primary" onclick="savePart()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-concept">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="conceptModalTitle">Add Concept</div>
+      <button class="modal-close" onclick="closeModal('modal-concept')">✕</button>
+    </div>
+    <div class="field-row">
+      <div class="field" style="max-width:80px">
+        <label class="field-label">Emoji</label>
+        <input class="field-input" id="conceptEmoji" placeholder="⚡" maxlength="4">
+      </div>
+      <div class="field">
+        <label class="field-label">Title</label>
+        <input class="field-input" id="conceptTitle" placeholder="e.g. EKF Basics">
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">Phase</label>
+      <select class="field-select" id="conceptPhase">
+        <option>Phase 1 — Toolchain &amp; Interface</option>
+        <option>Phase 2 — Signal Processing</option>
+        <option>Phase 3 — ROS 2 &amp; Integration</option>
+        <option>Phase 4 — Test &amp; Deploy</option>
+      </select>
+    </div>
+    <div class="field">
+      <label class="field-label">Week / Tag Label</label>
+      <input class="field-input" id="conceptWeek" placeholder="e.g. Wk 7 · Reference">
+    </div>
+    <div class="field">
+      <label class="field-label">Body (HTML supported)</label>
+      <textarea class="field-textarea" id="conceptBody" style="min-height:160px" placeholder="<p>Explanation here. Wrap code in <pre>...</pre>.</p>"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="conceptDelete" onclick="deleteConceptFromModal()" style="display:none">Delete</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-concept')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveConcept()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-settings">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Settings</div>
+      <button class="modal-close" onclick="closeModal('modal-settings')">✕</button>
+    </div>
+
+    <div class="settings-section-title">Project Dates</div>
+    <div class="field">
+      <label class="field-label">Start Date (Week 1 begins)</label>
+      <input type="date" class="field-input" id="settingStartDate">
+    </div>
+    <div class="field">
+      <label class="field-label">Deadline</label>
+      <input type="date" class="field-input" id="settingDeadline">
+    </div>
+    <div class="field">
+      <label class="field-label">Manual Week Override</label>
+      <select class="field-select" id="settingWeekOverride">
+        <option value="">Auto (compute from today)</option>
+      </select>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Data</div>
+      <div class="settings-row">
+        <button class="btn btn-secondary" onclick="exportData()">📥 Export</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📤 Import</button>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+      </div>
+      <div class="settings-row">
+        <button class="btn btn-danger" onclick="resetData()">⚠ Reset All Data</button>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// CONSTANTS & DEFAULT STATE
+// ═══════════════════════════════════════════════════════════
+
+const STORAGE_KEY = 'asv_state_v2';
+const TIMELINE = [
+  { w: 1,  start: '2026-05-24', end: '2026-05-30', title: 'Foundation + Ordering',           milestone: 'Pi setup · Tang Nano hello-world · Most parts ordered' },
+  { w: 2,  start: '2026-05-31', end: '2026-06-06', title: 'Gowin Toolchain + Parts Wave 2',   milestone: 'Gowin EDA running · AD9226 ordered · Pi UART config' },
+  { w: 3,  start: '2026-06-07', end: '2026-06-13', title: 'Timing Closure + Hull Start',      milestone: 'Tang Nano timing constraints clean · Hull materials in hand · Propulsion ordered' },
+  { w: 4,  start: '2026-06-14', end: '2026-06-20', title: 'AD9226 Interface + Bench Test',    milestone: 'AD9226 simulated, then bench-verified · Hull frame assembled' },
+  { w: 5,  start: '2026-06-21', end: '2026-06-27', title: 'Single FIR Matched Filter',        milestone: '32-tap FIR detecting chirp in air at 1-4m · Waterproofing started' },
+  { w: 6,  start: '2026-06-28', end: '2026-07-04', title: 'Dual Filter Banks + Buoy TX',      milestone: 'FPGA discriminates Buoy 1 vs Buoy 2 · Thrusters mounted' },
+  { w: 7,  start: '2026-07-05', end: '2026-07-11', title: 'ESP32 micro-ROS + Buoy Build',     milestone: 'All ROS topics live · Both buoys assembled' },
+  { w: 8,  start: '2026-07-12', end: '2026-07-18', title: 'State Machine + EKF',              milestone: 'Homing controller responds to simulated range · Shore display working' },
+  { w: 9,  start: '2026-07-19', end: '2026-07-25', title: 'Full Bench Integration',           milestone: 'Complete dry-run mission · All nodes synchronized' },
+  { w: 10, start: '2026-07-26', end: '2026-08-01', title: 'Pool Test #1',                     milestone: 'Waterproofing holds · Acoustic ranging calibrated in pool' },
+  { w: 11, start: '2026-08-02', end: '2026-08-10', title: 'Pool Test #2 + Demo Polish',       milestone: 'Autonomous homing on both buoys · Demo recorded · 🏁 DEADLINE Aug 10' },
+];
+
+const DEFAULT_STATE = {
+  config: {
+    startDate: '2026-05-24',
+    deadline: '2026-08-10',
+    weekOverride: null,
+    weekStatuses: {} // { 1: 'green', 2: 'yellow', ... }
+  },
+  tasks: [
+    // Carryover priorities
+    { id: 't_carry_fpga', text: 'Write .cst timing constraints + synthesize design onto Tang Nano — get positive slack in timing report', tag: 'FPGA', tagColor: 'red', priority: true, done: false, week: 'carryover', group: '🔴 Carryover — Do First' },
+    { id: 't_carry_uart', text: 'Disable UART serial console on Pi — sudo raspi-config → Interface → Serial Port → disable login shell, enable hardware', tag: 'Pi', tagColor: 'yellow', priority: true, done: false, week: 'carryover', group: '🔴 Carryover — Do First' },
+    { id: 't_carry_pipe', text: 'Study Verilog pipelining concepts — registered MAC stages, valid/ready handshaking', tag: 'Learn', tagColor: 'blue', priority: true, done: false, week: 'carryover', group: '🔴 Carryover — Do First' },
+    // Orders (carryover until ordered)
+    { id: 't_order_thrusters', text: 'Order brushed DC thrusters ×2 on Amazon — search "545 brushed motor underwater thruster 12V RC boat"', tag: 'Order', tagColor: 'red', priority: true, done: false, week: 'carryover', group: '🔴 Orders — Place Now' },
+    { id: 't_order_l298n',     text: 'Order L298N dual H-bridge module — $5-7 Amazon, any listing with blue heatsink', tag: 'Order', tagColor: 'red', priority: true, done: false, week: 'carryover', group: '🔴 Orders — Place Now' },
+    { id: 't_order_enclosure', text: 'Order waterproof enclosure + M12 cable glands + standoffs + heatshrink + 14AWG wire (bundle one order)', tag: 'Order', tagColor: 'red', priority: false, done: false, week: 'carryover', group: '🔴 Orders — Place Now' },
+    // Week 3 — FPGA
+    { id: 't_w3_ad_iface',  text: 'Write AD9226 parallel interface module in Verilog — 12-bit data bus latch, OTR pin, clock domain', tag: 'FPGA', tagColor: 'yellow', priority: false, done: false, week: 3, group: 'Week 3 — FPGA Work' },
+    { id: 't_w3_ad_sim',    text: 'Simulate AD9226 interface in Icarus Verilog + GTKWave — verify waveforms before chip arrives', tag: 'FPGA', tagColor: 'yellow', priority: false, done: false, week: 3, group: 'Week 3 — FPGA Work' },
+    { id: 't_w3_ad_bench',  text: 'AD9226 arrives (~Jun 14-21) — bench test against simulation, verify samples over UART to Pi', tag: 'FPGA', tagColor: 'yellow', priority: false, done: false, week: 3, group: 'Week 3 — FPGA Work' },
+    { id: 't_w3_lfm',       text: 'Study LFM chirp math — generation equation, matched filter as cross-correlation, ToF formula', tag: 'Learn', tagColor: 'blue', priority: false, done: false, week: 3, group: 'Week 3 — FPGA Work' },
+    // Week 3 — Hull
+    { id: 't_w3_homedepot', text: 'Home Depot run — PVC 4" pipe, end caps, cement/primer, L-brackets, M4 bolts, marine epoxy, silicone, acrylic', tag: 'Dad', tagColor: 'yellow', priority: false, done: false, week: 3, group: 'Week 3 — Hull (Dad)' },
+    { id: 't_w3_pvc',       text: 'Cut PVC pontoons to 70cm each, drill cross-member holes, fit L-brackets, begin cement bonding', tag: 'Dad', tagColor: 'yellow', priority: false, done: false, week: 3, group: 'Week 3 — Hull (Dad)' },
+  ],
+  parts: [
+    { id: 'p_pi',      name: 'Raspberry Pi 4 1GB',            detail: 'Ubuntu 24.04 · ROS 2 Jazzy · SSH working',           status: 'arrived' },
+    { id: 'p_heat',    name: 'Pi Heatsink Kit',                detail: '44.3°C idle · No throttling',                         status: 'arrived' },
+    { id: 'p_lipo',    name: 'Hosim 3S 5000mAh LiPo ×2',       detail: '11.1V 30C XT60',                                      status: 'arrived' },
+    { id: 'p_charger', name: 'B6 AC 80W Balance Charger',      detail: 'Built-in AC · XT60 cable included',                   status: 'arrived' },
+    { id: 'p_imu',     name: 'MPU-6050 IMU (HiLetgo GY-521)',  detail: 'I2C · Vehicle dead reckoning',                        status: 'arrived' },
+    { id: 'p_xt60',    name: 'XT60 Connectors + 14AWG wire',   detail: 'Cecicebb 5-pair · 50mm leads (will need extension)',  status: 'arrived' },
+    { id: 'p_fuse',    name: 'Inline Fuse Holder + Blade Fuses', detail: '20A · LiPo safety',                                 status: 'arrived' },
+    { id: 'p_tct40',   name: 'hiBCTR TCT40-16R/T Pack',         detail: '10TX + 10RX · 40kHz transducers',                    status: 'arrived' },
+    { id: 'p_owned1',  name: 'Tang Nano 20K · ESP32 ×2 · Arduino R4', detail: 'Already owned',                                status: 'owned' },
+    { id: 'p_owned2',  name: 'MOSFETs · Buck converters · Passives', detail: 'Already owned',                                 status: 'owned' },
+    { id: 'p_ad9226',  name: 'AD9226 12-bit 65MSPS ADC',        detail: 'AliExpress · Est. Jun 14-21',                        status: 'ordered' },
+    { id: 'p_thrust',  name: 'Brushed DC Thrusters ×2',         detail: '545 12V underwater · Search Amazon today',           status: 'pending' },
+    { id: 'p_l298n',   name: 'L298N Dual H-Bridge Module',      detail: '$5-7 · Blue heatsink block',                         status: 'pending' },
+    { id: 'p_enc',     name: 'Waterproof Enclosure + M12 Glands', detail: 'IP65 · Electronics bay',                           status: 'pending' },
+    { id: 'p_max',     name: 'MAX9814 Pre-amp Module',          detail: 'Auto gain · Between TCT40-16R and AD9226',           status: 'pending' },
+    { id: 'p_jsn',     name: 'JSN-SR04T Waterproof Ultrasonic', detail: 'Collision avoidance · ESP32',                        status: 'pending' },
+    { id: 'p_hardware',name: 'PVC + Hardware (Home Depot)',     detail: '4" pipe, end caps, L-brackets, epoxy, silicone',     status: 'pending' },
+  ],
+  learning: [
+    { id: 'l_timing', emoji: '⚡', title: 'Gowin EDA — Timing Constraints', phase: 'Phase 1 — Toolchain & Interface', week: 'Wk 1-2 · CRITICAL · Carryover', body:
+`<p>Timing constraints tell Gowin how fast your logic must run. Without them, place-and-route guesses — and your design may silently malfunction.</p>
+<p><strong>Clock constraint (.cst file):</strong></p>
+<pre>create_clock -name sys_clk -period 37.037 -waveform {0 18.518} [get_ports clk]
+IO_LOC "clk" 45;
+IO_LOC "led" 10;
+IO_PORT "led" IO_TYPE=LVCMOS33;</pre>
+<p>Period = 1/27MHz = 37.037ns. After P&amp;R, check the timing report for <strong>slack</strong>. Slack = budget − actual path delay. Positive = fine. Negative = that path is too slow and will malfunction.</p>
+<p><strong>Exercise:</strong> Synthesize a counter onto Tang Nano with a .cst file. Get a timing report showing positive slack on all paths.</p>
+<p>📎 <a href="https://github.com/sipeed/TangNano-20K-example" target="_blank">Sipeed Tang Nano 20K examples</a></p>` },
+    { id: 'l_ad9226', emoji: '📡', title: 'AD9226 Parallel ADC Interface', phase: 'Phase 1 — Toolchain & Interface', week: 'Wk 3-4 · CRITICAL', body:
+`<p>The AD9226 outputs 12-bit parallel data on D[11:0] at up to 65MSPS. Unlike SPI, there's no chip select or serial clock — you just latch the bus on the rising edge of your sampling clock.</p>
+<p><strong>Key signals:</strong></p>
+<pre>CLK     — your FPGA drives this (sampling clock)
+D[11:0] — 12-bit data out from ADC (you read)
+OTR     — over-range flag (input clipped — handle it)
+VREF    — set to 1.0V for ±1V input range</pre>
+<p><strong>Verilog pattern:</strong></p>
+<pre>always @(posedge clk) begin
+  if (!otr)
+    sample_reg &lt;= adc_data;  // latch valid sample
+  else
+    sample_reg &lt;= 12'h7FF;   // clamp on overrange
+end</pre>
+<p><strong>Exercise:</strong> Write the interface module, write a testbench that drives D[11:0] with a ramp, simulate in Icarus + GTKWave, verify the latch timing.</p>` },
+    { id: 'l_pipe', emoji: '🔁', title: 'Verilog Pipelining — MAC Stages', phase: 'Phase 1 — Toolchain & Interface', week: 'Wk 2-3 · CRITICAL · Carryover', body:
+`<p>Your matched filter is a 32-tap FIR — 32 multiply-accumulate operations per sample. At 65MHz you need the result in &lt;15ns. Pipelining splits the work across clock cycles so each stage only does a small piece.</p>
+<p><strong>One registered stage = one pipeline level:</strong></p>
+<pre>// Stage 1: multiply
+always @(posedge clk)
+  mult_reg &lt;= data_in * coeff;
+
+// Stage 2: accumulate
+always @(posedge clk)
+  accum_reg &lt;= accum_reg + mult_reg;</pre>
+<p>Each <code>always @(posedge clk)</code> register cuts the combinational path length in half. The cost is latency — output delayed by N cycles. That's fine for streaming DSP.</p>
+<p><strong>valid/ready:</strong> Propagate a <code>valid</code> flag through the same pipeline so downstream logic knows when output is meaningful.</p>` },
+    { id: 'l_lfm', emoji: '🔊', title: 'LFM Chirp + Matched Filter Theory', phase: 'Phase 2 — Signal Processing', week: 'Wk 3-4 · Build on ECEN 314', body:
+`<p>A Linear Frequency Modulated (LFM) chirp sweeps frequency linearly over time — Buoy 1 sweeps 34→38kHz, Buoy 2 sweeps 42→46kHz. Each is unique, so your FPGA can tell them apart.</p>
+<p><strong>Chirp equation:</strong></p>
+<pre>s(t) = cos(2π(f0·t + k/2·t²))
+k = (f1 - f0) / T   ← chirp rate</pre>
+<p><strong>Matched filter</strong> = cross-correlation of received signal with a stored reference chirp. When the chirp arrives, correlation peaks sharply. Time of peak = time of flight → range.</p>
+<p>📎 <a href="https://pysdr.org" target="_blank">PySDR.org — LFM chirp chapter</a> (best free resource, has Python code)</p>` },
+    { id: 'l_qmath', emoji: '🔢', title: 'Fixed-Point Arithmetic (Q-format)', phase: 'Phase 2 — Signal Processing', week: 'Wk 3-4 · FPGA math', body:
+`<p>FPGAs don't have floating point natively. You represent decimals using Q-format: Q1.15 means 1 sign bit + 15 fractional bits. Range = [-1, +1), resolution = 1/32768.</p>
+<p><strong>Multiplying two Q1.15 numbers:</strong></p>
+<pre>// Result is Q2.30 — shift right 15 to get Q1.15
+wire [31:0] mult_result = a * b;
+wire [15:0] scaled = mult_result[30:15];</pre>
+<p><strong>Overflow detection:</strong> If top bits aren't all the same sign, you've overflowed. Saturate rather than wrap — wrapping creates spurious correlations in your filter.</p>` },
+    { id: 'l_sm', emoji: '🤖', title: 'Custom ROS 2 State Machine', phase: 'Phase 3 — ROS 2 & Integration', week: 'Wk 6-7 · Software', body:
+`<p>Your mission state machine has 7 states:</p>
+<pre>INIT → SCAN_1 → HOMING_1 → ARRIVED_1
+     → SCAN_2 → HOMING_2 → ARRIVED_2</pre>
+<p><strong>SCAN:</strong> Vehicle rotates 360° while FPGA listens for target chirp. When correlation peak exceeds threshold, transition to HOMING.</p>
+<p><strong>HOMING:</strong> EKF fuses IMU + odometry for dead reckoning. Acoustic range corrections update position estimate. PID controls differential thrust toward decreasing range.</p>
+<p><strong>ARRIVED:</strong> Range below threshold → stop, log event, transition to next SCAN.</p>
+<p>nav2 is explicitly wrong here — it needs a map. Your range-only homing is simpler and more appropriate.</p>` },
+  ],
+  logs: []
+};
+
+// ═══════════════════════════════════════════════════════════
+// STATE MANAGEMENT
+// ═══════════════════════════════════════════════════════════
+
+let state = loadState();
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return JSON.parse(JSON.stringify(DEFAULT_STATE));
+    const parsed = JSON.parse(raw);
+    // Migration: ensure all top-level keys exist
+    if (!parsed.config) parsed.config = JSON.parse(JSON.stringify(DEFAULT_STATE.config));
+    if (!parsed.config.weekStatuses) parsed.config.weekStatuses = {};
+    if (!parsed.tasks) parsed.tasks = [];
+    if (!parsed.parts) parsed.parts = [];
+    if (!parsed.learning) parsed.learning = [];
+    if (!parsed.logs) parsed.logs = [];
+    return parsed;
+  } catch(e) {
+    console.error('Load error', e);
+    return JSON.parse(JSON.stringify(DEFAULT_STATE));
+  }
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch(e) {
+    toast('Storage full — export data and reduce log history', 'red');
+  }
+}
+
+function uid(prefix) {
+  return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+}
+
+// ═══════════════════════════════════════════════════════════
+// WEEK COMPUTATION
+// ═══════════════════════════════════════════════════════════
+
+function todayISO() {
+  const d = new Date();
+  return d.toISOString().slice(0,10);
+}
+
+function daysBetween(startISO, endISO) {
+  const [sy,sm,sd] = startISO.split('-').map(Number);
+  const [ey,em,ed] = endISO.split('-').map(Number);
+  return Math.floor((Date.UTC(ey,em-1,ed) - Date.UTC(sy,sm-1,sd)) / 86400000);
+}
+
+function getCurrentWeek() {
+  if (state.config.weekOverride) return Number(state.config.weekOverride);
+  const days = daysBetween(state.config.startDate, todayISO());
+  return Math.max(1, Math.min(11, Math.floor(days / 7) + 1));
+}
+
+function daysToDeadline() {
+  return daysBetween(todayISO(), state.config.deadline);
+}
+
+function formatDateRange(startISO, endISO) {
+  const opts = { month: 'short', day: 'numeric' };
+  const s = new Date(startISO + 'T00:00:00').toLocaleDateString('en-US', opts);
+  const e = new Date(endISO + 'T00:00:00').toLocaleDateString('en-US', opts);
+  return `${s} – ${e}`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDERING
+// ═══════════════════════════════════════════════════════════
+
+function renderAll() {
+  renderHeader();
+  renderTasks();
+  renderTimeline();
+  renderLearning();
+  renderParts();
+  renderLogs();
+  updateTabCounts();
+}
+
+function renderHeader() {
+  const wk = getCurrentWeek();
+  const dl = daysToDeadline();
+  let dlText = dl > 0 ? `· ${dl}d to demo` : (dl === 0 ? '· DEMO DAY' : '· past deadline');
+  document.getElementById('weekBadge').innerHTML =
+    `W<span class="w-num">${wk}</span>/11 <span class="deadline">${dlText}</span>`;
+}
+
+function renderTasks() {
+  const wk = getCurrentWeek();
+  const wkRange = TIMELINE.find(t => t.w === wk);
+  document.getElementById('weekTitle').textContent =
+    `Week ${wk} Progress · ${wkRange ? wkRange.title : ''}`;
+
+  // Focus banner: priority pending
+  const focus = state.tasks.filter(t => t.priority && !t.done && (t.week === 'carryover' || t.week === wk));
+  const banner = document.getElementById('focusBanner');
+  if (focus.length > 0) {
+    banner.innerHTML = `<div class="reminder-banner"><strong>⚡ TODAY'S FOCUS</strong><br>${focus.slice(0,3).map(t => escapeHTML(t.text.split(/[—·]/)[0].trim())).join(' · ')}</div>`;
+  } else {
+    banner.innerHTML = '';
+  }
+
+  // Visible tasks: carryover + current week
+  const visible = state.tasks.filter(t => t.week === 'carryover' || t.week === wk);
+
+  // Group
+  const groups = {};
+  visible.forEach(t => {
+    const g = t.group || 'Tasks';
+    if (!groups[g]) groups[g] = [];
+    groups[g].push(t);
+  });
+
+  // Sort: priority pending first, then by group
+  const groupOrder = Object.keys(groups).sort((a,b) => {
+    const aP = groups[a].some(t => t.priority && !t.done);
+    const bP = groups[b].some(t => t.priority && !t.done);
+    if (aP !== bP) return aP ? -1 : 1;
+    return a.localeCompare(b);
+  });
+
+  const container = document.getElementById('taskGroups');
+  if (visible.length === 0) {
+    container.innerHTML = '<div class="empty-state">No tasks for this week yet. Tap + Add Task, or use the AI Log to generate them.</div>';
+  } else {
+    container.innerHTML = groupOrder.map(gName => `
+      <div class="task-group">
+        <div class="task-group-label">${escapeHTML(gName)}</div>
+        ${groups[gName].sort((a,b) => Number(b.priority||0) - Number(a.priority||0) + (Number(a.done) - Number(b.done))*2).map(t => `
+          <div class="task-item ${t.done?'done':''} ${t.priority?'priority':''}" id="task-${t.id}">
+            <div class="task-check" onclick="toggleTask('${t.id}')">
+              <svg width="10" height="8" viewBox="0 0 10 8"><polyline points="1,4 4,7 9,1" fill="none" stroke="#080B12" stroke-width="2" stroke-linecap="round"/></svg>
+            </div>
+            <div class="task-text" onclick="toggleTask('${t.id}')">${escapeHTML(t.text)}</div>
+            ${t.tag ? `<span class="task-tag tag-${t.tagColor||'blue'}">${escapeHTML(t.tag)}</span>` : ''}
+            <button class="kebab" onclick="openTaskEditor('${t.id}')" aria-label="Edit">⋯</button>
+          </div>
+        `).join('')}
+      </div>
+    `).join('');
+  }
+
+  // Progress
+  const done = visible.filter(t => t.done).length;
+  const total = visible.length;
+  const pct = total ? Math.round((done/total)*100) : 0;
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressDone').textContent = `${done} / ${total} done`;
+  document.getElementById('progressPct').textContent = pct + '%';
+}
+
+function renderTimeline() {
+  const wk = getCurrentWeek();
+  const c = document.getElementById('timelineContainer');
+  c.innerHTML = TIMELINE.map(t => {
+    const isPast = t.w < wk;
+    const isCurrent = t.w === wk;
+    const status = state.config.weekStatuses[t.w] || (isPast ? 'green' : isCurrent ? 'yellow' : 'grey');
+    return `
+      <div class="timeline-week ${isCurrent?'current':''} ${isPast?'past':''}">
+        <div class="week-num">W${t.w}</div>
+        <div class="week-info">
+          <div class="week-title">${escapeHTML(t.title)}</div>
+          <div class="week-dates">${formatDateRange(t.start, t.end)}</div>
+          <div class="week-milestone">${escapeHTML(t.milestone)}</div>
+        </div>
+        <div class="week-status status-${status}" onclick="cycleWeekStatus(${t.w})" title="Tap to cycle status"></div>
+      </div>
+    `;
+  }).join('');
+}
+
+function cycleWeekStatus(w) {
+  const cycle = ['grey','yellow','green','red'];
+  const cur = state.config.weekStatuses[w] || 'grey';
+  const next = cycle[(cycle.indexOf(cur)+1) % cycle.length];
+  state.config.weekStatuses[w] = next;
+  saveState(); renderTimeline();
+}
+
+function renderLearning() {
+  const phases = {};
+  state.learning.forEach(c => {
+    const p = c.phase || 'Other';
+    if (!phases[p]) phases[p] = [];
+    phases[p].push(c);
+  });
+  const phaseOrder = Object.keys(phases).sort();
+  const container = document.getElementById('learningContainer');
+  if (state.learning.length === 0) {
+    container.innerHTML = '<div class="empty-state">No concepts yet. Tap "AI Teach Me" to generate one.</div>';
+    return;
+  }
+  container.innerHTML = phaseOrder.map(p => `
+    <div class="phase-divider">${escapeHTML(p)}</div>
+    ${phases[p].map(c => `
+      <div class="concept-card" id="concept-${c.id}">
+        <div class="concept-header" onclick="toggleConcept('${c.id}')">
+          <div class="concept-info">
+            <div class="concept-title">${escapeHTML(c.emoji||'📘')} ${escapeHTML(c.title)}</div>
+            <div class="concept-week">${escapeHTML(c.week||'')}</div>
+          </div>
+          <span class="concept-arrow">›</span>
+        </div>
+        <div class="concept-body">
+          ${c.body || ''}
+          <div class="concept-actions">
+            <button class="mini-btn" onclick="event.stopPropagation();openConceptEditor('${c.id}')">Edit</button>
+            <button class="mini-btn danger" onclick="event.stopPropagation();deleteConcept('${c.id}')">Delete</button>
+          </div>
+        </div>
+      </div>
+    `).join('')}
+  `).join('');
+}
+
+function toggleConcept(id) {
+  const el = document.getElementById('concept-' + id);
+  if (el) el.classList.toggle('open');
+}
+
+function renderParts() {
+  const order = ['arrived','owned','ordered','pending'];
+  const labels = { arrived: '✅ Arrived', owned: '🔧 Owned', ordered: '🚚 Ordered — In Transit', pending: '🔴 Still Need to Order' };
+  const grouped = {};
+  state.parts.forEach(p => {
+    if (!grouped[p.status]) grouped[p.status] = [];
+    grouped[p.status].push(p);
+  });
+  const c = document.getElementById('partsContainer');
+  if (state.parts.length === 0) {
+    c.innerHTML = '<div class="empty-state">No parts tracked yet.</div>';
+    return;
+  }
+  c.innerHTML = order.filter(s => grouped[s]).map(s => `
+    <div class="phase-divider">${labels[s]}</div>
+    ${grouped[s].map(p => `
+      <div class="part-row" id="part-${p.id}">
+        <div class="part-status-dot status-${s==='arrived'||s==='owned'?'green':s==='ordered'?'yellow':'red'}" onclick="cyclePartStatus('${p.id}')"></div>
+        <div class="part-info">
+          <div class="part-name">${escapeHTML(p.name)}</div>
+          <div class="part-detail">${escapeHTML(p.detail||'')}</div>
+        </div>
+        <span class="part-badge badge-${s}" onclick="cyclePartStatus('${p.id}')">${s==='arrived'?'Arrived':s==='owned'?'Owned':s==='ordered'?'In Transit':'Order Now'}</span>
+        <button class="kebab" onclick="openPartEditor('${p.id}')" aria-label="Edit">⋯</button>
+      </div>
+    `).join('')}
+  `).join('');
+}
+
+function cyclePartStatus(id) {
+  const part = state.parts.find(p => p.id === id);
+  if (!part) return;
+  const cycle = ['pending','ordered','arrived','owned'];
+  part.status = cycle[(cycle.indexOf(part.status)+1) % cycle.length];
+  saveState(); renderParts(); updateTabCounts();
+  flash('part-' + id);
+  toast(`Marked: ${part.status}`, 'green');
+}
+
+function renderLogs() {
+  const c = document.getElementById('logEntries');
+  if (!state.logs.length) {
+    c.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:13px;padding:30px 0;font-style:italic">No logs yet — log your first daily update above.</div>';
+    return;
+  }
+  c.innerHTML = state.logs.map(e => {
+    const summary = e.summary ? `<div class="log-entry-summary">${escapeHTML(e.summary)}</div>` : '';
+    const pills = e.status ? `<div class="status-pills">
+      ${pill('TECH', e.status.technical)}
+      ${pill('COST', e.status.cost)}
+      ${pill('CAREER', e.status.career)}
+    </div>` : '';
+    const next = e.next_steps && e.next_steps.length ? `<div class="log-next">
+      <span class="log-section-label">Next Session</span>
+      <ul>${e.next_steps.map(s => `<li>${escapeHTML(s)}</li>`).join('')}</ul>
+    </div>` : '';
+    const risks = e.risks ? `<div class="log-risks">
+      <span class="log-section-label">⚠ Risk</span>
+      ${escapeHTML(e.risks)}
+    </div>` : '';
+    const changes = e.actions_applied && e.actions_applied.length ? `<div class="log-changes">
+      <span class="log-section-label">What Changed</span>
+      ${e.actions_applied.map(a => `<div class="log-changes-item">${escapeHTML(a)}</div>`).join('')}
+    </div>` : '';
+    const fallback = !e.summary && e.raw_response ? `<div class="log-entry-summary" style="white-space:pre-wrap">${escapeHTML(e.raw_response)}</div>` : '';
+    return `
+      <div class="log-entry">
+        <div class="log-entry-header"><div class="log-entry-date">📅 ${escapeHTML(e.date)}</div></div>
+        <div class="log-entry-raw">"${escapeHTML((e.raw||'').slice(0,200))}${(e.raw||'').length>200?'…':''}"</div>
+        ${pills}${summary}${fallback}${next}${risks}${changes}
+      </div>`;
+  }).join('');
+}
+
+function pill(label, color) {
+  if (!color) return '';
+  const c = String(color).toUpperCase();
+  const cls = c === 'GREEN' ? 'pill-green' : c === 'YELLOW' ? 'pill-yellow' : c === 'RED' ? 'pill-red' : '';
+  return `<span class="status-pill ${cls}">${label}: ${c}</span>`;
+}
+
+function updateTabCounts() {
+  const wk = getCurrentWeek();
+  const visible = state.tasks.filter(t => t.week === 'carryover' || t.week === wk);
+  const pending = visible.filter(t => !t.done).length;
+  document.getElementById('count-tasks').textContent = pending;
+  const partsPending = state.parts.filter(p => p.status === 'pending').length;
+  document.getElementById('count-parts').textContent = partsPending;
+}
+
+function flash(elId) {
+  const el = document.getElementById(elId);
+  if (el) {
+    el.classList.add('flash');
+    setTimeout(() => el.classList.remove('flash'), 1200);
+  }
+}
+
+function escapeHTML(s) {
+  if (s == null) return '';
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ═══════════════════════════════════════════════════════════
+// TAB SWITCHING
+// ═══════════════════════════════════════════════════════════
+
+function switchTab(name, ev) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  if (ev && ev.target) ev.target.closest('.tab').classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════════════
+// TASK CRUD
+// ═══════════════════════════════════════════════════════════
+
+let editingTaskId = null;
+let editingTaskColor = 'blue';
+let editingTaskPriority = false;
+
+function toggleTask(id) {
+  const t = state.tasks.find(x => x.id === id);
+  if (!t) return;
+  t.done = !t.done;
+  saveState(); renderTasks(); updateTabCounts();
+}
+
+function openTaskEditor(id) {
+  editingTaskId = id;
+  populateWeekDropdown('taskWeek');
+  if (id) {
+    const t = state.tasks.find(x => x.id === id);
+    if (!t) return;
+    document.getElementById('taskModalTitle').textContent = 'Edit Task';
+    document.getElementById('taskText').value = t.text;
+    document.getElementById('taskTag').value = t.tag || '';
+    document.getElementById('taskWeek').value = t.week;
+    document.getElementById('taskGroup').value = t.group || '';
+    editingTaskColor = t.tagColor || 'blue';
+    editingTaskPriority = !!t.priority;
+    document.getElementById('taskDelete').style.display = '';
+  } else {
+    document.getElementById('taskModalTitle').textContent = 'Add Task';
+    document.getElementById('taskText').value = '';
+    document.getElementById('taskTag').value = '';
+    document.getElementById('taskWeek').value = getCurrentWeek();
+    document.getElementById('taskGroup').value = `Week ${getCurrentWeek()} — `;
+    editingTaskColor = 'blue';
+    editingTaskPriority = false;
+    document.getElementById('taskDelete').style.display = 'none';
+  }
+  refreshTaskColor();
+  refreshTaskPriority();
+  openModal('modal-task');
+}
+
+function pickColor(target, color) {
+  if (target === 'task') {
+    editingTaskColor = color;
+    refreshTaskColor();
+  }
+}
+
+function refreshTaskColor() {
+  document.querySelectorAll('#taskColorPicker .picker-chip').forEach(c => {
+    c.classList.toggle('selected', c.dataset.color === editingTaskColor);
+  });
+}
+
+function togglePriority() {
+  editingTaskPriority = !editingTaskPriority;
+  refreshTaskPriority();
+}
+
+function refreshTaskPriority() {
+  document.getElementById('taskPriority').classList.toggle('on', editingTaskPriority);
+}
+
+function saveTask() {
+  const text = document.getElementById('taskText').value.trim();
+  if (!text) { toast('Task text required', 'red'); return; }
+  const data = {
+    text,
+    tag: document.getElementById('taskTag').value.trim(),
+    tagColor: editingTaskColor,
+    priority: editingTaskPriority,
+    week: document.getElementById('taskWeek').value === 'carryover' ? 'carryover' : Number(document.getElementById('taskWeek').value),
+    group: document.getElementById('taskGroup').value.trim() || 'Tasks'
+  };
+  if (editingTaskId) {
+    const t = state.tasks.find(x => x.id === editingTaskId);
+    Object.assign(t, data);
+    toast('Task updated', 'green');
+  } else {
+    state.tasks.push({ id: uid('t'), done: false, ...data });
+    toast('Task added', 'green');
+  }
+  saveState(); renderTasks(); updateTabCounts();
+  closeModal('modal-task');
+}
+
+function deleteTaskFromModal() {
+  if (!editingTaskId) return;
+  if (!confirm('Delete this task?')) return;
+  state.tasks = state.tasks.filter(t => t.id !== editingTaskId);
+  saveState(); renderTasks(); updateTabCounts();
+  closeModal('modal-task');
+  toast('Task deleted', 'green');
+}
+
+function populateWeekDropdown(id) {
+  const sel = document.getElementById(id);
+  sel.innerHTML = '<option value="carryover">Carryover (always shown)</option>';
+  TIMELINE.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t.w;
+    opt.textContent = `Week ${t.w} · ${t.title}`;
+    sel.appendChild(opt);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// PART CRUD
+// ═══════════════════════════════════════════════════════════
+
+let editingPartId = null;
+let editingPartStatus = 'pending';
+
+function openPartEditor(id) {
+  editingPartId = id;
+  if (id) {
+    const p = state.parts.find(x => x.id === id);
+    if (!p) return;
+    document.getElementById('partModalTitle').textContent = 'Edit Part';
+    document.getElementById('partName').value = p.name;
+    document.getElementById('partDetail').value = p.detail || '';
+    editingPartStatus = p.status;
+    document.getElementById('partDelete').style.display = '';
+  } else {
+    document.getElementById('partModalTitle').textContent = 'Add Part';
+    document.getElementById('partName').value = '';
+    document.getElementById('partDetail').value = '';
+    editingPartStatus = 'pending';
+    document.getElementById('partDelete').style.display = 'none';
+  }
+  refreshPartStatus();
+  openModal('modal-part');
+}
+
+function pickStatus(status) {
+  editingPartStatus = status;
+  refreshPartStatus();
+}
+
+function refreshPartStatus() {
+  document.querySelectorAll('#partStatusPicker .picker-chip').forEach(c => {
+    const s = c.dataset.status;
+    c.classList.remove('tag-red','tag-yellow','tag-green','tag-blue','selected');
+    if (s === editingPartStatus) {
+      c.classList.add('selected');
+      c.classList.add(s==='arrived'||s==='owned'?'tag-green':s==='ordered'?'tag-yellow':'tag-red');
+    }
+  });
+}
+
+function savePart() {
+  const name = document.getElementById('partName').value.trim();
+  if (!name) { toast('Name required', 'red'); return; }
+  const data = {
+    name,
+    detail: document.getElementById('partDetail').value.trim(),
+    status: editingPartStatus
+  };
+  if (editingPartId) {
+    const p = state.parts.find(x => x.id === editingPartId);
+    Object.assign(p, data);
+    toast('Part updated', 'green');
+  } else {
+    state.parts.push({ id: uid('p'), ...data });
+    toast('Part added', 'green');
+  }
+  saveState(); renderParts(); updateTabCounts();
+  closeModal('modal-part');
+}
+
+function deletePartFromModal() {
+  if (!editingPartId) return;
+  if (!confirm('Delete this part?')) return;
+  state.parts = state.parts.filter(p => p.id !== editingPartId);
+  saveState(); renderParts(); updateTabCounts();
+  closeModal('modal-part');
+  toast('Part deleted', 'green');
+}
+
+// ═══════════════════════════════════════════════════════════
+// CONCEPT CRUD
+// ═══════════════════════════════════════════════════════════
+
+let editingConceptId = null;
+
+function openConceptEditor(id) {
+  editingConceptId = id;
+  if (id) {
+    const c = state.learning.find(x => x.id === id);
+    if (!c) return;
+    document.getElementById('conceptModalTitle').textContent = 'Edit Concept';
+    document.getElementById('conceptEmoji').value = c.emoji || '';
+    document.getElementById('conceptTitle').value = c.title;
+    document.getElementById('conceptPhase').value = c.phase || 'Phase 1 — Toolchain & Interface';
+    document.getElementById('conceptWeek').value = c.week || '';
+    document.getElementById('conceptBody').value = c.body || '';
+    document.getElementById('conceptDelete').style.display = '';
+  } else {
+    document.getElementById('conceptModalTitle').textContent = 'Add Concept';
+    document.getElementById('conceptEmoji').value = '📘';
+    document.getElementById('conceptTitle').value = '';
+    document.getElementById('conceptPhase').value = 'Phase 1 — Toolchain & Interface';
+    document.getElementById('conceptWeek').value = `Wk ${getCurrentWeek()} · Reference`;
+    document.getElementById('conceptBody').value = '<p></p>';
+    document.getElementById('conceptDelete').style.display = 'none';
+  }
+  openModal('modal-concept');
+}
+
+function saveConcept() {
+  const title = document.getElementById('conceptTitle').value.trim();
+  if (!title) { toast('Title required', 'red'); return; }
+  const data = {
+    emoji: document.getElementById('conceptEmoji').value.trim() || '📘',
+    title,
+    phase: document.getElementById('conceptPhase').value,
+    week: document.getElementById('conceptWeek').value.trim(),
+    body: document.getElementById('conceptBody').value
+  };
+  if (editingConceptId) {
+    const c = state.learning.find(x => x.id === editingConceptId);
+    Object.assign(c, data);
+    toast('Concept updated', 'green');
+  } else {
+    state.learning.push({ id: uid('l'), ...data });
+    toast('Concept added', 'green');
+  }
+  saveState(); renderLearning();
+  closeModal('modal-concept');
+}
+
+function deleteConcept(id) {
+  if (!confirm('Delete this concept?')) return;
+  state.learning = state.learning.filter(c => c.id !== id);
+  saveState(); renderLearning();
+  toast('Concept deleted', 'green');
+}
+
+function deleteConceptFromModal() {
+  if (editingConceptId) {
+    deleteConcept(editingConceptId);
+    closeModal('modal-concept');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// MODALS
+// ═══════════════════════════════════════════════════════════
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) closeModal(o.id); });
+});
+
+// ═══════════════════════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════════════════════
+
+function openSettings() {
+  document.getElementById('settingStartDate').value = state.config.startDate;
+  document.getElementById('settingDeadline').value = state.config.deadline;
+  const sel = document.getElementById('settingWeekOverride');
+  sel.innerHTML = '<option value="">Auto (compute from today)</option>';
+  TIMELINE.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t.w;
+    opt.textContent = `Force Week ${t.w}`;
+    sel.appendChild(opt);
+  });
+  sel.value = state.config.weekOverride || '';
+  openModal('modal-settings');
+}
+
+function saveSettings() {
+  state.config.startDate = document.getElementById('settingStartDate').value || state.config.startDate;
+  state.config.deadline = document.getElementById('settingDeadline').value || state.config.deadline;
+  const wo = document.getElementById('settingWeekOverride').value;
+  state.config.weekOverride = wo ? Number(wo) : null;
+  saveState(); renderAll();
+  closeModal('modal-settings');
+  toast('Settings saved', 'green');
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `asv_hub_backup_${todayISO()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Backup downloaded', 'green');
+}
+
+function importData(ev) {
+  const file = ev.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      if (!parsed.config || !Array.isArray(parsed.tasks)) throw new Error('Invalid backup');
+      if (!confirm('Replace all current data with imported backup?')) return;
+      state = parsed;
+      saveState(); renderAll();
+      closeModal('modal-settings');
+      toast('Data imported', 'green');
+    } catch(err) {
+      toast('Invalid backup file', 'red');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function resetData() {
+  if (!confirm('Reset all data to defaults? This will erase all progress, logs, and customizations.')) return;
+  if (!confirm('Really sure? This cannot be undone.')) return;
+  state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+  saveState(); renderAll();
+  closeModal('modal-settings');
+  toast('Reset complete', 'green');
+}
+
+// ═══════════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════════
+
+let toastTimer;
+function toast(msg, color) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.color = color === 'red' ? 'var(--danger)' : 'var(--accent2)';
+  el.style.borderColor = color === 'red' ? 'var(--danger)' : 'var(--accent2)';
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+// ═══════════════════════════════════════════════════════════
+// AI LOG — STRUCTURED RESPONSE
+// ═══════════════════════════════════════════════════════════
+
+function fillExample(n) {
+  const input = document.getElementById('logInput');
+  if (n === 1) {
+    input.value = "Can you teach me the basics of Extended Kalman Filters? I need to understand it for the dead reckoning code on the Pi.";
+  } else if (n === 2) {
+    input.value = "Generate task list for next week based on where I currently am.";
+  }
+  input.focus();
+}
+
+function askAIForConcept() {
+  switchTab('log', { target: document.querySelector('[data-tab="log"]') });
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelector('[data-tab="log"]').classList.add('active');
+  document.getElementById('logInput').value = "Teach me about [topic] — add it as a concept card with code examples.";
+  document.getElementById('logInput').focus();
+  document.getElementById('logInput').setSelectionRange(15, 22);
+}
+
+async function submitLog() {
+  const input = document.getElementById('logInput');
+  const text = input.value.trim();
+  if (!text) return;
+
+  const btn = document.getElementById('logBtn');
+  const thinking = document.getElementById('logThinking');
+  btn.disabled = true;
+  thinking.style.display = 'flex';
+
+  // Build context for the AI
+  const wk = getCurrentWeek();
+  const activeTasks = state.tasks
+    .filter(t => !t.done && (t.week === 'carryover' || t.week === wk))
+    .map(t => ({ id: t.id, text: t.text, tag: t.tag, priority: t.priority }));
+  const pendingParts = state.parts
+    .filter(p => p.status === 'pending' || p.status === 'ordered')
+    .map(p => ({ id: p.id, name: p.name, status: p.status }));
+  const existingConceptTitles = state.learning.map(c => c.title);
+
+  const systemPrompt = `You are the AI project assistant for Mirthun's GPS-denied autonomous acoustic homing USV project.
+DEADLINE: August 10, 2026. Today: ${todayISO()}. Current project week: ${wk}/11.
+
+PROJECT STACK: Tang Nano 20K FPGA, AD9226 ADC, Raspberry Pi 4 (ROS 2 Jazzy), ESP32 micro-ROS, L298N motors, dual LFM chirp matched filters (34-38kHz + 42-46kHz), brushed DC thrusters, PVC catamaran hull. GPS-denied — acoustic-only homing on 2 sequential beacons via 360° scan + EKF dead reckoning.
+
+CURRENT ACTIVE TASKS (pending only, current week + carryover):
+${JSON.stringify(activeTasks, null, 1)}
+
+PENDING/ORDERED PARTS:
+${JSON.stringify(pendingParts, null, 1)}
+
+EXISTING CONCEPT TITLES (don't duplicate):
+${JSON.stringify(existingConceptTitles)}
+
+You MUST respond with valid JSON only — no preamble, no markdown fences, no explanation outside JSON.
+
+SCHEMA:
+{
+  "summary": "2-3 sentence analysis of progress + status",
+  "status": { "technical": "GREEN|YELLOW|RED", "cost": "GREEN|YELLOW|RED", "career": "GREEN|YELLOW|RED" },
+  "next_steps": ["specific item 1", "specific item 2", "specific item 3"],
+  "risks": "brief flag or null",
+  "actions": [
+    { "type": "complete_task", "match": "distinctive substring of task text" },
+    { "type": "add_task", "text": "...", "tag": "FPGA|Pi|Order|Dad|Learn|Test|ROS|Hull", "tagColor": "red|yellow|green|blue", "group": "Week N — ...", "priority": false, "week": "current|carryover|2|3|..." },
+    { "type": "complete_part", "match": "..." },
+    { "type": "add_part", "name": "...", "detail": "...", "status": "pending|ordered|arrived|owned" },
+    { "type": "add_concept", "emoji": "🧠", "title": "...", "phase": "Phase 1 — Toolchain & Interface|Phase 2 — Signal Processing|Phase 3 — ROS 2 & Integration|Phase 4 — Test & Deploy", "week": "Wk N · descriptor", "body": "<p>HTML content with <pre>code</pre> blocks and <strong>key</strong> emphasis</p>" }
+  ]
+}
+
+RULES:
+- Only include "complete_task" / "complete_part" when the user clearly reports finishing that work
+- Match strings should be distinctive 2-4 word substrings of the existing task/part text
+- "add_task" when user mentions new follow-up work
+- "add_concept" when user asks to learn something not in existing titles
+- For "add_concept", write the body in rich HTML with code examples wherever applicable — be thorough and tutorial-grade since the user reads these on mobile
+- Be conservative — never fabricate progress not reported
+- Status: GREEN = on track, YELLOW = behind but recoverable, RED = blocking issue
+- Cost status considers the $100 budget; flag YELLOW if approaching
+- Career status considers naval defense portfolio alignment
+- Be tactical and specific in next_steps`;
+
+  let entryData;
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 4000,
+        system: systemPrompt,
+        messages: [{ role: "user", content: text }]
+      })
+    });
+    const data = await response.json();
+    let raw = data.content
+      ?.filter(b => b.type === 'text')
+      .map(b => b.text)
+      .join('\n')
+      .trim() || '';
+    // strip code fences if model added them despite instructions
+    raw = raw.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
+
+    let parsed;
+    try { parsed = JSON.parse(raw); }
+    catch(e) {
+      entryData = {
+        id: uid('log'), date: nowLabel(), raw: text,
+        raw_response: raw || 'No response received.',
+      };
+    }
+
+    if (parsed) {
+      const applied = applyActions(parsed.actions || []);
+      entryData = {
+        id: uid('log'),
+        date: nowLabel(),
+        raw: text,
+        summary: parsed.summary,
+        status: parsed.status,
+        next_steps: parsed.next_steps,
+        risks: parsed.risks,
+        actions_applied: applied
+      };
+    }
+  } catch(e) {
+    console.error(e);
+    entryData = {
+      id: uid('log'), date: nowLabel(), raw: text,
+      raw_response: 'Network error or API unavailable. Your update was saved locally.'
+    };
+  }
+
+  state.logs.unshift(entryData);
+  if (state.logs.length > 50) state.logs = state.logs.slice(0, 50);
+  saveState();
+  input.value = '';
+  renderAll();
+  btn.disabled = false;
+  thinking.style.display = 'none';
+}
+
+function nowLabel() {
+  return new Date().toLocaleDateString('en-US', {
+    weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// ACTION APPLICATION
+// ═══════════════════════════════════════════════════════════
+
+function applyActions(actions) {
+  const applied = [];
+  if (!Array.isArray(actions)) return applied;
+
+  actions.forEach(a => {
+    try {
+      if (a.type === 'complete_task') {
+        const matches = findTasks(a.match);
+        if (matches.length === 0) {
+          applied.push(`⚠ No task matched "${a.match}"`);
+        } else {
+          matches.slice(0,3).forEach(t => {
+            t.done = true;
+            applied.push(`✅ Marked done: "${truncate(t.text, 60)}"`);
+            setTimeout(() => flash('task-' + t.id), 100);
+          });
+        }
+      } else if (a.type === 'add_task') {
+        const week = a.week === 'current' ? getCurrentWeek() : (a.week === 'carryover' ? 'carryover' : Number(a.week));
+        const t = {
+          id: uid('t'),
+          text: a.text,
+          tag: a.tag || '',
+          tagColor: a.tagColor || 'blue',
+          priority: !!a.priority,
+          done: false,
+          week: isNaN(week) || week === 'carryover' ? (a.week === 'carryover' ? 'carryover' : getCurrentWeek()) : week,
+          group: a.group || `Week ${getCurrentWeek()} — AI Added`
+        };
+        state.tasks.push(t);
+        applied.push(`➕ Added task: "${truncate(a.text, 60)}"`);
+      } else if (a.type === 'complete_part') {
+        const matches = findParts(a.match);
+        if (matches.length === 0) {
+          applied.push(`⚠ No part matched "${a.match}"`);
+        } else {
+          matches.slice(0,3).forEach(p => {
+            p.status = 'arrived';
+            applied.push(`📦 Marked arrived: "${p.name}"`);
+            setTimeout(() => flash('part-' + p.id), 100);
+          });
+        }
+      } else if (a.type === 'add_part') {
+        const p = {
+          id: uid('p'),
+          name: a.name,
+          detail: a.detail || '',
+          status: a.status || 'pending'
+        };
+        state.parts.push(p);
+        applied.push(`📦 Added part: "${a.name}" (${p.status})`);
+      } else if (a.type === 'add_concept') {
+        const c = {
+          id: uid('l'),
+          emoji: a.emoji || '🧠',
+          title: a.title,
+          phase: a.phase || 'Phase 1 — Toolchain & Interface',
+          week: a.week || '',
+          body: a.body || '<p></p>'
+        };
+        state.learning.push(c);
+        applied.push(`🧠 Added concept: "${a.title}"`);
+        setTimeout(() => flash('concept-' + c.id), 100);
+      }
+    } catch(e) {
+      console.error('Action error', a, e);
+      applied.push(`⚠ Failed to apply ${a.type}`);
+    }
+  });
+
+  saveState();
+  return applied;
+}
+
+function findTasks(query) {
+  if (!query) return [];
+  const q = query.toLowerCase();
+  return state.tasks.filter(t => !t.done && t.text.toLowerCase().includes(q));
+}
+
+function findParts(query) {
+  if (!query) return [];
+  const q = query.toLowerCase();
+  return state.parts.filter(p =>
+    p.status !== 'arrived' && p.status !== 'owned' &&
+    (p.name.toLowerCase().includes(q) || (p.detail||'').toLowerCase().includes(q))
+  );
+}
+
+function truncate(s, n) {
+  if (!s) return '';
+  return s.length > n ? s.slice(0, n) + '…' : s;
+}
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+
+renderAll();
+</script>
+</body>
+</html>

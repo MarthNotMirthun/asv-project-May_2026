@@ -1,0 +1,2 @@
+- [Hub v3 Build History](project_hub_v3_build.md) — data model, 16 concept list, June 2026 audit session changes, localStorage keys
+- [User: Mirthun Mohan](user_mirthun.md) — Texas A&M CompE, naval defense portfolio, pragmatic one-person project

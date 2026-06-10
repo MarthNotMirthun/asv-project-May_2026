@@ -1,0 +1,17 @@
+// Constraint file: uart_tx.cst
+// Format: Gowin .cst (Tang Nano 20K, GW2AR-18 QFN88)
+// Module: uart_tx
+// Pin assignments verified against official Sipeed TangNano-20K-example/uart/src/top.cst
+//   clk   = 4  : 27MHz onboard oscillator (Tang Nano 20K — NOT pin 52, which is the 9K clock)
+//   tx    = 69 : free header GPIO broken out to pads (Sipeed UART example uart_tx pin)
+//   rst_n = 88 : user button S1 (active-low, idles HIGH via internal pull-up)
+// Note: sys_led[0..5] occupy pins 15-20 (pin 17 is an LED — never route TX there).
+
+IO_LOC "clk" 4;
+IO_PORT "clk" PULL_MODE=UP IO_TYPE=LVCMOS33;
+
+IO_LOC "tx" 69;
+IO_PORT "tx" PULL_MODE=NONE DRIVE=8 IO_TYPE=LVCMOS33;
+
+IO_LOC "rst_n" 88;
+IO_PORT "rst_n" PULL_MODE=UP IO_TYPE=LVCMOS33;

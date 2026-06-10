@@ -1,0 +1,1 @@
+- [CIC/pipeline real params](spec_cic_params.md) — actual ASV values (R=8 N=3, shift=5, offset-binary fix) vs generic instruction examples

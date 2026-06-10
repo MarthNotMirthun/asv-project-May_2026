@@ -1,0 +1,252 @@
+════════════════════════════════════════════════════════════
+ASV PROJECT — MASTER VALIDATION & BUILD PIPELINE
+════════════════════════════════════════════════════════════
+
+Read CLAUDE.md before starting anything.
+Do no implementation work yourself.
+Pass complete, untruncated agent outputs between stages.
+The target for this pipeline run is specified in the chat.
+
+AGENT ROSTER:
+  hw-validation        → electrical interfaces, voltages, pins, power
+  dsp-signal-validator → DSP math, number formats, bit widths, latency
+  systems-integrator   → cross-check all validators, mission coherence,
+                         consolidated fix list
+  fpga-verilog-engineer → write and fix all Verilog + testbenches
+  verilog-sim-runner   → run simulations, report PASS/FAIL
+  docs-updater         → update CLAUDE.md and docs/progress.md
+
+════════════════════════════════════════════════════════════
+STAGE 1 — THREE-WAY VALIDATION (run all three, collect all outputs)
+════════════════════════════════════════════════════════════
+
+Run hw-validation and dsp-signal-validator. Collect both complete
+outputs before running systems-integrator.
+
+─────────────────────────────────────────────────────────
+STAGE 1A — Use hw-validation:
+─────────────────────────────────────────────────────────
+"Read CLAUDE.md. Review [TARGET] for electrical hardware
+interface correctness.
+
+Use Puppeteer to navigate directly to manufacturer datasheet
+PDFs for pin diagrams, timing waveforms, and voltage tables.
+Use web search for text specs and known failure modes.
+Cite every spec with exact source URL and page/section.
+
+Check:
+- Every port connecting to real hardware: voltage levels,
+  timing, current requirements
+- Every .cst pin: exists on GW2AR-18, LVCMOS33-compatible
+  bank, supports required frequency
+- AD9226 DVDD vs Tang Nano GPIO voltage compatibility
+- JSN-SR04T echo pin voltage vs ESP32 GPIO max input
+- Power budget: buck converter headroom >20%
+- CLKS_PER_BIT=234 for 115200 baud at 27MHz
+- adc_clk output port drives AD9226 ENCODE pin
+- Clock domain crossings have 2-FF synchronizers
+
+At the end of your output include CROSS-CHECK FLAGS:
+Any finding with DSP or systems implications for the
+other validators."
+
+Collect complete hw-validation output.
+
+─────────────────────────────────────────────────────────
+STAGE 1B — Use dsp-signal-validator:
+─────────────────────────────────────────────────────────
+"Read CLAUDE.md. Review [TARGET] for DSP mathematical
+and signal chain correctness.
+
+Use web search and Puppeteer to verify specs from
+authoritative DSP references and manufacturer datasheets.
+Cite every spec with source.
+
+Check:
+- Number format at every stage boundary:
+  adc_interface→cic_decimator→fir_filter→matched_filter→
+  peak_detector→uart_tx
+- AD9226 offset binary→two's complement conversion exists
+  ({~data[11], data[10:0]}) — absence is BLOCKER
+- CIC internal width = 34 bits minimum (12 + ceil(3×log2(160)))
+- CIC output right-shift = 5 bits for 16-bit output precision
+- All accumulators: saturation not wrapping overflow
+- OTR flag propagates as sample_otr through every stage
+- Every valid signal delayed to match data pipeline latency
+- Q1.15 multiply: intermediate Q2.30, shift right 15
+
+At the end include CROSS-CHECK FLAGS:
+Any finding with electrical or systems implications."
+
+Collect complete dsp-signal-validator output.
+
+─────────────────────────────────────────────────────────
+STAGE 1C — Use systems-integrator:
+─────────────────────────────────────────────────────────
+Pass BOTH complete validator outputs:
+
+"Read CLAUDE.md completely.
+
+hw-validation output:
+[PASTE COMPLETE hw-validation OUTPUT HERE]
+
+dsp-signal-validator output:
+[PASTE COMPLETE dsp-signal-validator OUTPUT HERE]
+
+Cross-check both outputs against each other and against
+the full system mission. Find:
+1. Conflicts between validators — resolve with evidence
+2. DSP implications of electrical findings (and vice versa)
+3. Systems-level issues neither validator caught:
+   - Data rate mismatches between stages
+   - UART packet format vs fpga_uart_node parser
+   - Target ID switching buoy 1 vs buoy 2
+   - FPGA resource running totals
+   - End-to-end latency for real-time homing (<100ms)
+   - Signal level from transducer through MAX9814 to AD9226
+   - Pool multipath effects on detection threshold
+4. Mission coherence — every output is used downstream
+
+Produce a CONSOLIDATED FIX LIST prioritized:
+BLOCKERS first, then WARNINGS, then NOTES.
+Each fix: filename, line number, exact change, which
+validator found it, testbench verification method.
+This list is the ONLY input fpga-verilog-engineer receives."
+
+→ If BLOCKED: stop pipeline. Report all blockers to user
+  with exact fixes required. Wait for user input.
+→ If APPROVED or APPROVED WITH CONDITIONS: collect
+  consolidated fix list and proceed to Stage 2.
+
+════════════════════════════════════════════════════════════
+STAGE 2 — IMPLEMENTATION
+════════════════════════════════════════════════════════════
+
+Use fpga-verilog-engineer:
+
+"Read CLAUDE.md.
+
+You are receiving the CONSOLIDATED FIX LIST from
+systems-integrator. This is your complete and only
+instruction set — do not seek additional input from
+individual validators.
+
+CONSOLIDATED FIX LIST:
+[PASTE COMPLETE CONSOLIDATED FIX LIST HERE]
+
+[IF BUILDING NEW MODULE]:
+Build [module name] per CLAUDE.md spec.
+Implement the specification and fix every item in the
+consolidated list simultaneously. Write the module and
+testbench together — not sequentially.
+
+[IF FIXING EXISTING MODULE]:
+Fix every BLOCKER and WARNING in the list above.
+Do not touch anything rated NOTE unless directly
+related to a BLOCKER or WARNING fix.
+
+For every fix:
+- Verify the math before writing code
+- Add inline comment citing the datasheet or formula
+- Update testbench to explicitly verify the fix with
+  a named assertion or $display check
+
+Testbench must end with:
+  $display('ALL CHECKS PASSED — [module]'); $finish;
+  or $display('FAILED: ...'); $fatal;
+
+Report every change: file, line, reason, which
+consolidated list item it addresses."
+
+Collect complete implementation report.
+
+════════════════════════════════════════════════════════════
+STAGE 3 — SIMULATION VERIFICATION
+════════════════════════════════════════════════════════════
+
+Use verilog-sim-runner:
+
+"Run full simulation suite on all files modified or
+created by fpga-verilog-engineer:
+[LIST ALL MODIFIED FILES FROM STAGE 2 REPORT]
+
+Use:
+  C:\iverilog\bin\iverilog.exe -o fpga/sim/out.out
+  C:\iverilog\bin\vvp.exe fpga/sim/out.out
+
+For each module verify:
+- Zero X/Z states
+- ALL CHECKS PASSED present in output
+- DSP correctness checks per module type
+
+Report PASS or FAIL per module.
+Final verdict: PIPELINE: ALL PASS or PIPELINE: FAIL"
+
+─────────────────────────────────────────────────────────
+IF PIPELINE: ALL PASS → proceed to Stage 4
+─────────────────────────────────────────────────────────
+
+─────────────────────────────────────────────────────────
+IF PIPELINE: FAIL → one retry only:
+─────────────────────────────────────────────────────────
+Use fpga-verilog-engineer:
+
+"Fix only these specific simulation failures — do not
+touch anything that passed:
+[PASTE EXACT FAILURES FROM verilog-sim-runner]
+
+For each failure: explain the root cause, make the
+targeted fix, update only the affected testbench check."
+
+Re-run verilog-sim-runner on changed files only.
+
+If still failing after one retry: STOP.
+Report to user: what failed, what was tried, what likely
+needs Gowin synthesis or manual debugging.
+
+════════════════════════════════════════════════════════════
+STAGE 4 — DOCUMENTATION
+════════════════════════════════════════════════════════════
+
+Use docs-updater:
+
+"Update docs/progress.md and CLAUDE.md based on this
+completed pipeline run.
+
+Validator findings summary:
+hw-validation: [paste finding counts]
+dsp-signal-validator: [paste finding counts]
+systems-integrator: [paste conflict count, additions]
+
+fpga-verilog-engineer changes: [paste change list]
+verilog-sim-runner results: [paste final results]
+
+Update:
+1. docs/progress.md — new timestamped entry with all
+   validator findings, changes made, simulation result
+2. CLAUDE.md build status — ⏳→✅ for verified modules
+3. CLAUDE.md hardware contracts — correct any specs that
+   conflicted with datasheets (strike old, add new + cite)
+4. CLAUDE.md resource utilization — update running totals
+5. CLAUDE.md pipeline latency — update table if confirmed
+
+Report every change made with section and line."
+
+════════════════════════════════════════════════════════════
+FINAL REPORT TO USER
+════════════════════════════════════════════════════════════
+
+PIPELINE RESULT: PASS / FAIL / PARTIAL
+MODULES PROCESSED: [list]
+ISSUES FOUND: [N BLOCKER] [N WARNING] [N NOTE]
+ISSUES FIXED: [N]
+CONFLICTS BETWEEN VALIDATORS: [N — list resolutions]
+SIMULATION: ALL PASS / [list failures]
+DOCS UPDATED: [what changed in CLAUDE.md / progress.md]
+
+REQUIRES PHYSICAL VERIFICATION (cannot confirm in simulation):
+[list — these need Gowin synthesis, multimeter, or oscilloscope]
+
+NEXT RECOMMENDED MODULE (per CLAUDE.md pipeline):
+[what to build next]
+════════════════════════════════════════════════════════════
