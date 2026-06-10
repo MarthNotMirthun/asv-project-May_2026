@@ -232,6 +232,11 @@ Update:
 
 Report every change made with section and line."
 
+After docs-updater completes, run these git commands:
+  git add fpga/src/ fpga/sim/ fpga/constraints/ docs/ CLAUDE.md
+  git commit -m "Pipeline: [modules processed] — [date]"
+  git push
+
 ════════════════════════════════════════════════════════════
 FINAL REPORT TO USER
 ════════════════════════════════════════════════════════════
