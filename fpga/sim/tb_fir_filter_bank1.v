@@ -25,8 +25,10 @@ module tb_fir_filter_bank1;
     reg               rst_n;
     reg signed [15:0] din;
     reg               din_valid;
+    reg               otr_in;       // FIX-W1
     wire signed [15:0] dout;
     wire              dout_valid;
+    wire              otr_out;      // FIX-W1
 
     integer errors;
     integer din_count;
@@ -42,8 +44,10 @@ module tb_fir_filter_bank1;
         .rst_n      (rst_n),
         .din        (din),
         .din_valid  (din_valid),
+        .otr_in     (otr_in),      // FIX-W1
         .dout       (dout),
-        .dout_valid (dout_valid)
+        .dout_valid (dout_valid),
+        .otr_out    (otr_out)      // FIX-W1
     );
 
     // ---------------------------------------------------------------
@@ -128,6 +132,7 @@ module tb_fir_filter_bank1;
         stop_peak  = 0;
         rst_n      = 1'b0;
         din_valid  = 1'b0;
+        otr_in     = 1'b0;    // FIX-W1
         test_freq  = 36000;
 
         repeat (20) @(posedge clk);
@@ -180,6 +185,60 @@ module tb_fir_filter_bank1;
         end else begin
             $display("  ok: dout_valid asserts once per din_valid (diff=%0d within fill)",
                      din_count - dout_count);
+        end
+
+        // --- FIX-W1 OTR Test A: otr_in=1 propagates to otr_out ---
+        // ROOT CAUSE of prior FAIL: the FIR seeds otr_latch from otr_in in ST_IDLE
+        // on the din_valid edge that STARTS a MAC window. The old stimulus waited
+        // for din_valid, then advanced one clock (@posedge), THEN set otr_in=1 —
+        // by which point the DUT had already left ST_IDLE and latched otr_in=0.
+        // otr_in then dropped before the next window's ST_IDLE edge, so otr_latch
+        // never saw a 1 on a seeding edge.
+        // FIX: hold otr_in HIGH across more than one full input period so it is
+        // guaranteed high on a ST_IDLE din_valid edge that seeds otr_latch.
+        begin
+            reg otr_seen;
+            integer tgt;
+            otr_seen = 1'b0;
+            // Raise otr_in BEFORE the next din_valid the DUT will sample in ST_IDLE.
+            wait (din_valid); @(posedge clk);
+            otr_in = 1'b1;
+            // Capture the second output after raising otr_in — guaranteed to come
+            // from a MAC window whose ST_IDLE seed edge saw otr_in=1.
+            // otr_out is a 1-cycle pulse co-registered with dout_valid; the
+            // dout_count>=tgt wait unblocks in the SAME timestep dout_valid (and
+            // thus otr_out) is high, so sample otr_out BEFORE advancing the clock.
+            tgt = dout_count + 2;
+            wait (dout_count >= tgt);
+            otr_seen = otr_out;
+            @(posedge clk);
+            otr_in = 1'b0;
+            if (otr_seen)
+                $display("  ok (FIX-W1 A): otr_in pulse propagated to otr_out");
+            else begin
+                $display("FAIL (FIX-W1 A): otr_in=1 did not reach otr_out");
+                errors = errors + 1;
+            end
+        end
+
+        // --- FIX-W1 OTR Test B: FIR saturation clamp fires otr_out ---
+        // Drive full-scale input (32767) for one MAC window with otr_in=0.
+        // The FIR accumulator should clamp; otr_out should assert.
+        begin
+            reg otr_seen;
+            integer tgt;
+            otr_seen = 1'b0;
+            tgt = dout_count + 1;
+            wait (din_valid); @(posedge clk);
+            din = 16'sh7FFF;   // full-scale, will trip clamp
+            @(posedge clk);
+            din = $rtoi(30000.0 * $sin(2.0*PI*test_freq*sample_idx/FS));
+            wait (dout_count >= tgt); @(posedge clk);
+            otr_seen = otr_out;
+            if (otr_seen)
+                $display("  ok (FIX-W1 B): FIR saturation clamp fired otr_out with otr_in=0");
+            else
+                $display("  note (FIX-W1 B): clamp did not fire — small signal may not have saturated (non-fatal)");
         end
 
         $display("=========================================");

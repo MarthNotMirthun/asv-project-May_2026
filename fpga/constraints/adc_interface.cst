@@ -1,0 +1,51 @@
+// Constraint file: adc_interface.cst
+// Format: Gowin .cst (Tang Nano 20K, GW2AR-18 QFN88)
+// Module: adc_interface  — AD9226 12-bit parallel ADC front end
+//
+// PIN SOURCE OF TRUTH (verified 2026-06-12):
+//   Official Sipeed schematic  Tang_Nano_20K_3921_Schematics.pdf (rev 1.22),
+//     connectors J5 / J6 = Conn_01x20 (the two 20-pin breadboard headers).
+//   Official Sipeed pin-label diagram tang_nano_20k_pinlabel.png.
+//   Both sources agree on every pin below. All header banks are LVCMOS33.
+//
+// CRITICAL CORRECTION vs the previous version of this file:
+//   The previous assignment used a "contiguous block 25-41". Pins 32-39 are
+//   NOT broken out to the J5/J6 breadboard headers — they go ONLY to the
+//   dedicated 40-pin RGB-LCD FPC connector (LCD_G7..LCD_R6). You cannot wire
+//   a ribbon from those pins to the AD9226 board. Assigning the ADC bus there
+//   would route 8 of 14 signals to unreachable pads => the ADC would never
+//   connect. That block does not exist as header GPIO on this board.
+//
+// All 14 signals below are confirmed broken out to a header pad:
+//   adc_data[11:0]  -> LEFT  header J6 (single 12-pin ribbon, in pad order)
+//   otr             -> RIGHT header J5 pin 80 (IOT27A, Bank1)
+//   adc_clk (ENCODE)-> RIGHT header J5 pin 76 (IOT30B, Bank1), DRIVE=8
+//
+// J6 physical pad order used for adc_data[11:0] (top->bottom, skipping LED
+//   pins 15/16/17/18/19/20 and the 3V3/GND pads): 73,74,75,85,77,27,28,25,26,29,30,31.
+//   Pins 73/74/75/85/77 = Bank1 IOT (HSPI/SDIO aliases, unused in ASV).
+//   Pins 25/26/27/28/29/30/31 = Bank5 IOB6/8/14/29 (clean GPIO, no onboard use).
+//   These 12 pads exactly fill J6 — so otr + adc_clk go to J5 (pins 80 & 76),
+//   the two cleanest pads at the top of the RIGHT header. Two short ribbons.
+//   adc_clk DRIVE=8 keeps the ENCODE edge clean over the ribbon
+//     (the AD9226 samples on the ENCODE rising edge).
+//
+// DO NOT re-declare clk(4) / rst_n(88) here — they live in uart_tx.cst.
+// Avoided: pin 4 (xtal), 15-20 (LEDs), 87/88 (S1/S2), 69 (UART TX to BL616),
+//   79 (WS2812 LED), 51 (audio PA_EN), VCCO/power pins, in-package SDRAM pins,
+//   and all RGB-LCD-only / HDMI-only / MS5351 / BL616 / EDID pins.
+
+IO_LOC "adc_data[0]"  73;  IO_PORT "adc_data[0]"  PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_LOC "adc_data[1]"  74;  IO_PORT "adc_data[1]"  PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_LOC "adc_data[2]"  75;  IO_PORT "adc_data[2]"  PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_LOC "adc_data[3]"  85;  IO_PORT "adc_data[3]"  PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_LOC "adc_data[4]"  77;  IO_PORT "adc_data[4]"  PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_LOC "adc_data[5]"  27;  IO_PORT "adc_data[5]"  PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_LOC "adc_data[6]"  28;  IO_PORT "adc_data[6]"  PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_LOC "adc_data[7]"  25;  IO_PORT "adc_data[7]"  PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_LOC "adc_data[8]"  26;  IO_PORT "adc_data[8]"  PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_LOC "adc_data[9]"  29;  IO_PORT "adc_data[9]"  PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_LOC "adc_data[10]" 30;  IO_PORT "adc_data[10]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_LOC "adc_data[11]" 31;  IO_PORT "adc_data[11]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_LOC "otr"          80;  IO_PORT "otr"          PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_LOC "adc_clk"      76;  IO_PORT "adc_clk"      PULL_MODE=NONE DRIVE=8 IO_TYPE=LVCMOS33;

@@ -3,14 +3,20 @@
 // Module: uart_tx
 // Pin assignments verified against official Sipeed TangNano-20K-example/uart/src/top.cst
 //   clk   = 4  : 27MHz onboard oscillator (Tang Nano 20K — NOT pin 52, which is the 9K clock)
-//   tx    = 69 : free header GPIO broken out to pads (Sipeed UART example uart_tx pin)
+//   tx    = 86 : J5 header (Bank1, LVCMOS33) — broken out to a physical breadboard
+//                pad so a wire can run to Pi GPIO15 (/dev/ttyAMA0 RX).
+//                NOTE: pin 69 (SYS_TX) is NOT usable here — per Tang Nano 20K
+//                schematic rev 1.22, pin 69 connects ONLY to the BL616 USB-UART
+//                bridge and is never broken out to the J5/J6 headers, so it
+//                cannot deliver a wire to the Pi. Pin 86 has no onboard alias
+//                and does not collide with adc_interface.cst or clk/rst_n pins.
 //   rst_n = 88 : user button S1 (active-low, idles HIGH via internal pull-up)
 // Note: sys_led[0..5] occupy pins 15-20 (pin 17 is an LED — never route TX there).
 
 IO_LOC "clk" 4;
 IO_PORT "clk" PULL_MODE=NONE IO_TYPE=LVCMOS33;
 
-IO_LOC "tx" 69;
+IO_LOC "tx" 86;
 IO_PORT "tx" PULL_MODE=NONE DRIVE=8 IO_TYPE=LVCMOS33;
 
 IO_LOC "rst_n" 88;

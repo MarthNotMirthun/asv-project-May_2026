@@ -26,8 +26,10 @@ module cic_decimator #(
     input  wire               rst_n,        // synchronous active-low reset
     input  wire signed [11:0] din,          // signed 12-bit input sample
     input  wire               din_valid,    // 1-cycle strobe per input sample
+    input  wire               otr_in,       // FIX-W1: AD9226 over-range flag for this sample
     output reg  signed [15:0] dout,         // decimated output (top 16 bits)
-    output reg                dout_valid    // 1-cycle strobe per output sample
+    output reg                dout_valid,   // 1-cycle strobe per output sample
+    output reg                otr_out       // FIX-W1: over-range seen anywhere in window
 );
 
     // Sign-extend the 12-bit input to the internal datapath width.
@@ -48,6 +50,16 @@ module cic_decimator #(
     // ---------------------------------------------------------------
     reg [$clog2(R)-1:0] dec_count;
     reg                 decimate;
+
+    // ---------------------------------------------------------------
+    // FIX-W1: over-range quality flag. OR-latch otr_in across each R-sample
+    // decimation window so a single over-range input taints the whole output
+    // sample. otr_capture holds the window result until the decimate block fires
+    // one cycle later (otr_latch is reset in the same cycle decimate is set, so
+    // it cannot be read directly by the decimate block — otr_capture bridges the gap).
+    // ---------------------------------------------------------------
+    reg otr_latch;
+    reg otr_capture;
 
     // ---------------------------------------------------------------
     // Comb section (output rate, gated by `decimate`).
@@ -82,9 +94,13 @@ module cic_decimator #(
             comb3_d    <= {WIDTH{1'b0}};
             dout       <= 16'sd0;
             dout_valid <= 1'b0;
+            otr_latch   <= 1'b0;   // FIX-W1: reset over-range latch
+            otr_capture <= 1'b0;   // FIX-W1: reset capture register
+            otr_out     <= 1'b0;   // FIX-W1: reset over-range output
         end else begin
             decimate   <= 1'b0;   // default
             dout_valid <= 1'b0;   // default
+            otr_out    <= 1'b0;   // default; pulses only with dout_valid
 
             // ---- Integrators (input rate) ----
             if (din_valid) begin
@@ -93,10 +109,17 @@ module cic_decimator #(
                 int3 <= int3 + int2;
 
                 if (dec_count == R-1) begin
-                    dec_count <= {$clog2(R){1'b0}};
-                    decimate  <= 1'b1;
+                    dec_count   <= {$clog2(R){1'b0}};
+                    decimate    <= 1'b1;
+                    // FIX-W1: capture accumulated otr + R-th sample into otr_capture
+                    // so the decimate block (firing next cycle) can read it.
+                    // otr_latch is reset here for the next window.
+                    otr_capture <= otr_latch | otr_in;
+                    otr_latch   <= 1'b0;
                 end else begin
                     dec_count <= dec_count + 1'b1;
+                    // FIX-W1: accumulate over-range across the window.
+                    otr_latch <= otr_latch | otr_in;
                 end
             end
 
@@ -111,6 +134,9 @@ module cic_decimator #(
                               (c3_shifted < -28'sh0008000) ? (-16'sh7FFF - 16'sh1) :
                               c3_shifted[15:0];
                 dout_valid <= 1'b1;
+                // FIX-W1: otr_capture holds accumulated otr from all R samples
+                // (set one cycle earlier when decimate was asserted).
+                otr_out    <= otr_capture;
             end
         end
     end

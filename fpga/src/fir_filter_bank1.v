@@ -46,8 +46,10 @@ module fir_filter_bank1 #(
     input  wire               rst_n,      // synchronous active-low reset
     input  wire signed [15:0] din,        // from cic_decimator dout
     input  wire               din_valid,  // from cic_decimator dout_valid (~422kSPS strobe)
-    output reg  signed [15:0] dout,       // filtered output (Q1.15-scaled to 16-bit)
-    output reg                dout_valid  // 1-cycle strobe, co-registered with dout
+    input  wire               otr_in,     // FIX-W1: over-range flag from cic_decimator otr_out
+    output reg  signed [15:0] dout,       // FIX-N2: signed-16 INTEGER sample scale. The Q1.15 coeffs are applied as a fractional gain INTERNALLY and the >>>15 already removed the Q1.15 scaling — dout is therefore a plain integer sample, NOT Q1.15. Downstream matched_filter reference chirp MUST use this same integer scale, NOT Q1.15.
+    output reg                dout_valid, // 1-cycle strobe, co-registered with dout
+    output reg                otr_out     // FIX-W1: over-range seen in MAC window OR clamp fired
 );
 
     // ---------------------------------------------------------------
@@ -104,10 +106,18 @@ module fir_filter_bank1 #(
     reg signed [31:0]     prod;         // 16x16 -> 32-bit Q2.30
     reg                   prod_pend;    // a freshly-issued product is valid next cycle
 
+    // FIX-W1: over-range latch — OR'd across the MAC window, then OR'd with a
+    // fired saturation clamp at output time. Seeded in ST_IDLE, cleared after
+    // the output is registered in ST_DRAIN.
+    reg                   otr_latch;
+
     // Q2.30 >> 15 -> Q1.15; saturate to signed 16-bit.
     wire signed [ACCW-1:0] acc_q15 = acc >>> 15;
     localparam signed [ACCW-1:0] SAT_MAX =  38'sd32767;
     localparam signed [ACCW-1:0] SAT_MIN = -38'sd32768;
+
+    // FIX-W1: a fired saturation clamp is itself an over-range event.
+    wire clamp_fired = (acc_q15 > SAT_MAX) || (acc_q15 < SAT_MIN);
 
     // Sign-extend the 32-bit product to the accumulator width.
     wire signed [ACCW-1:0] prod_ext = {{(ACCW-32){prod[31]}}, prod};
@@ -126,10 +136,13 @@ module fir_filter_bank1 #(
             prod_pend  <= 1'b0;
             dout       <= 16'sd0;
             dout_valid <= 1'b0;
+            otr_latch  <= 1'b0;     // FIX-W1
+            otr_out    <= 1'b0;     // FIX-W1
             for (k = 0; k < N; k = k + 1)
                 shift[k] <= 16'sd0;
         end else begin
             dout_valid <= 1'b0;     // default
+            otr_out    <= 1'b0;     // FIX-W1: default; pulses only with dout_valid
 
             // Single pipelined multiplier (always registers current operands).
             prod <= mul_a * mul_b;
@@ -159,10 +172,12 @@ module fir_filter_bank1 #(
                         prod_pend <= 1'b1;
                         idx       <= 6'd1;     // next operand index to issue
                         state     <= ST_LOAD;
+                        otr_latch <= otr_in;   // FIX-W1: seed window from this sample
                     end
                 end
                 // -----------------------------------------------------
                 ST_LOAD: begin
+                    otr_latch <= otr_latch | otr_in;  // FIX-W1: OR across window
                     if (idx < N) begin
                         mul_a     <= shift[idx];
                         mul_b     <= coeff_rom(idx);
@@ -186,6 +201,9 @@ module fir_filter_bank1 #(
                         else
                             dout <= acc_q15[15:0];
                         dout_valid <= 1'b1;
+                        // FIX-W1: over-range = window otr OR a fired saturation clamp.
+                        otr_out    <= otr_latch | clamp_fired;
+                        otr_latch  <= 1'b0;     // clear for next window
                         state      <= ST_IDLE;
                     end
                 end

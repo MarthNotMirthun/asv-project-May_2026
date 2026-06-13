@@ -20,7 +20,7 @@ module adc_interface #(
     input  wire [11:0] adc_data,     // AD9226 parallel data bus D[11:0]
     input  wire        otr,          // AD9226 out-of-range flag (1 = over/under range)
     output reg         adc_clk,      // FPGA-generated ENCODE clock to AD9226 (rising-edge sample)
-    output reg  [11:0] sample_out,   // signed two's-complement sample (AD9226 offset binary MSB-inverted per datasheet)
+    output reg signed [11:0] sample_out,   // signed two's-complement sample (AD9226 offset binary MSB-inverted per datasheet); declared signed to match cic_decimator's signed din (FIX-N1)
     output reg         sample_otr,   // registered OTR flag, aligned to sample_out's conversion
     output reg         sample_valid  // 1-cycle strobe each captured sample
 );

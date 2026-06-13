@@ -1,3 +1,67 @@
+## 2026-06-13 — Full Pipeline Re-Validation (Jun 13) + adc_interface.cst Verified
+
+**Validation Run Summary:**
+Re-ran pipeline on all 5 modules (uart_tx, adc_interface, cic_decimator, fir_filter_bank1, fir_filter_bank2) with constraint files (.cst) included. Complete end-to-end system validation.
+
+**Validator Findings:**
+
+hw-validation:
+- APPROVED WITH CONDITIONS — 0 BLOCKERs, 0 WARNINGs
+- adc_interface.cst confirmed COMPLETE and pin-correct: all 14 pins verified against GW2AR-18 datasheet, LVCMOS33-compatible banks confirmed, no pin conflicts
+- CLKS_PER_BIT=234 verified correct (115,384 baud actual, +0.16% error from target 115,200)
+- Single 27MHz clock domain confirmed — no asynchronous CDC needed
+- Physical bring-up gates identified: DRVDD=3.3V rail must be wired, OEB tied LOW, DFS strapped to AVSS
+
+dsp-signal-validator:
+- APPROVED WITH CONDITIONS — 0 BLOCKERs, 0 WARNINGs, 2 NOTEs (resolved)
+- MSB-flip {~data[11], data[10:0]} confirmed correct for offset binary output
+- CIC internal width 28 bits vs 21-bit minimum — 7-bit margin, PASS
+- CIC shift=5 verified correct per Hogenauer formula for 16-bit output precision
+- FIR Q1.15 coefficients verified, 32-tap symmetric Hamming window, linear phase confirmed
+- OTR flag propagation confirmed complete: adc→cic→fir (OR-latched at each stage)
+- True sample rate measured: 421.875 kSPS (CLAUDE.md ~422kSPS is correct, illustrative figure acceptable)
+- Resource utilization for 5 modules: 2/48 HW multipliers, 0/46 BSRAM used
+
+systems-integrator:
+- APPROVED WITH CONDITIONS — 0 conflicts between validators, 2 NOTEs resolved, 5 forward constraints issued
+- adc_interface.cst "NOT YET WRITTEN" in CLAUDE.md contradicts verified reality — FIXED below
+- FIR output is signed-16 INTEGER scale (gain ~0.20), NOT Q1.15 — matched_filter must use same integer scale
+- Forward constraints for matched_filter correlators:
+  * FC-1: Chirp reference in BSRAM must be integer scale, not Q1.15
+  * FC-2: OTR flag chain continues through matched_filter and peak_detector modules
+  * FC-3: TOF math uses 421,875 Hz sample rate (not 400,000 Hz rounded figure)
+  * FC-4: Peak detection threshold must account for multipath reflections (~1–2m near field)
+  * FC-5: Delete fir_test_top.v from fpga/src before full integration
+
+**fpga-verilog-engineer Changes Made:**
+1. adc_interface.v:23 — Changed `output reg [11:0] sample_out` to `output reg signed [11:0] sample_out` (declaration-only, FIX-N1)
+2. fir_filter_bank1.v:50 — Rewrote output dout port comment: output is signed-16 INTEGER sample scale; matched_filter MUST use same integer scale NOT Q1.15 (FIX-N2)
+3. fir_filter_bank2.v:50 — Same FIX-N2 comment rewording
+4. tb_cic_decimator.v — Fixed OTR test timing race: hold otr_in high across full window, target dout_count+2
+5. tb_fir_filter_bank1.v — Fixed OTR test timing: hold otr_in high, sample otr_out before clock advance, target dout_count+2
+6. tb_fir_filter_bank2.v — Same timing fix as bank1
+
+**verilog-sim-runner Results: PIPELINE ALL PASS**
+- uart_tx: PASS (0 X/Z, all checks passed)
+- adc_interface: PASS (0 X/Z, MSB-flip conversions verified, OTR alignment confirmed)
+- cic_decimator: PASS (0 X/Z, DC gain correct, R=8 verified, OTR propagation PASS)
+- fir_filter_bank1: PASS (0 X/Z, passband 36kHz preserved, OTR PASS)
+- fir_filter_bank2: PASS (0 X/Z, passband 44kHz preserved, OTR PASS)
+
+**CLAUDE.md Updated:**
+- FPGA Build Status: "adc_interface.cst: NOT YET WRITTEN" changed to "adc_interface.cst: VERIFIED (pins D[0..11], otr, adc_clk assigned to LVCMOS33 banks) ← VALIDATED Jun 13"
+- Added Jun 13 pipeline re-validation line to COMPLETED section
+- IMMEDIATE NEXT TASKS: removed timing constraints from critical path (both uart_tx.cst and adc_interface.cst complete), pushed matched_filter to task #1
+- Added adc_interface.cst pin configuration to AD9226 Hardware Contract section
+
+**Next Priority:**
+1. Matched filter correlators ×2 (800-sample BSRAM correlation windows) — NOW CRITICAL PATH
+2. Peak detector + TOF calculator
+3. Full pipeline integration and synthesis
+4. Hardware bring-up: verify DRVDD=3.3V rail, OEB=LOW, DFS=AVSS
+
+---
+
 ## 2026-06-10 — Full Pipeline Validation Run + FIR Filter Banks Built
 
 **Validation Run Summary:**

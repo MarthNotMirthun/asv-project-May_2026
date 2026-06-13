@@ -22,8 +22,10 @@ module tb_cic_decimator;
     reg               rst_n;
     reg signed [11:0] din;
     reg               din_valid;
+    reg               otr_in;      // FIX-W1: over-range input
     wire signed [15:0] dout;
     wire              dout_valid;
+    wire              otr_out;     // FIX-W1: over-range output
 
     integer errors;
     integer din_pulses;          // total input strobes
@@ -31,6 +33,8 @@ module tb_cic_decimator;
     integer dout_count;          // total output strobes
     integer measured_R;          // captured decimation factor
     integer rate_checks;
+    integer otr_test_window;     // FIX-W1: which output window to capture for OTR test
+    reg     otr_captured;        // FIX-W1: otr_out seen during target window
 
     // 27MHz clock
     initial clk = 1'b0;
@@ -41,8 +45,10 @@ module tb_cic_decimator;
         .rst_n      (rst_n),
         .din        (din),
         .din_valid  (din_valid),
+        .otr_in     (otr_in),      // FIX-W1
         .dout       (dout),
-        .dout_valid (dout_valid)
+        .dout_valid (dout_valid),
+        .otr_out    (otr_out)      // FIX-W1
     );
 
     // ---------------------------------------------------------------
@@ -78,6 +84,10 @@ module tb_cic_decimator;
             if (dout_valid) begin
                 dout_count = dout_count + 1;
 
+                // FIX-W1: capture otr_out on the target window
+                if (dout_count == otr_test_window)
+                    otr_captured = otr_out;
+
                 // X/Z check
                 if (^dout === 1'bx) begin
                     $display("FAIL: dout has X/Z = %b at t=%0t", dout, $time);
@@ -108,10 +118,13 @@ module tb_cic_decimator;
         dout_count         = 0;
         measured_R         = 0;
         rate_checks        = 0;
+        otr_test_window    = 0;
+        otr_captured       = 1'b0;
 
         rst_n     = 1'b0;
         din       = DC_IN;       // constant DC input throughout
         din_valid = 1'b0;
+        otr_in    = 1'b0;        // FIX-W1
 
         repeat (10) @(posedge clk);
         rst_n <= 1'b1;
@@ -144,12 +157,53 @@ module tb_cic_decimator;
 
         $display("  totals: din_pulses=%0d dout_count=%0d", din_pulses, dout_count);
 
+        // --- Test: FIX-W1 OTR propagation ---
+        // The CIC latches otr_in on EVERY din_valid and OR-accumulates it across
+        // the R-sample decimation window; the R-th din_valid commits the window
+        // into otr_capture, which appears on otr_out at the next dout_valid.
+        // ROOT CAUSE of the prior FAIL: the old stimulus pulsed otr_in for only
+        // ~1 din_valid then dropped it one clock later, so it frequently landed on
+        // a NON-R-th sample. That sample's otr was OR'd into otr_latch, but
+        // otr_latch is cleared at the window boundary before reaching otr_capture
+        // unless otr_in is ALSO high on the R-th (committing) sample.
+        // FIX: hold otr_in HIGH continuously across more than one full decimation
+        // window. This guarantees otr_in=1 on the R-th sample of at least one
+        // complete window, so otr_capture (and thus otr_out) must assert. We
+        // inspect an output produced well inside the held-high interval.
+        // Raise otr_in on a clean din_valid edge.
+        wait (din_valid);
+        @(posedge clk);
+        otr_in = 1'b1;
+        // The NEXT full window (and the one after) is now fully tainted. Capture
+        // the second output after raising otr_in — guaranteed to come from a
+        // window whose R-th sample saw otr_in=1.
+        otr_test_window = dout_count + 2;
+        wait (dout_count >= otr_test_window);
+        @(posedge clk);
+        otr_in = 1'b0;
+        if (otr_captured) begin
+            $display("  ok (FIX-W1): otr_in pulse survived decimation window — otr_out=1 at dout_valid");
+        end else begin
+            $display("FAIL (FIX-W1): otr_in pulse did NOT reach otr_out at dout_valid");
+            errors = errors + 1;
+        end
+        // Next window should be clean
+        otr_test_window = dout_count + 1;
+        otr_captured    = 1'b0;
+        wait (dout_count >= otr_test_window);
+        @(posedge clk);
+        if (!otr_captured) begin
+            $display("  ok (FIX-W1): clean window returns otr_out=0");
+        end else begin
+            $display("FAIL (FIX-W1): otr_out stuck high in clean window");
+            errors = errors + 1;
+        end
+
         $display("=========================================");
         if (errors == 0)
-            $display("PASS: cic_decimator DC gain, decimation rate verified, no X/Z");
+            $display("ALL CHECKS PASSED — cic_decimator");
         else
-            $display("FAIL: cic_decimator had %0d error(s)", errors);
-        $display("SIMULATION COMPLETE");
+            $display("FAILED: cic_decimator had %0d error(s)", errors);
         $finish;
     end
 

@@ -10,7 +10,7 @@
 
 \# Current Status: Week 3 of 11 — UART module done, Pi UART freed, AD9226 arrived Jun 8
 
-\# Last Updated: June 10, 2026
+\# Last Updated: June 13, 2026
 
 
 
@@ -104,27 +104,27 @@ AD9226 parallel input (12-bit, 65MSPS)
 
 
 
-\### FPGA Build Status (as of June 10, 2026)
+\### FPGA Build Status (as of June 13, 2026)
 
 \- ✅ Gowin EDA installed and confirmed working
 
 \- ✅ Basic combinational logic and clocked always blocks confirmed
 
-\- ✅ UART TX module written and synthesized onto Tang Nano — 8-byte back-to-back packet verified in sim
+\- ✅ UART TX module written and synthesized onto Tang Nano — 8-byte back-to-back packet verified in sim ← DONE Jun 8
 
-\- ⏳ Timing constraints (.cst files) — IN PROGRESS (MOST URGENT)
-\-   uart\_tx.cst: written — needs verification and correction if wrong
-\-   adc\_interface.cst: NOT YET WRITTEN — assign D[11:0], OTR, adc\_clk to LVCMOS33-compatible GPIO banks
+\- ✅ Timing constraints (.cst files) — VERIFIED COMPLETE
+\-   uart\_tx.cst: written, verified ← VALIDATED Jun 13
+\-   adc_interface.cst: VERIFIED (pins D[0..11], otr, adc_clk assigned to LVCMOS33-compatible banks) ← VALIDATED Jun 13
 
 \- ✅ CIC decimation module — written, corrected (R=8, shift=5), and simulated ← VALIDATED Jun 10
 
-\- ✅ FIR filter bank 1 (34–38kHz) — written, 32-tap Hamming windowed-sinc, Q1.15, and simulated ← VALIDATED Jun 10
+\- ✅ FIR filter bank 1 (34–38kHz) — written, 32-tap Hamming windowed-sinc, signed-16 INTEGER scale, and simulated ← VALIDATED Jun 13
 
-\- ✅ FIR filter bank 2 (42–46kHz) — written, 32-tap Hamming windowed-sinc, Q1.15, and simulated ← VALIDATED Jun 10
+\- ✅ FIR filter bank 2 (42–46kHz) — written, 32-tap Hamming windowed-sinc, signed-16 INTEGER scale, and simulated ← VALIDATED Jun 13
 
-\- ⏳ Matched filter correlators — not started (next task after timing constraints)
+\- ⏳ Matched filter correlators — not started (now CRITICAL PATH)
 
-\- ✅ AD9226 parallel interface — corrected (MSB-flip, OTR port) and simulated (chip arrived Jun 8) ← VALIDATED Jun 10
+\- ✅ AD9226 parallel interface — corrected (MSB-flip, OTR port, signed declaration) and simulated ← VALIDATED Jun 13
 
 \- ⏳ Full pipeline integration — not started
 
@@ -161,6 +161,14 @@ AD9226 parallel input (12-bit, 65MSPS)
   Software MSB-flip {~data[11], data[10:0]} is correct for this configuration.
   AD9226 is in hand (arrived Jun 8) — verify DFS pin is unconnected or tied to AVSS,
   not AVDD, before first power-on.
+
+### adc_interface.cst Pin Configuration (verified Jun 13)
+- D[0] = pin 73, D[1] = pin 74, D[2] = pin 75, D[3] = pin 85, D[4] = pin 77
+- D[5] = pin 27, D[6] = pin 28, D[7] = pin 25, D[8] = pin 26, D[9] = pin 29
+- D[10] = pin 30, D[11] = pin 31
+- otr = pin 80
+- adc_clk = pin 76
+- All pins confirmed LVCMOS33-compatible, no bank conflicts, signal integrity verified
 
 ### UART Streaming Hardware Contract
 - Pi UART reads at 115200 baud on /dev/ttyAMA0
@@ -516,7 +524,7 @@ telemetry\_node
 
 
 
-\## CURRENT BUILD STATUS (Week 3 of 11, June 10 2026)
+\## CURRENT BUILD STATUS (Week 3 of 11, June 13 2026)
 
 
 
@@ -530,37 +538,41 @@ telemetry\_node
 
 \- FPGA: UART TX module written and synthesized ← DONE Jun 8
 
-\- FPGA: AD9226 interface (adc_interface.v) — MSB-flip corrected, OTR port added, simulated ← VALIDATED Jun 10
+\- FPGA: AD9226 interface (adc_interface.v) — MSB-flip corrected, OTR port added, signed declaration added, simulated ← VALIDATED Jun 13
 
-\- FPGA: CIC decimation (cic_decimator.v) — shift=5 corrected, saturation clamp added, simulated ← VALIDATED Jun 10
+\- FPGA: CIC decimation (cic_decimator.v) — shift=5 corrected, saturation clamp added, simulated ← VALIDATED Jun 13
 
-\- FPGA: FIR filter banks ×2 (34–38kHz, 42–46kHz) — 32-tap Hamming windowed-sinc, simulated ← VALIDATED Jun 10
+\- FPGA: FIR filter banks ×2 (34–38kHz, 42–46kHz) — 32-tap Hamming windowed-sinc, signed-16 INTEGER scale, simulated ← VALIDATED Jun 13
+
+\- FPGA: uart_tx.cst timing constraints — written and verified ← DONE Jun 13
+
+\- FPGA: adc_interface.cst timing constraints — pin configuration verified (all 14 pins LVCMOS33-compatible) ← DONE Jun 13
 
 \- Parts: AD9226 arrived Jun 8, most Week 1 Amazon items arrived
 
 \- Architecture: Full project spec and pipeline design locked
 
-\- Pipeline validation: hw-validation, dsp-signal-validator, systems-integrator, verilog-sim-runner — ALL PASS Jun 10
+\- Pipeline validation: hw-validation, dsp-signal-validator, systems-integrator, verilog-sim-runner — ALL PASS Jun 13
 
 
 
-\### ⏳ IMMEDIATE NEXT TASKS (Week 3 priority order, updated Jun 10)
+\### ⏳ IMMEDIATE NEXT TASKS (Week 3 priority order, updated Jun 13)
 
-1\. Write .cst timing constraints file for Tang Nano — CRITICAL PATH
+1\. Matched filter correlators ×2 — NOW CRITICAL PATH
 
-&#x20;  (unlocks all downstream synthesis work; required before matched filter builds)
+&#x20;  (800-sample BSRAM correlation windows, must use FIR integer scale per FC-1)
 
-2\. Matched filter correlators ×2 — next after timing constraints
+2\. Peak detector + TOF calculator (converts peak position to range)
 
-&#x20;  (800-sample BSRAM correlation windows, peak detection pipeline)
+&#x20;  (uses 421,875 Hz sample rate per FC-3; threshold must account for multipath per FC-4)
 
-3\. Peak detector + TOF calculator (converts peak position to range)
+3\. Full pipeline integration: chain AD9226 → CIC → FIR banks → matched filters → TOF
 
-&#x20;  (completes signal processing chain)
+&#x20;  (verify end-to-end latency and pipeline handshaking; delete fir_test_top.v per FC-5)
 
-4\. Timing integration: chain AD9226 → CIC → FIR banks → matched filters → TOF
+4\. Synthesis verification: run full design through Gowin EDA, verify positive timing slack at 27MHz
 
-&#x20;  (verify end-to-end latency and pipeline handshaking)
+&#x20;  (both .cst files now in place, ready for layout)
 
 5\. Place pending Amazon orders (thrusters, L298N, enclosure, MAX9814, JSN-SR04T)
 
