@@ -1,3 +1,33 @@
+## 2026-06-16 — BSRAM Resource Accounting Corrected (Jun 16)
+
+**Correction: depth constraint overrides capacity for 2109-sample BSRAM arrays**
+
+The matched filter pipeline run initially calculated 8 BSRAM blocks total based on bit
+capacity (33,744 bits per array < 36,864 bits in 2 blocks). Post-commit analysis showed
+the depth constraint is binding:
+
+- GW2AR-18 18Kbit BSRAM in 1K×18 mode: **1024 locations deep** (the native 16-bit config)
+- 2 blocks × 1024 = 2048 locations < 2109 samples → two blocks insufficient by depth
+- 3 blocks × 1024 = 3072 locations ≥ 2109 → three blocks required per array
+- Capacity check (2 blocks = 36,864 bits > 33,744 bits) gives the wrong answer here
+
+**Corrected BSRAM totals:**
+- FIR filter coefficients: 2 blocks (32-tap × 16-bit = 512 bits/bank, well within 1 block each)
+- Matched filter ref ROMs: 3 blocks/channel × 2 channels = 6 blocks
+- Matched filter window buffers: 3 blocks/channel × 2 channels = 6 blocks
+- **Total: 14 / 46 blocks (~30%)** — was incorrectly stated as 8/46 (~17%)
+
+**Files corrected:**
+- matched_filter_1.v, matched_filter_2.v: header comment at BSRAM section
+- CLAUDE.md: BSRAM Resource Allocation section (8→12 matched filter blocks, 8→14 total)
+- CLAUDE.md: pipeline section — added 4-array architecture description
+
+**Budget outlook:** 14/46 used by existing verified modules. Remaining planned modules
+(peak_detector, uart_tx already written, integration top) will add ≤2 more blocks.
+Projected final total: ~16/46 blocks (~35%) — 65% margin remaining.
+
+---
+
 ## 2026-06-16 — Propulsion/Enclosure Parts Research (Jun 16)
 
 **Parts Research:**

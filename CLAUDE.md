@@ -82,16 +82,21 @@ AD9226 parallel input (12-bit, 65MSPS)
 
 &#x20;     Coefficients stored in BSRAM, runtime-loadable via UART from Pi
 
-### BSRAM Resource Allocation (verified Jun 16)
-- FIR filter banks: 2 BSRAM blocks (32-tap coefficients per bank)
-- Matched filter ×2: 6 blocks total
-  - Reference chirp ROMs: 2 blocks (2109-sample LFM per channel)
-  - Window buffers: 4 blocks (double-buffered, 2 per channel)
-- Total BSRAM used: ~8 of 46 blocks (~17%)
+### BSRAM Resource Allocation (corrected Jun 16 — depth-bound, not capacity-bound)
+- FIR filter banks: 2 BSRAM blocks (1 per bank, 32-tap × 16-bit = 512 bits << 18K)
+- Matched filter ×2: 12 blocks total (4-array architecture):
+  - Architecture: reference ROM + window buffer per channel × 2 channels = 4 arrays
+  - Depth constraint: 1K×18 mode = 1024 locations/block; 2×1024=2048 < 2109
+    → 3 blocks per array (3×1024=3072 ≥ 2109); capacity alone would say 2
+  - Reference chirp ROMs: 3 blocks/channel × 2 channels = 6 blocks
+  - Window sample buffers: 3 blocks/channel × 2 channels = 6 blocks
+- Total BSRAM used: ~14 of 46 blocks (~30%)
 
 &#x20; → 2× Matched Filter Correlators
 
-&#x20;     Reference chirps in BSRAM (2× 2109-sample arrays)
+&#x20;     BSRAM layout (4 arrays total): reference ROM + window buffer per channel
+&#x20;     Reference chirps: 2× 2109-sample arrays (3 BSRAM blocks each, depth-bound)
+&#x20;     Window buffers:  2× 2109-sample arrays (3 BSRAM blocks each, depth-bound)
 
 &#x20;     Correlation window: 5ms × 421,875 SPS = 2109 samples (FC-3, corrected from stale 800/2ms)
 

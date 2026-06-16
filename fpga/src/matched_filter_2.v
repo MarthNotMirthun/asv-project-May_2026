@@ -101,7 +101,11 @@ module matched_filter_2 (
     // FIX-N2: two inferred BSRAMs (window buffer + reference ROM).
     // Window buffer: written as live samples arrive, read during MAC sweep.
     // Reference ROM: written by the Pi load interface, read during MAC sweep.
-    // Both 2109x16; Gowin maps each to ~2 of the 18Kbit blocks.
+    // Both 2109x16. BSRAM depth constraint (not capacity) is binding:
+    // 1K×18 mode = 1024 locations/block; 2×1024=2048 < 2109, so each array
+    // needs ~3 blocks (3×1024=3072 >= 2109). Capacity check gives 2 blocks
+    // (2×18432=36864 > 33744 bits) but depth overrides it. Gowin EDA will
+    // infer 3 blocks per array automatically. Per-channel total: 6 blocks.
     // ---------------------------------------------------------------
     reg signed [15:0] window_mem [0:N_TAPS-1];
     reg signed [15:0] ref_mem    [0:N_TAPS-1];
