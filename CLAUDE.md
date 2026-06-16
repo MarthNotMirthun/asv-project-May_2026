@@ -8,9 +8,9 @@
 
 \# Hard Demo Deadline: August 10, 2026
 
-\# Current Status: Week 3 of 11 — UART module done, Pi UART freed, AD9226 arrived Jun 8
+\# Current Status: Week 4 of 11 — FIR banks verified, matched filters CRITICAL PATH, SNR-gradient architecture (FC-5/FC-6)
 
-\# Last Updated: June 13, 2026
+\# Last Updated: June 16, 2026
 
 
 
@@ -84,21 +84,23 @@ AD9226 parallel input (12-bit, 65MSPS)
 
 &#x20;     Reference chirps in BSRAM (2× 800-sample arrays)
 
-&#x20;     Correlation window: 2ms × 400kSPS = 800 samples
+&#x20;     Correlation window: 2ms × 421,875 SPS ≈ 800 samples (FC-3)
 
-&#x20;     Peak position = time-of-flight
+&#x20;     Output: corr_peak (magnitude), snr (proximity gradient), peak_lag (diagnostic only, per FC-5)
 
-&#x20; → Peak Detector + TOF Calculator
+&#x20; → Peak Detector + SNR Calculator
 
-&#x20;     TOF × 343 m/s ÷ 2 = range (m)
+&#x20;     corr_peak (32-bit) and snr (8-bit) are primary homing signals
 
-&#x20;     Range resolution: \~1–2cm practical
+&#x20;     peak_lag kept as diagnostic only — NOT converted to range (per FC-5)
 
 &#x20; → Active Target Selector + UART TX
 
 &#x20;     8-byte packet at up to 20Hz:
 
-&#x20;     \[target\_id:1]\[range\_cm:2]\[corr\_peak:2]\[snr:1]\[checksum:1]\[0xFF:1]
+&#x20;     \[target\_id:1]\[peak\_lag:2]\[corr\_peak:2]\[snr:1]\[checksum:1]\[0xFF:1]
+
+&#x20;     (bytes 2–3 previously labeled range_cm — now peak_lag diagnostic; wire format UNCHANGED)
 
 ```
 
@@ -172,8 +174,9 @@ AD9226 parallel input (12-bit, 65MSPS)
 
 ### UART Streaming Hardware Contract
 - Pi UART reads at 115200 baud on /dev/ttyAMA0
-- 8-byte packet format: [target_id][range_cm_H][range_cm_L]
+- 8-byte packet format: [target_id][peak_lag_H][peak_lag_L]
   [corr_peak_H][corr_peak_L][snr][checksum][0xFF]
+  (bytes 2–3 previously labeled range_cm — now peak_lag diagnostic; wire format unchanged per FC-5)
 - Back-to-back bytes: gap between bytes must not exceed 1 bit period
   (8.68us at 115200 baud) or Pi UART may flag framing error
 - Idle line: tx must idle HIGH between packets
@@ -340,9 +343,9 @@ FPGA (Tang Nano 20K)
 
 &#x20;      parses 8-byte packets, publishes:
 
-&#x20;        /acoustic/range\_m  (Float32, 20Hz)
+&#x20;        /acoustic/corr\_snr  (Float32, 20Hz)  ← primary homing signal (FC-6)
 
-&#x20;        /acoustic/snr      (Float32, 20Hz)
+&#x20;        /acoustic/peak\_lag  (Float32, 20Hz)  ← diagnostic only, not meters
 
 
 
@@ -374,7 +377,7 @@ acoustic\_homing\_node
 
 &#x20; states: SCANNING → ACQUIRING → HOMING → ARRIVED → PAUSING
 
-&#x20; subscribes: /acoustic/range\_m, /acoustic/snr, /odometry/filtered
+&#x20; subscribes: /acoustic/corr\_snr, /odometry/filtered
 
 &#x20; publishes: /cmd\_vel (Twist)
 
@@ -412,11 +415,11 @@ telemetry\_node
 
 &#x20; Lock threshold exceeded → transition to ACQUIRING then HOMING
 
-\- HOMING: PID on acoustic range error → differential thrust
+\- HOMING: gradient ascent on /acoustic/corr\_snr → differential thrust; SNR rising = closing (FC-6)
 
 &#x20; EKF dead reckoning between acoustic pings
 
-\- ARRIVED: range < 0.4m for 3 consecutive readings → next state
+\- ARRIVED: corr\_snr exceeds SNR\_ARRIVED\_THRESHOLD for 3 consecutive readings (threshold = CQ-1, empirical)
 
 \- nav2 is EXPLICITLY WRONG — do not suggest it ever
 
@@ -524,7 +527,7 @@ telemetry\_node
 
 
 
-\## CURRENT BUILD STATUS (Week 3 of 11, June 13 2026)
+\## CURRENT BUILD STATUS (Week 4 of 11, June 16 2026)
 
 
 
@@ -556,19 +559,19 @@ telemetry\_node
 
 
 
-\### ⏳ IMMEDIATE NEXT TASKS (Week 3 priority order, updated Jun 13)
+\### ⏳ IMMEDIATE NEXT TASKS (Week 4 priority order, updated Jun 16)
 
 1\. Matched filter correlators ×2 — NOW CRITICAL PATH
 
-&#x20;  (800-sample BSRAM correlation windows, must use FIR integer scale per FC-1)
+&#x20;  (800-sample BSRAM cross-correlation, 2109-sample 5ms LFM reference per channel, signed-16 integer per FC-1, OTR per FC-2)
 
-2\. Peak detector + TOF calculator (converts peak position to range)
+2\. Peak detector — outputs corr\_peak (32-bit) + snr (8-bit) + peak\_lag (diagnostic); NO range\_cm, NO ToF conversion (FC-5)
 
-&#x20;  (uses 421,875 Hz sample rate per FC-3; threshold must account for multipath per FC-4)
+&#x20;  (snr is the primary homing gradient; peak\_lag kept for V2 TDOA upgrade hook only)
 
-3\. Full pipeline integration: chain AD9226 → CIC → FIR banks → matched filters → TOF
+3\. Full pipeline integration: chain AD9226 → CIC → FIR banks → matched filters → peak detector → UART
 
-&#x20;  (verify end-to-end latency and pipeline handshaking; delete fir_test_top.v per FC-5)
+&#x20;  (verify end-to-end latency; delete fir\_test\_top.v per FC-4)
 
 4\. Synthesis verification: run full design through Gowin EDA, verify positive timing slack at 27MHz
 
@@ -603,8 +606,8 @@ it unlocks all downstream FPGA synthesis work.
 # Week Mapping (use this exactly, do not recalculate):
 #   W1:  May 25–May 31
 #   W2:  Jun 01–Jun 07
-#   W3:  Jun 08–Jun 14  ← CURRENT WEEK
-#   W4:  Jun 15–Jun 21
+#   W3:  Jun 08–Jun 14
+#   W4:  Jun 15–Jun 21  ← CURRENT WEEK
 #   W5:  Jun 22–Jun 28
 #   W6:  Jun 29–Jul 05
 #   W7:  Jul 06–Jul 12
@@ -612,7 +615,7 @@ it unlocks all downstream FPGA synthesis work.
 #   W9:  Jul 20–Jul 26
 #   W10: Jul 27–Aug 02
 #   W11: Aug 03–Aug 09
-# Today June 8 2026 = Week 3 Day 1
+# Today June 16 2026 = Week 4 Day 2
 # Deadline August 10 2026 falls the day after W11 ends — hard cutoff
 
 
@@ -623,9 +626,9 @@ it unlocks all downstream FPGA synthesis work.
 
 | 1  | May 25–May 31 | Foundation + ordering        | 🔴 Partial |
 | 2  | Jun 01–Jun 07 | AD9226 interface + hull start | 🔴 Partial |
-| 3  | Jun 08–Jun 14 | Timing constraints + AD9226 sim | 🟡 Current |
-| 4  | Jun 15–Jun 21 | CIC decimation + single FIR bank | ⚪ |
-| 5  | Jun 22–Jun 28 | Dual matched filter banks    | 🎯 Milestone |
+| 3  | Jun 08–Jun 14 | Timing constraints + FIR banks verified | ✅ Done |
+| 4  | Jun 15–Jun 21 | Matched filters + peak detector | 🟡 Current |
+| 5  | Jun 22–Jun 28 | Pipeline integration + synthesis | 🎯 Milestone |
 | 6  | Jun 29–Jul 05 | ESP32 micro-ROS + buoy firmware | ⚪ |
 | 7  | Jul 06–Jul 12 | ROS 2 nodes + PID homing     | ⚪ |
 | 8  | Jul 13–Jul 19 | Mission state machine + display | ⚪ |
@@ -659,7 +662,7 @@ it unlocks all downstream FPGA synthesis work.
 
 \- Target clock: 27MHz, period 37.037ns
 
-\- Fixed-point: Q1.15 format for filter coefficients
+\- Fixed-point: signed-16 integer scale for filter coefficients (NOT Q1.15 — see TRAJECTORY.md FC-1)
 
 \- Pipeline ALL multiply-accumulate chains — never combinational MAC
 
@@ -781,7 +784,7 @@ ALWAYS simulate with iverilog before declaring done.
 
 Check for X/Z states. Gowin .cst format only. Non-blocking assignments.
 
-Target 27MHz. Q1.15 fixed-point. Pipeline all MAC chains.
+Target 27MHz. Signed-16 integer scale (NOT Q1.15 — see TRAJECTORY.md FC-1). Pipeline all MAC chains.
 
 Next tasks: write uart\_tx.cst and adc\_interface.cst, synthesize each in Gowin EDA,
 

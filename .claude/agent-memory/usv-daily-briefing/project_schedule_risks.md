@@ -5,37 +5,46 @@ metadata:
   type: project
 ---
 
-**Risk pattern confirmed through Week 3 Day 3 (2026-06-10):**
-FPGA simulation work is ahead of original plan (CIC + FIR banks + adc_interface all
-validated as of 2026-06-10), but synthesis has never been run because the .cst
-constraints file remains unwritten. The .cst file was the #1 task in Week 2 and
-again on W3D1, W3D2, and W3D3 — four consecutive sessions of carryover.
-The matched filter (the hardest component) cannot start until .cst is done.
-If .cst is not written by 2026-06-14 (Week 3 end), technical status flips RED.
+**FPGA displacement pattern — confirmed through Week 4 Day 2:**
+The .cst constraints file was the #1 carryover task for four consecutive sessions
+(W2 + W3D1 + W3D2 + W3D3) before being resolved on 2026-06-13.
+matched_filter_correlator.v is now the unconditional #1 task and has NOT been started
+as of 2026-06-16 (Week 4 Day 2). This is the second distinct critical-path item
+to carry over past its target start week.
 
-**Why:** FPGA Verilog work is the hardest component and has been deferred twice
-when other tasks (Pi setup, parts ordering, Amazon carts) competed for attention.
-The pattern is: FPGA task is acknowledged, then displaced by "quick" infrastructure work.
+The pattern: FPGA work is acknowledged as #1, then displaced by "quick" tasks
+(Pi setup, parts ordering, Amazon carts, testbench fixes). Result: carryover sessions.
 
-**How to apply:** In every briefing from Week 3-6, the FPGA .cst / CIC / FIR /
-matched filter task chain must be CRITICAL regardless of other open items.
-Never demote FPGA work to TODAY or IF TIME during Weeks 3-6. If the .cst file
-still does not exist by Week 4 Day 1 (2026-06-15), escalate to RED overall status.
+**Why:** Each "quick" task feels bounded and achievable. FPGA Verilog is open-ended
+and intellectually demanding. The displacement is predictable.
 
-**Parts ordering delay pattern:**
-As of 2026-06-10, 5 critical parts are still unordered:
+**How to apply:** In every briefing from Weeks 3-6:
+- FPGA matched filter / peak_detector / pipeline integration must be CRITICAL, always.
+- Never demote FPGA modules to TODAY or IF TIME during Weeks 3-6.
+- If matched_filter.v does not exist by 2026-06-16 (Week 4 Day 2), escalate to RED.
+- Once matched_filter.v simulates clean, peak_detector is the new #1.
+
+**Parts ordering delay — persistent risk:**
+As of 2026-06-13, 5 critical parts are still unordered:
 - Brushed DC 545 12V underwater thrusters x2 — gates Week 6 motor testing
 - L298N dual H-bridge module — gates Week 6 motor testing
 - MAX9814 AGC pre-amp module — gates full signal chain bench test after AD9226 arrives
 - JSN-SR04T waterproof ultrasonic sensor — gates collision avoidance (Week 7)
 - IP65 waterproof electronics enclosure + M12 cable glands — gates hull integration (Week 8)
-Amazon domestic: 3-7 day lead time. If ordered by June 11, arrive by June 18.
-If not ordered by 2026-06-14, thruster arrival will compress Week 6 motor integration.
-If not ordered by 2026-06-22, flag as a hard RED cost/schedule risk.
 
-**AD9226 arrival window:**
-Chip expected 2026-06-14 to 2026-06-21. adc_interface.v is already written and
-validated in simulation as of 2026-06-10 — bench testing prep is complete.
-DFS pin verification is the critical physical check on arrival (DFS=AVSS assumed).
+Amazon domestic: 3-7 day lead time.
+Ordered Jun 14 = arrive Jun 17-21 (within Week 4).
+Not ordered by Jun 22 = flag thruster arrival as hard RED schedule risk for Week 6.
+
+**AD9226 arrival:**
+Chip expected 2026-06-14 to 2026-06-21. Today (Jun 14) is Day 1 of window.
+adc_interface.v and adc_interface.cst are both complete and waiting.
+Critical physical check on arrival: confirm DFS=AVSS (not AVDD) before power-on.
+Do NOT apply AVDD=5V before DRVDD=3.3V is wired and OEB=LOW.
+
+**Timeline RED/YELLOW thresholds (updated Jun 16):**
+- matched_filter_correlator.v not simulating by Jun 21 (Week 4 end) -> Technical RED, milestone miss
+- 5 Amazon parts not ordered by Jun 22 -> Cost/Schedule RED
+- peak_detector.v not started by Jun 23 (Week 5 Day 2) -> Technical YELLOW escalation
 
 [[project-milestones]]

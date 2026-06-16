@@ -1,2 +1,2 @@
-
-
+- [Pipeline Baselines](project_pipeline_baselines.md) — confirmed as-built sample rate, resource totals, latency, data formats (CLAUDE.md prose is stale)
+- [Ranging Architecture](project_ranging_architecture.md) — V1 homes on SNR gradient, NOT ToF range; no buoy/vehicle clock sync (FC-5/FC-6)

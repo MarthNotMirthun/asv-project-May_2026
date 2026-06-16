@@ -1,0 +1,108 @@
+╔══════════════════════════════════════════════════════════════╗
+║                  ASV PROJECT — WEEKLY PLAN                   ║
+║               WEEK 4 OF 11  |  Jun 15–21, 2026               ║
+╚══════════════════════════════════════════════════════════════╝
+
+  TEMPORAL STATUS
+    Week 4 of 11  |  Project Day 22  |  56 days until Aug 10
+    Phase: CIC decimation + single FIR bank
+    Next milestone: Week 5 — Dual matched filter banks complete
+
+  OVERALL STATUS: RED
+    Technical:   YELLOW — 2 FPGA module(s) still pending
+    Procurement: RED    — 6 critical part(s) not yet ordered
+    Schedule:    YELLOW — 56 days left, 7 week(s) remaining
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  THIS WEEK'S TASKS  (Week 4 — from CLAUDE.md)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  CRITICAL PATH
+    [ ] Matched filter correlators ×2 — NOW CRITICAL PATH
+
+  THIS WEEK
+    [ ] Peak detector + TOF calculator (converts peak position
+    to range)
+    [ ] Full pipeline integration: chain AD9226 → CIC → FIR
+    banks → matched filters → TOF
+    [ ] Synthesis verification: run full design through Gowin
+    EDA, verify positive timing slack at 27MHz
+    [ ] Place pending Amazon orders (thrusters, L298N,
+    enclosure, MAX9814, JSN-SR04T)
+    [ ] Coordinate Home Depot run with Dad (PVC, epoxy,
+    brackets, silicone)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  FORWARD CONSTRAINTS  (TRAJECTORY.md — every new module must respect these)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    FC-1: Reference chirps and FIR coefficients use signed-16
+    integer scale. This was a deliberate correction from the
+    original Q1.15 spec in CLAUDE.md's coding standards. Every
+    module that consumes FIR output or feeds matched filter
+    input must operate in integer scale. Do not reintroduce
+    Q1.15 scaling at any stage boundary downstream of the FIR
+    banks.
+    FC-2: Every pipeline stage from adc_interface onward must
+    carry otr_in / otr_out ports. The over-range flag must
+    travel the full chain to uart_tx so the Pi can flag
+    saturated readings in the packet. A new module without OTR
+    ports is incomplete by definition.
+    FC-3: Time-of-flight and range calculations must use the
+    exact post-CIC output rate: 27,000,000 / 8 / 8 = 421,875
+    Hz. Do not use the "422 kSPS" or "400 kSPS" approximations
+    from earlier design notes. Range = (peak_position /
+    421,875) × 343 m/s ÷ 2.
+    FC-4: fir_test_top.v is a timing-wrapper artifact created
+    to exercise the FIR banks in isolation. It must not appear
+    in the synthesis file list for the full pipeline. Delete it
+    before integration to avoid pulling a stray top module into
+    the build.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  PHYSICAL VERIFICATION QUEUE  (before first hardware power-on)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  [ ] PV-1: AD9226 DRVDD rail
+        Required: 3.3V (not 5V)
+  [ ] PV-2: DFS pin strap
+        Required: tied to AVSS (ground), not AVDD
+  [ ] PV-3: OEB pin
+        Required: tied LOW
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  FPGA PIPELINE STATUS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ✅  uart_tx
+  ✅  adc_interface
+  ✅  cic_decimator
+  ✅  fir_filter_bank1 (34–38 kHz)
+  ✅  fir_filter_bank2 (42–46 kHz)
+  ⏳  matched_filter ×2
+  ⏳  peak_detector + TOF
+  ⏳  Full pipeline integration
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  PROCUREMENT — NOT YET ORDERED  (each gates a downstream week)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  🔴  Brushed DC thrusters ×2 (545 12V underwater) — ORDER NOW
+  🔴  L298N dual H-bridge module — ORDER NOW
+  🔴  MAX9814 pre-amp module — ORDER NOW
+  🔴  JSN-SR04T waterproof ultrasonic sensor — ORDER NOW
+  🔴  IP65 waterproof enclosure + M12 cable glands — ORDER NOW
+  🔴  PVC pipe, end caps, L-brackets, epoxy, silicone — HOME DEPOT RUN
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  LOOKAHEAD — NEXT 2 WEEKS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Week  5 (Jun 22–Jun 28)  Dual matched filter banks
+           🎯 Dual matched filter banks complete
+  Week  6 (Jun 29–Jul 05)  ESP32 micro-ROS + buoy firmware
+
+════════════════════════════════════════════════════════════════
+  Generated Jun 15, 2026  |  CLAUDE.md last updated: June 13, 2026
+  Plan saved to docs/weekly_plan.txt
+════════════════════════════════════════════════════════════════

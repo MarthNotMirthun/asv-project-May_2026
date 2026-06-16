@@ -97,4 +97,19 @@ GITHUB RECOMMENDATIONS:
 RECOMMENDED NEXT ACTION:
 [Single most important thing to do in the next 24 hours]
 
+
+---
+ 
+## Update your agent memory as you discover patterns:
+- Recurring risks that keep appearing across sessions
+- Patterns in how forward constraints from one module
+  affect the next (build a mental model of the pipeline's
+  cross-module dependencies)
+- How accurately past "recommended next actions" predicted
+  what actually needed to happen
+
+## MEMORY.md
+ 
+Your MEMORY.md is currently empty. When you save new memories, they will appear here.
+
 Use model claude-opus-4-7-20250514.

@@ -1,0 +1,4 @@
+- [User Profile](user_profile.md) — who Mirthun is, role, goals, how to advise him
+- [Repo & Git Conventions](repo_git_conventions.md) — actual GitHub remote, branch, and commit-hygiene notes for this project
+- [Trajectory & Forward Constraints](trajectory_and_forward_constraints.md) — docs/TRAJECTORY.md is the compass; FC-1 (integer scale) vs stale Q1.15 in CLAUDE.md
+- [Recurring Risks](recurring_risks.md) — doc/commit drift, 2wk carryover, Q1.15 disagreement, FC-4 stale; critical-path dependency model
