@@ -1,3 +1,70 @@
+## 2026-06-16 — Propulsion/Enclosure Parts Research (Jun 16)
+
+**Parts Research:**
+- Researched remaining propulsion parts (thrusters ×2, IP65 enclosure) via Exa web search — links presented to user for manual purchase decision.
+- Brave browser opened with 6 tabs: 3 thruster options, 3 enclosure options (see product list below).
+- L298N, MAX9814, JSN-SR04T status: **NOT YET ORDERED** — all three remain in the "🔴 Not Yet Ordered — Action Required" section of CLAUDE.md as of Jun 16. User should confirm their order status before proceeding with wiring tasks.
+
+**Thruster Options (545 brushed, 12V, need CW+CCW pair):**
+1. equlup 545 50T Brushed (CW) — 7.4–14.8V, 700–1000g thrust, fully waterproof — https://www.amazon.com/equlup-Underwater-Thruster-Brushed-Propeller/dp/B0DHZLLBR3
+2. Amazon search — 545 50T CW+CCW pair — https://www.amazon.com/s?k=545+50T+brushed+underwater+thruster+12V+RC+boat+CW+CCW+pair
+3. Amazon search — broader brushed thruster — https://www.amazon.com/s?k=underwater+brushed+motor+thruster+12V+catamaran+boat+545
+
+**Enclosure Options (IP65+, large enough for Pi 4 + Tang Nano):**
+1. Otdorpatio IP67 6.3"×6.3"×3.5", 4× M16 cable glands included — https://www.amazon.com/Otdorpatio-Electrical-Waterproof-Electronic-160x160x90mm/dp/B0DX781Z3W
+2. LeMotech IP65 5.9"×4.3"×2.8", CE/RoHS, pre-drilled — https://www.amazon.com/LeMotech-Dustproof-Waterproof-Universal-Electrical/dp/B075DHRJHZ (slightly small — verify interior fits Pi 4)
+3. Amazon search — large IP65 enclosure with cable glands — https://www.amazon.com/s?k=IP65+waterproof+enclosure+project+box+electronics+cable+glands+large
+
+**Thrusters/enclosure NOT marked as ordered** — pending user purchase confirmation.
+
+---
+
+## 2026-06-16 — Dual Matched Filter Correlators Validated (Jun 16)
+
+**Completed:**
+- Matched filter correlator ×2 (matched_filter_1.v, matched_filter_2.v) — 2109-sample block correlators, 48-bit internal accumulators, 200Hz output, CORR_SHIFT=16, OTR window-OR
+- Companion testbenches (tb_matched_filter_1.v, tb_matched_filter_2.v) — 6-check suites per module
+
+**Verified:**
+- hw-validation: 0 BLOCKERs, 2 WARNINGs (OTR propagation, HW multiplier count), 6 NOTEs — APPROVED WITH CONDITIONS
+- dsp-signal-validator: 3 BLOCKERs CAUGHT AND RESOLVED (block correlation required, 48-bit accumulator required, 2109-sample window length corrected from stale 800)
+- systems-integrator: 0 conflicts, 2 major corrections (BSRAM: 4→8 blocks, resource totals reconciled)
+- verilog-sim-runner: matched_filter_1 ALL CHECKS PASSED, matched_filter_2 ALL CHECKS PASSED
+
+**Validator Findings Summary:**
+- hw-validation: WARNING — CLAUDE.md HW multiplier count was wrong (stated 32/48 for FIR banks). Actual: FIR banks use sequential ~1/48 each; matched filters use time-shared ~2-4/48. Total ~4-6/48 multipliers (>90% margin).
+- dsp-signal-validator: BLOCKER #1 — Block correlation (2109 MACs/sample) cannot fit in 64-clocks/sample sequentially; must use block buffering. RESOLVED: implemented block correlator architecture. BLOCKER #2 — 32-bit accumulator overflows at full scale; corrected to 48-bit internal. BLOCKER #3 — Window length is 2109 samples (5ms × 421.875 kSPS), not 800 (stale figure). CLAUDE.md L87 corrected.
+- systems-integrator: Corrected BSRAM count from 4 to 8 total (matched filter windows require 2 blocks per channel × 2 channels = 4; FIR coefficients 2; reference ROMs 2 = 8 total). Verified CORR_SHIFT=16 scaling contract end-to-end.
+
+**Resource Utilization (verified end-to-end):**
+- HW Multipliers: ~4-6 / 48 (FIR banks ~1 each, matched filters time-shared ~2-4) — >90% margin
+- BSRAM: ~8 / 46 blocks (~17%)
+  - FIR coefficients: 2 blocks
+  - Matched filter reference chirps: 2 blocks (2109-sample ROM per channel)
+  - Matched filter window buffers: 4 blocks (2 per channel, double-buffered)
+- LUTs: ~1070 / 20,736 (~5%)
+
+**End-to-End Latency:**
+- Matched filter pipeline: ~16-26ms (block correlation + peak detection within 50ms budget)
+
+**Pipeline Simulation Results:**
+- matched_filter_1: CHIRP_DETECT corr_peak=709,215 vs NOISE_REJECT corr_peak=64 (>3000× ratio), OTR_FLAG PASS, NO_XZ PASS, SCALING PASS, PEAK_LAG_ZERO PASS
+- matched_filter_2: CHIRP_DETECT corr_peak=709,046 vs NOISE_REJECT corr_peak=232 (>3000× ratio), OTR_FLAG PASS, NO_XZ PASS, SCALING PASS, PEAK_LAG_ZERO PASS
+
+**CLAUDE.md Updated:**
+- FPGA Build Status: "⏳ Matched filter correlators" → "✅ Matched filter correlators ×2 — block correlator, 2109-tap, 48-bit acc, OTR window-OR, 200Hz output, CORR_SHIFT=16 ← VALIDATED Jun 16"
+- Pipeline comment: "800 samples / 2ms" → "2109 samples / 5ms" (FC-3, corrected from stale spec)
+- Reference chirps: "2× 800-sample arrays" → "2× 2109-sample arrays"
+- FIR bank multiplier claims: Changed from "~16 HW multipliers" each to "~1 HW multiplier (sequential MAC engine)" each
+- Total multiplier budget: Changed from "32 of 48 (33% margin)" to "~4-6 of 48 (>90% margin)"
+- BSRAM count: Added itemized breakdown totaling ~8 / 46 blocks
+- IMMEDIATE NEXT TASKS: Marked task 1 (matched filters) DONE Jun 16; updated task 2 (peak detector) to specify CORR_SHIFT=16 scale and otr_out consumption
+
+**Next:**
+Peak detector — outputs corr_peak (32-bit, CORR_SHIFT=16 scale from matched filter), snr (8-bit = corr_peak/noise_floor in same scale), peak_lag (11-bit diagnostic passthrough). No range_cm, no ToF.
+
+---
+
 ## 2026-06-13 — Full Pipeline Re-Validation (Jun 13) + adc_interface.cst Verified
 
 **Validation Run Summary:**

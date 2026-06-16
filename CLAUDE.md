@@ -72,19 +72,28 @@ AD9226 parallel input (12-bit, 65MSPS)
 
 &#x20; → 2× Parallel 32-tap FIR Bandpass Filter Banks
 
-&#x20;     Bank 1: 34–38 kHz (Buoy 1 chirp), \~16 HW multipliers
+&#x20;     Bank 1: 34–38 kHz (Buoy 1 chirp), \~1 HW multiplier (sequential MAC engine)
 
-&#x20;     Bank 2: 42–46 kHz (Buoy 2 chirp), \~16 HW multipliers
+&#x20;     Bank 2: 42–46 kHz (Buoy 2 chirp), \~1 HW multiplier (sequential MAC engine)
 
-&#x20;     Total: 32 of 48 HW multipliers — 33% margin
+&#x20;     Matched filter ×2: \~2-4 HW multipliers (block correlator, time-shared MAC)
+
+&#x20;     Total: \~4-6 of 48 HW multipliers — >90% margin
 
 &#x20;     Coefficients stored in BSRAM, runtime-loadable via UART from Pi
 
+### BSRAM Resource Allocation (verified Jun 16)
+- FIR filter banks: 2 BSRAM blocks (32-tap coefficients per bank)
+- Matched filter ×2: 6 blocks total
+  - Reference chirp ROMs: 2 blocks (2109-sample LFM per channel)
+  - Window buffers: 4 blocks (double-buffered, 2 per channel)
+- Total BSRAM used: ~8 of 46 blocks (~17%)
+
 &#x20; → 2× Matched Filter Correlators
 
-&#x20;     Reference chirps in BSRAM (2× 800-sample arrays)
+&#x20;     Reference chirps in BSRAM (2× 2109-sample arrays)
 
-&#x20;     Correlation window: 2ms × 421,875 SPS ≈ 800 samples (FC-3)
+&#x20;     Correlation window: 5ms × 421,875 SPS = 2109 samples (FC-3, corrected from stale 800/2ms)
 
 &#x20;     Output: corr_peak (magnitude), snr (proximity gradient), peak_lag (diagnostic only, per FC-5)
 
@@ -124,7 +133,7 @@ AD9226 parallel input (12-bit, 65MSPS)
 
 \- ✅ FIR filter bank 2 (42–46kHz) — written, 32-tap Hamming windowed-sinc, signed-16 INTEGER scale, and simulated ← VALIDATED Jun 13
 
-\- ⏳ Matched filter correlators — not started (now CRITICAL PATH)
+\- ✅ Matched filter correlators ×2 — block correlator, 2109-tap, 48-bit acc, OTR window-OR, 200Hz output, CORR_SHIFT=16 ← VALIDATED Jun 16
 
 \- ✅ AD9226 parallel interface — corrected (MSB-flip, OTR port, signed declaration) and simulated ← VALIDATED Jun 13
 
@@ -561,13 +570,11 @@ telemetry\_node
 
 \### ⏳ IMMEDIATE NEXT TASKS (Week 4 priority order, updated Jun 16)
 
-1\. Matched filter correlators ×2 — NOW CRITICAL PATH
+1\. ✅ Matched filter correlators ×2 — DONE Jun 16
 
-&#x20;  (800-sample BSRAM cross-correlation, 2109-sample 5ms LFM reference per channel, signed-16 integer per FC-1, OTR per FC-2)
+2\. Peak detector — outputs corr\_peak (32-bit, CORR\_SHIFT=16 scale from matched filter), snr (8-bit = corr\_peak/noise\_floor in same scale), peak\_lag (11-bit diagnostic passthrough); NO range\_cm, NO ToF (FC-5)
 
-2\. Peak detector — outputs corr\_peak (32-bit) + snr (8-bit) + peak\_lag (diagnostic); NO range\_cm, NO ToF conversion (FC-5)
-
-&#x20;  (snr is the primary homing gradient; peak\_lag kept for V2 TDOA upgrade hook only)
+&#x20;  (Consume otr\_out from matched filters; snr is the primary homing gradient; peak\_lag kept for V2 TDOA upgrade hook only)
 
 3\. Full pipeline integration: chain AD9226 → CIC → FIR banks → matched filters → peak detector → UART
 
