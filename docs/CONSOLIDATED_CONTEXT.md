@@ -103,7 +103,7 @@ AD9226 → adc_interface → cic_decimator → fir_bank1/fir_bank2 (parallel)
 - **Function:** 8N1 UART transmitter, 115,200 baud, 8-byte back-to-back packets
 - **Key params:** `CLKS_PER_BIT=234`, 27MHz clock → 115,384 baud (+0.16% error)
 - **Ports:** `clk`, `rst_n`, `tx_start`, `tx_data[7:0]`, `tx` (serial out, idles HIGH), `tx_busy`
-- **Packet format:** `[target_id:1][range_cm_H][range_cm_L][corr_peak_H][corr_peak_L][snr][checksum][0xFF]`
+- **Packet format:** `[target_id:1][peak_lag_H][peak_lag_L][corr_peak_H][corr_peak_L][snr][checksum][0xFF]` — bytes 2–3 carry `peak_lag` (diagnostic sample index, per FC-5); **packet structure is unchanged from original design**, only Pi-side interpretation of bytes 2–3 changes (NOT range_cm)
 - **Constraint:** `uart_tx.cst` — clk=pin4, tx=pin86, rst_n=pin88
 - **Verified:** 8-byte back-to-back packet, inter-byte gap <<1 bit period, no X/Z
 
@@ -149,12 +149,13 @@ AD9226 → adc_interface → cic_decimator → fir_bank1/fir_bank2 (parallel)
   - Pipeline all MAC chains — no combinational MAC
   - BSRAM for reference chirp arrays
 - **Input:** FIR bank dout (signed-16 integer), dout_valid, otr_out
-- **Output:** peak_position, corr_peak (magnitude), otr_out propagated
+- **Output:** `corr_peak` (32-bit peak magnitude — primary homing signal), `snr` (8-bit peak-to-noise ratio — proximity proxy), `peak_lag` (16-bit sample index — **diagnostic only**, do NOT convert to range_cm per FC-5), `otr_out` propagated
 
-#### `peak_detector` + TOF calculator — ⏳ NOT STARTED
-- **Function:** Finds peak in matched filter correlation output; converts peak position to time-of-flight and range
-- **Range formula:** `range_m = (peak_position / 421875) × 343 / 2`
-- **Requirements:** FC-3 (use 421,875Hz exactly); FC-4 (threshold must account for multipath ~1–2m near field); FC-2 (OTR propagates through)
+#### `peak_detector.v` — ⏳ NOT STARTED
+- **Function:** Finds peak in matched filter correlation output; outputs `corr_peak`/`snr` as primary navigation signals; `peak_lag` kept as diagnostic only
+- **Primary outputs:** `corr_peak` (32-bit magnitude — the homing gradient), `snr` (8-bit peak-to-noise — proximity proxy; monotonic with proximity: closer buoy → higher SNR), `peak_lag` (16-bit sample index at peak — diagnostic hook for V2 TDOA upgrade, **do NOT convert to meters**)
+- **Requirements:** FC-2 (OTR propagates through); FC-3 (421,875Hz for any lag-to-time diagnostic only); FC-5 (no absolute ToF — do not compute or output range_m); FC-6 (SNR is the primary homing signal)
+- **Critical:** Absolute one-way ToF is impossible — buoy and vehicle share no time reference. `peak_lag` is a relative correlation phase offset within the capture window, NOT a distance. See FC-5.
 
 #### Full pipeline integration — ⏳ NOT STARTED
 - Blocked on matched filter and peak detector
@@ -289,18 +290,39 @@ The over-range flag travels the full chain to `uart_tx` so the Pi can flag satur
 readings in the packet. A new module without OTR ports is incomplete by definition.
 Current propagation: adc_interface→cic_decimator→fir_bank1/2 ✅. Still needed: matched_filter, peak_detector, uart_tx (packet byte).
 
-### FC-3 — TOF math uses exactly 421,875 samples/sec
+### FC-3 — Sample rate is exactly 421,875 samples/sec
 Use `27,000,000 / 8 / 8 = 421,875 Hz` — not "422 kSPS" or "400 kSPS".
-Range formula: `range_m = (peak_position / 421875.0) × 343.0 / 2.0`
+This sample rate governs the correlation window size and any lag-to-time diagnostic conversion.
+**FC-5 supersedes the `÷ 2` range formula** that previously appeared here — do not use `(peak_lag / 421875) × 343 / 2` to produce range_cm; absolute ToF is physically impossible for this system.
 
 ### FC-4 — fir_test_top.v must be deleted before integration
 `fir_test_top.v` is a timing-wrapper artifact from FIR isolation testing. It must NOT
 appear in the Gowin synthesis file list. Delete it before building the full pipeline.
 
-### FC-5 — Peak detection threshold must account for multipath
-Near-field multipath reflections occur at ~1–2m in pool environments. The peak detector
-threshold must be set conservatively to avoid false triggers from multipath echoes.
-This is a tunable parameter, but the hardware module must expose it.
+### FC-5 — Ranging Method Correction: NO absolute ToF; `peak_detector.v` outputs corr_peak + snr, not range_cm
+**Supersedes the `÷ 2` range formula previously in FC-3.**
+
+Buoys transmit LFM chirps continuously and autonomously. The vehicle has no shared time reference with any buoy (GPS-denied, no radio time-sync, no wired link). `T_transmit` is therefore unknown — **absolute one-way ToF is impossible**. The `÷ 2` round-trip model has no physical meaning either (the vehicle does not transmit; the buoy does not echo).
+
+What the matched filter peak actually is: the correlation lag gives the **sample offset within the 800-sample capture window** at which the received chirp best aligns with the stored reference, plus the **peak magnitude (correlation energy → SNR)**. The lag drifts and wraps because clocks are unsynchronized; it cannot be anchored to a true `T_transmit`.
+
+**`peak_detector.v` must output:**
+- `corr_peak` (32-bit peak magnitude) — **primary navigation signal**
+- `snr` (8-bit peak-to-noise ratio) — **proximity proxy; monotonic with proximity** (closer buoy → higher received SPL → higher correlation energy)
+- `peak_lag` (16-bit sample index) — **diagnostic only**; kept as hook for V2 TDOA dual-receiver upgrade; **do NOT convert to meters**; do NOT gate any V1 state transition on it
+- `target_id` and OTR still propagate (per FC-2)
+
+**FPGA pipeline impact: NONE structural.** Build the matched filter and peak detector exactly as planned. Only the labeling and Pi-side interpretation of the output changes.
+
+### FC-6 — `acoustic_homing_node` uses SNR-gradient homing, not range-PID
+The state machine shape (SCAN→ACQUIRE→HOME→ARRIVE) is unchanged, but the homing signal changes:
+
+- **SCANNING:** rotate 360°, log `snr(θ)` per heading; lock onto `θ*` that maximizes SNR for the active `target_id` band
+- **ACQUIRING:** confirm SNR exceeds the lock threshold for N consecutive readings at `θ*`; multipath pool-wall reflections sit ~20–30% below direct-path peak — set threshold above that floor
+- **HOMING:** drive forward on `θ*`; run **gradient ascent on SNR** (not PID-on-range); differential thrust corrects heading to keep SNR climbing; EKF dead-reckoning still smooths between pings
+- **ARRIVED trigger MUST change:** `range < 0.4 m for 3 readings` is not computable without absolute range. Replace with **SNR plateau / saturation trigger**: SNR exceeds a high "very-close" threshold (and/or OTR asserts from high SPL) for 3 consecutive readings. Calibrate empirically at pool test #1 (see CQ-1 in TRAJECTORY.md).
+
+**ROS 2 topic rename:** `/acoustic/range_m` → **`/acoustic/corr_snr`** (Float32, 20 Hz). The `range_cm` bytes in the UART packet may be republished as `/acoustic/peak_lag` (diagnostic only — do NOT label as meters). The **8-byte UART packet structure is unchanged**; only Pi-side interpretation of bytes 2–3 changes.
 
 ---
 
