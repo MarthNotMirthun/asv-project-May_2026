@@ -1,6 +1,6 @@
 # TRAJECTORY.md — ASV Technical Compass
 
-**Last Updated:** June 15, 2026 (Week 4 Day 1 of 11)
+**Last Updated:** June 17, 2026 (Week 4 Day 3 of 11)
 
 This is the living technical compass for the GPS-denied acoustic-homing
 catamaran USV. It records the **verified pipeline state**, the
@@ -30,19 +30,30 @@ AD9226 → adc_interface → cic_decimator → FIR banks → matched filters →
 | `cic_decimator` | ✅ DONE & verified | R=8, N=3, shift=5 corrected, saturation clamp added |
 | `fir_filter_bank1` (34–38 kHz) | ✅ DONE & verified | 32-tap Hamming windowed-sinc, signed-16 integer scale |
 | `fir_filter_bank2` (42–46 kHz) | ✅ DONE & verified | 32-tap Hamming windowed-sinc, signed-16 integer scale |
-| `matched_filter` ×2 | ⏳ NOT STARTED | **NOW THE CRITICAL PATH** — see Section 4 |
-| `peak_detector` + TOF | ⏳ NOT STARTED | Depends on matched filter |
-| Full pipeline integration | ⏳ NOT STARTED | Blocked on the above |
+| `matched_filter_1` (Buoy 1) | ✅ DONE & verified | 2109-sample block correlator, 48-bit acc, CORR_SHIFT=16, OTR window-OR, 200Hz out; sim >3000× chirp/noise ratio ← VALIDATED Jun 16 |
+| `matched_filter_2` (Buoy 2) | ✅ DONE & verified | Same architecture; cross-band rejection verified ← VALIDATED Jun 16 |
+| `peak_detector` | ⏳ NOT STARTED | **NOW THE SINGLE REMAINING FPGA MODULE** before integration — see Section 4 |
+| Full pipeline integration | ⏳ NOT STARTED | Blocked only on peak_detector |
 
-**Status as of June 16:** All five completed modules passed
-hw-validation, dsp-signal-validator, systems-integrator, and
-verilog-sim-runner on June 13. FC-5 and FC-6 (added June 15) are
-**confirmed and resolved** — the system uses SNR-gradient homing, not
-absolute ToF range. `peak_detector.v` outputs `corr_peak`/`snr` as
-primary; `peak_lag` kept as diagnostic only. `acoustic_homing_node`
-homes by gradient ascent on `/acoustic/corr_snr`. ARRIVED trigger uses
-SNR plateau threshold (CQ-1, empirical at pool test #1). **Proceed to
-matched filter implementation immediately.**
+**Status as of June 16:** All seven authored modules (ADC → CIC → 2×FIR →
+2×matched_filter) are verified. The dual matched filters passed
+hw-validation (APPROVED WITH CONDITIONS), dsp-signal-validator (3 BLOCKERs
+caught and resolved), systems-integrator, and verilog-sim-runner (ALL
+PASS, >3000× chirp/noise rejection, cross-band rejection confirmed) on
+June 16. **`peak_detector.v` is now the only remaining FPGA module
+between current state and full-pipeline integration.** FC-5 and FC-6 are
+confirmed and resolved — SNR-gradient homing, not absolute ToF range.
+`peak_detector.v` outputs `corr_peak`/`snr` as primary; `peak_lag` kept
+as diagnostic only. **Proceed to peak_detector implementation
+immediately.**
+
+**Resource accounting note (Jun 16):** BSRAM usage was corrected upward
+from 8/46 to **14/46 (~30%)** after manual verification against the
+GW2AR-18 BSRAM primitive (UG285E): the 2109-sample arrays are
+**depth-bound (1024 locations/block → 3 blocks/array), not
+capacity-bound**. This correction was found by manual datasheet check,
+not by trusting the pipeline's first answer. See Q1 audit note below
+re: re-verifying remaining LUT/multiplier estimates the same way.
 
 ---
 
@@ -71,11 +82,12 @@ output rate: `27,000,000 / 8 / 8 = 421,875 Hz`. Do not use the "422 kSPS"
 or "400 kSPS" approximations from earlier design notes. Range =
 (peak_position / 421,875) × 343 m/s ÷ 2.
 
-### FC-4 — `fir_test_top.v` must be deleted before integration
-`fir_test_top.v` is a timing-wrapper artifact created to exercise the FIR
-banks in isolation. It must **not** appear in the synthesis file list for
-the full pipeline. Delete it before integration to avoid pulling a stray
-top module into the build.
+### FC-4 — `fir_test_top.v` must be deleted before integration — ✅ CLEARED (Jun 15)
+`fir_test_top.v` was a timing-wrapper artifact created to exercise the FIR
+banks in isolation. It is **confirmed absent from fpga/src/** as of Jun 15
+(verified again Jun 16 — fpga/src/ contains exactly the 7 pipeline modules
+and no test_top). This constraint is satisfied; retain the note for
+history but it no longer gates integration.
 
 ### FC-5 — Ranging Method Correction: NO absolute one-way ToF; peak_detector outputs CORRELATION LAG + SNR, not range
 **This supersedes the `÷ 2` round-trip interpretation in FC-3.**
@@ -188,26 +200,40 @@ silently wrong data. Complete ALL before applying power to a wired ADC.
 
 ---
 
-## 4. CRITICAL PATH — Matched Filter Correlators ×2
+## 4. CRITICAL PATH — `peak_detector.v` (single remaining FPGA module)
 
-The two matched filter correlators are now the single most important and
-most time-sensitive deliverable. They are the centerpiece DSP that the
-project is judged on. **Week 4 must start them immediately.**
+The matched filter correlators ×2 are **DONE and verified (Jun 16)**. The
+critical path has advanced to `peak_detector.v` — the last module before
+full-pipeline integration and synthesis. It is far simpler than the
+matched filter; the hardest DSP block is now behind us.
 
-Requirements (each inherits the forward constraints above):
-- **2109-sample reference chirps in BSRAM** (5 ms × 421,875 SPS = 2109 samples per channel); correlation window slides over incoming samples
-- **Reference chirps in signed-16 integer scale** (per **FC-1**)
-- **`otr_in` / `otr_out` ports** carried through (per **FC-2**)
-- `corr_peak` (32-bit magnitude) and `snr` (8-bit peak-to-noise) are primary outputs; `peak_lag` kept as diagnostic (per **FC-5**)
-- `peak_lag` uses **421,875 Hz** sample clock for any lag-to-time diagnostic (per **FC-3**); do NOT convert to range_cm
-- Pipeline all multiply-accumulate chains — never combinational MAC
-- Companion testbench in `fpga/sim/`; simulate with iverilog, check for X/Z
+Requirements (inherits all forward constraints above):
+- Consumes `corr_peak` (matched filter, CORR_SHIFT=16 scale) and `otr_out`
+  from both matched filter channels
+- Outputs: `corr_peak` (32-bit, same scale), `snr` (8-bit = corr_peak /
+  noise_floor in the same scale), `peak_lag` (11-bit diagnostic passthrough)
+- **NO range_cm, NO ToF conversion** (per **FC-5**) — `snr` is the primary
+  homing gradient; `peak_lag` is V2-TDOA hook only
+- `otr_in` / `otr_out` carried through (per **FC-2**)
+- Watch BSRAM: if noise-floor averaging or threshold-history buffers are
+  added, they consume blocks on top of the current 14/46 — keep them in
+  LUT/registers if small (see Q2 below). Budget for ≤2 added blocks.
+- Pipeline all MAC chains; companion testbench in `fpga/sim/`; iverilog,
+  check X/Z
+
+### After peak_detector
+1. Full pipeline integration: chain ADC → CIC → FIR ×2 → MF ×2 →
+   peak_detector → uart_tx; verify end-to-end latency within 50 ms budget
+2. Synthesis in Gowin EDA: confirm positive timing slack at 27 MHz, and
+   **re-confirm actual LUT/BSRAM/DSP from the synthesis report** vs the
+   estimates in CLAUDE.md (the BSRAM correction shows estimates can be off)
 
 ### Schedule reality
-Two weeks of carryover already exist. Weeks 3–6 are reserved as
-FPGA-focused. ROS 2 work stays deferred until the FPGA pipeline is done.
-The matched filter is the hardest block in the project — if it slips,
-the demo slips. Protect this time above all else.
+Two weeks of carryover from Weeks 1–2 still exist. Weeks 3–6 are reserved
+as FPGA-focused; ROS 2 work stays deferred until the FPGA pipeline is
+done. With the matched filter complete, the schedule risk has dropped
+materially — but the carryover means peak_detector + integration +
+synthesis must finish inside Week 5 to hold the Week 5 milestone.
 
 ---
 
@@ -231,3 +257,122 @@ These values must be measured at the pool venue with `rosbag2 record -a`. They c
 | CQ-1 | SNR plateau / saturation threshold for ARRIVED state | Walk vehicle manually toward Buoy 1 at measured distances (0.1 m, 0.2 m, 0.4 m, 0.6 m, 1.0 m, 2.0 m). Record `/acoustic/corr_snr` at each distance. Identify the `corr_snr` value where readings plateau or OTR asserts — this is `SNR_ARRIVED_THRESHOLD`. Hard-code into `acoustic_homing_node` before pool test #2. | Pool test #1 (Week 9, Jul 20–26) |
 
 **How to use CQ-1:** After pool test #1 bag capture, extract `/acoustic/corr_snr` from the bag, plot vs distance, and identify the near-field plateau knee. Set `SNR_ARRIVED_THRESHOLD` in `acoustic_homing_node` to 90% of the plateau value to give a margin before OTR saturation.
+
+---
+
+## 7. DECISION LOG
+
+### DL-1 — Acoustic bench testing timing (decided June 17, 2026, Week 4 Day 3)
+
+**Question:** All four analog-chain parts are now physically in hand
+(TCT40-16R, MAX9814 preamp delivered today, AD9226 arrived Jun 8, Tang
+Nano 20K). Should real hardware bench testing of the signal chain start
+now, or wait? The original plan put all hardware/pool testing at Week 9.
+
+**Decision: HYBRID.**
+1. **No change to the critical path this week.** `peak_detector.v` →
+   full-pipeline integration → Gowin synthesis remains the Week 4–5
+   priority exactly as Section 4 states. FPGA simulation focus is NOT
+   interrupted for hardware bring-up.
+2. **Pull ONE narrow analog-only bench check forward** to the Week 4/5
+   boundary (after peak_detector is written, before/around integration):
+   a scope-only validation of the **analog sub-chain TCT40-16R → MAX9814**,
+   FPGA NOT in the loop. This is a few hours and touches zero Verilog context.
+3. **Defer the FPGA-in-the-loop ADC capture** (AD9226 → Tang Nano reading
+   valid samples) to **Week 5**, naturally coincident with pipeline
+   integration when `adc_interface` first lives in an integrated top.
+
+**Reasoning:** The "test now vs. wait" question actually splits into two
+independent de-risking layers that must be scheduled differently:
+- **Layer A (analog: transducer → MAX9814 → into AD9226 input range).**
+  Failure modes — MAX9814 AGC behavior on a 40 kHz tone, gain/clipping,
+  DC bias, signal level vs. the AD9226 ±1V (VREF=1.0V) window — are
+  empirical and *cannot be simulated*. They are independent of the matched
+  filter. The MAX9814 auto-gain is the single least-predictable element in
+  the entire signal path, and it directly gates CQ-1 (the SNR-plateau
+  calibration). Catching a gain/level problem now is cheap; discovering it
+  at Week 9 with zero buffer left is a crisis. → worth pulling forward.
+- **Layer B (FPGA reading valid ADC data).** Requires PV-1/PV-2/PV-3
+  strap checks cleared first (or risk FPGA GPIO damage), and only proves
+  anything once `adc_interface` + `uart_tx` sit in an integrated top —
+  which is itself the Week 5 milestone. Doing this *now* forces a
+  context-switch into hardware bring-up mid-critical-path, exactly the
+  week-level risk to avoid given the two weeks of carryover already
+  compressing Weeks 3–6. → keep it on the Week 5 integration boundary.
+
+Rejected **START FULLY NOW**: would divert focus from `peak_detector.v`,
+the single remaining FPGA module before integration, during the most
+schedule-constrained stretch of the project.
+Rejected **DEFER ENTIRELY TO WEEK 9**: leaves the least-predictable analog
+element (MAX9814 AGC) unvalidated until there is no schedule slack to
+absorb a surprise.
+
+**Recommended action THIS week (Week 4):** finish `peak_detector.v`
+(simulate, X/Z check, companion testbench) → begin full-pipeline
+integration. Do NOT wire the FPGA to the ADC yet.
+
+**When bench testing begins:**
+- *Analog-only scope check (Layer A):* Week 4/5 boundary, immediately
+  after `peak_detector.v` is verified. A few hours, no FPGA.
+- *FPGA-in-the-loop ADC capture (Layer B):* Week 5, alongside pipeline
+  integration, and only after PV-1/PV-2/PV-3 are cleared.
+
+**Preconditions before bench testing:**
+- *For the analog-only check (Layer A):* MAX9814 powered at a known rail;
+  a 34–46 kHz tone source to drive TCT40-16R (function generator, or a
+  buoy TCT40-16T driven by ESP32 #2 — but ESP32 firmware is not yet
+  written, so a function generator is the faster source). Scope the
+  MAX9814 output and confirm it stays within the AD9226 ±1V input window
+  with headroom and no clipping/AGC pumping artifacts. The AD9226 need NOT
+  be powered for this step.
+- *For FPGA-in-the-loop (Layer B):* ALL of Section 3 must be cleared first
+  — **PV-1** DRVDD = 3.3V (not 5V), **PV-2** DFS strap = AVSS,
+  **PV-3** OEB tied LOW. These are mandatory the instant the AD9226 is
+  energized and wired to Tang Nano GPIO; getting any one wrong can destroy
+  FPGA GPIO or produce silently wrong data.
+
+**DL-1 addendum — Layer A signal source validated (hw-validation, June 17, 2026):**
+
+FPGA-as-tone-generator plan approved for TX side. Tang Nano 27 MHz clock
+divider generates clean square waves via integer division: 40 kHz (half-count
+337 → 40,059 Hz, ±0.15%), 36 kHz (half-count 375 → exactly 36,000 Hz), 44 kHz
+(half-count 307 → 43,974 Hz, −0.06%). FPGA PWM preferred over 555 timer —
+more accurate, retunable in Verilog, zero extra parts. Drive circuit:
+logic-level N-channel MOSFET (2N7000/BS170 — confirm part number in hobby
+pack), 150–220Ω gate series resistor, 100kΩ gate-to-source pulldown, 1N4148
+clamp diode from drain to +V rail. Drive TX at **5V, not 11.1V LiPo** — 5V
+gives sufficient SPL at 20–30 cm bench range without overdriving the receiver
+or creating LiPo risk on a breadboard. TX/RX separation: 20–30 cm, line-of-
+sight, transducers facing each other.
+
+**TWO BLOCKERS DISCOVERED — project-architecture level, not just bench logistics:**
+
+**BLOCKER B1 — Transducer bandwidth vs. chirp bands:**
+TCT40-16T/R are narrowband resonant piezo transducers, efficient only within
+~38.5–41.5 kHz around their 40 kHz resonance. The project's Chirp 1 (34–38 kHz)
+and Chirp 2 (42–46 kHz) bands both sit on the resonance skirts. At 36 kHz and
+44 kHz, radiated/received acoustic energy is down many dB — a bench test at
+these frequencies will see almost no signal even at point-blank range. **For the
+Layer A bench test, drive TX at 40 kHz** to confirm the acoustic path is working.
+The two-band beacon architecture needs reconciliation with systems-integrator:
+options are (a) move chirp bands to straddle 40 kHz (e.g. 38–40/40–42 kHz),
+(b) change to wider-band transducers, or (c) change the buoy-ID method. **The
+FIR banks, matched-filter reference chirps, and UART packet schema may need
+revision depending on the resolution.** Escalate to systems-integrator before
+any pool test is scheduled.
+
+**BLOCKER B2 — MAX9814 preamp bandwidth:**
+MAX9814 is an audio-band preamp (20 Hz – 20 kHz). Its gain-bandwidth product puts
+the −3 dB corner far below 40 kHz — the ultrasonic signal is attenuated into the
+noise. It **cannot** be used in the receive chain. Replace with a wideband op-amp
+front end (e.g. MCP6022, TLV2462, or a small ultrasonic receiver board) with a
+bandpass centered on 40 kHz. This is an unbudgeted purchase (~$2–8). Also note:
+the preamp-to-ADC interface needs AC coupling and re-biasing — the MAX9814's
+1.25V DC bias / 2 Vpp output does not directly match the AD9226 ±1V (VREF=1.0V)
+input range; this applies to any replacement preamp as well.
+
+**Interim Layer A path (no preamp purchase required):** Drive TCT40-16T at 40 kHz /
+5V via FPGA+MOSFET. Scope the TCT40-16R receiver output **directly** (no preamp in
+the loop) to confirm the acoustic path is transmitting and receiving. This validates
+the transducer pair and acoustic coupling independent of the broken preamp choice.
+Full signal-chain test (with preamp) waits on the replacement part arriving.
