@@ -1,3 +1,31 @@
+## 2026-06-17 — Procurement Status Corrected (Jun 17)
+
+**Completed:**
+- Budget spreadsheet reconciliation against delivery confirmations
+- MAX9814 pre-amp module confirmed delivered and in hand
+- JSN-SR04T waterproof ultrasonic sensor confirmed delivered and in hand
+- L298N dual H-bridge module confirmed delivered and in hand
+
+**Verified:**
+- Physical parts inspection against order receipts
+- CLAUDE.md procurement section updated to reflect correct status
+
+**CLAUDE.md Updated:**
+- ✅ Arrived / Owned: Added MAX9814, JSN-SR04T, L298N with Jun 2026 delivery dates
+- 🔴 Not Yet Ordered: Removed the three delivered items; kept thrusters, enclosure, PVC/hull materials as still-pending
+- Procurement status now accurate for acoustic bench testing chain: TCT40-16R → MAX9814 → AD9226 → FPGA
+
+**Budget Impact:**
+- MAX9814: $8 actual (pre-amp stage)
+- JSN-SR04T: $10 actual (collision avoidance sensor)
+- L298N: $7 actual (motor driver stage)
+- Running total: ~$310 optimized budget on track
+
+**Next:**
+Peak detector module — outputs corr_peak (32-bit, CORR_SHIFT=16 scale), snr (8-bit homing signal), peak_lag (11-bit diagnostic). Ready for acoustic signal chain assembly once FPGA pipeline integration complete.
+
+---
+
 ## 2026-06-16 — BSRAM Resource Accounting Corrected (Jun 16)
 
 **Correction: depth constraint overrides capacity for 2109-sample BSRAM arrays**

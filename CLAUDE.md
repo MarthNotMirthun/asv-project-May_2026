@@ -76,9 +76,12 @@ AD9226 parallel input (12-bit, 65MSPS)
 
 &#x20;     Bank 2: 42–46 kHz (Buoy 2 chirp), \~1 HW multiplier (sequential MAC engine)
 
-&#x20;     Matched filter ×2: \~2-4 HW multipliers (block correlator, time-shared MAC)
+&#x20;     Matched filter ×2: \~2 HW multipliers (block correlator, time-shared MAC, 1 per filter)
 
-&#x20;     Total: \~4-6 of 48 HW multipliers — >90% margin
+&#x20;     Total: \~4 of 48 HW multipliers — UNVERIFIED RTL inference, pending Gowin synthesis report
+&#x20;     (Basis: each module has exactly one `prod <= mul_a*mul_b` register; 64 sys clocks/sample ≫
+&#x20;      32 MAC cycles for FIR; 134,976 sys clocks/window ≫ 2109 MAC cycles for matched filter.
+&#x20;      Synthesis may differ — do not treat as confirmed until post-synthesis utilization report.)
 
 &#x20;     Coefficients stored in BSRAM, runtime-loadable via UART from Pi
 
@@ -515,6 +518,12 @@ telemetry\_node
 
 &#x20; resistors, capacitors, soldering iron, multimeter, drill
 
+\- MAX9814 pre-amp module (delivered Jun 2026)
+
+\- JSN-SR04T waterproof ultrasonic sensor (delivered Jun 2026)
+
+\- L298N dual H-bridge module (delivered Jun 2026)
+
 
 
 \### 🚚 In Transit
@@ -524,12 +533,6 @@ telemetry\_node
 \### 🔴 Not Yet Ordered — Action Required
 
 \- Brushed DC thrusters ×2 (545 12V underwater) — ORDER NOW
-
-\- L298N dual H-bridge module — ORDER NOW
-
-\- MAX9814 pre-amp module — ORDER NOW
-
-\- JSN-SR04T waterproof ultrasonic sensor — ORDER NOW
 
 \- IP65 waterproof enclosure + M12 cable glands — ORDER NOW
 
