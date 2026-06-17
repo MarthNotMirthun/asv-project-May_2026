@@ -317,7 +317,7 @@ AD9226 parallel input (12-bit, 65MSPS)
 \- 2× LICHIFIT RC Jet Boat Underwater Motor (RF-370 class, ASIN B07WY4MDYZ) — NOT YET ORDERED
 &#x20; (replaced 545-class: 545 ~3.6A exceeds L298N 2A/3A rating; RF-370 stall <1.8A. Drive at ~9V via PWM duty cap. Buy 2 kits — spare-pair hedge. See DL-2.)
 
-\- Driver: L298N dual H-bridge — NOT YET ORDERED
+\- Driver: L298N dual H-bridge ✅ delivered Jun 2026
 
 \- Power: Hosim 3S 5000mAh LiPo 11.1V 30C XT60 ×2 ✅ arrived
 
@@ -601,7 +601,8 @@ telemetry\_node
 
 &#x20;  (both .cst files now in place, ready for layout)
 
-5\. Place pending Amazon orders (thrusters, L298N, enclosure, MAX9814, JSN-SR04T)
+5\. Place pending Amazon orders (thrusters ×2 kits LICHIFIT RF-370, enclosure, JSN-SR04T)
+&#x20;  (L298N ✅ delivered. MAX9814 ✅ delivered but BLOCKED — replaced by wideband op-amp preamp, see DL-1/BLOCKER B2.)
 
 6\. Coordinate Home Depot run with Dad (PVC, epoxy, brackets, silicone)
 
