@@ -266,6 +266,8 @@ AD9226 parallel input (12-bit, 65MSPS)
 
 \- Subscribes: /cmd\_vel (Twist)
 
+\- PWM ceiling: 80% max duty cycle enforced in firmware (L298N ~2V drop → 9V effective at 80% on 11.1V rail; full duty risks over-voltage on thrusters)
+
 \- Status: not started
 
 
@@ -312,7 +314,8 @@ AD9226 parallel input (12-bit, 65MSPS)
 
 \### Propulsion
 
-\- 2× brushed DC underwater thrusters 12V — NOT YET ORDERED
+\- 2× LICHIFIT RC Jet Boat Underwater Motor (RF-370 class, ASIN B07WY4MDYZ) — NOT YET ORDERED
+&#x20; (replaced 545-class: 545 ~3.6A exceeds L298N 2A/3A rating; RF-370 stall <1.8A. Drive at ~9V via PWM duty cap. Buy 2 kits — spare-pair hedge. See DL-2.)
 
 \- Driver: L298N dual H-bridge — NOT YET ORDERED
 
@@ -414,7 +417,7 @@ collision\_safety\_node
 
 motor\_driver\_node
 
-&#x20; subscribes /cmd\_vel → drives L298N PWM
+&#x20; subscribes /cmd\_vel → drives L298N PWM (scale linear.x to ≤80% PWM duty; firmware hard cap)
 
 
 
@@ -471,6 +474,8 @@ telemetry\_node
 | Motors | Brushed DC + L298N | Simpler than brushless, sufficient for pool |
 
 | Transmission | Air acoustic above waterline | Avoids hull penetration complexity |
+
+| Motor PWM ceiling | ≤80% duty cycle hard cap in firmware | L298N ~2V drop; 80% on 11.1V = ~9V effective; protects thrusters |
 
 | OS | Ubuntu 24.04.4 LTS | ROS 2 Jazzy compatibility confirmed |
 
@@ -532,7 +537,11 @@ telemetry\_node
 
 \### 🔴 Not Yet Ordered — Action Required
 
-\- Brushed DC thrusters ×2 (545 12V underwater) — ORDER NOW
+\- Thrusters: 2× LICHIFIT RC Jet Boat Underwater Motor (RF-370 class, ASIN B07WY4MDYZ) — ORDER NOW
+&#x20; \* Buy **2 kits (~$48)**: each kit ships a CW+CCW pair (one kit = one full vehicle set); 2nd kit is a spare-pair hedge against documented DOA / 12V burn-out reviews (see DL-2)
+&#x20; \* REJECTED the 545-class (~$65/pair): ~3.6A draw STRUCTURALLY EXCEEDS the purchased L298N (2A cont / 3A peak per channel). RF-370 stall <1.8A → L298N PASS
+&#x20; \* hw-validation CONDITION: PWM duty cap so motor sees ~9V (12V burns these out); L298N's ~2V drop helps but set an explicit ceiling
+&#x20; \* GATE before hull final assembly (DL-2): bench-verify ≥150g/motor (200g target) with a luggage scale BEFORE any thruster is epoxied/glanded in
 
 \- IP65 waterproof enclosure + M12 cable glands — ORDER NOW
 
@@ -644,7 +653,7 @@ it unlocks all downstream FPGA synthesis work.
 | 3  | Jun 08–Jun 14 | Timing constraints + FIR banks verified | ✅ Done |
 | 4  | Jun 15–Jun 21 | Matched filters + peak detector | 🟡 Current |
 | 5  | Jun 22–Jun 28 | Pipeline integration + synthesis | 🎯 Milestone |
-| 6  | Jun 29–Jul 05 | ESP32 micro-ROS + buoy firmware | ⚪ |
+| 6  | Jun 29–Jul 05 | ESP32 micro-ROS + buoy firmware (enforce PWM ≤80% duty cap) | ⚪ |
 | 7  | Jul 06–Jul 12 | ROS 2 nodes + PID homing     | ⚪ |
 | 8  | Jul 13–Jul 19 | Mission state machine + display | ⚪ |
 | 9  | Jul 20–Jul 26 | Pool test #1                 | 🎯 Milestone |

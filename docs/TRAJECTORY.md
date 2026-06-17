@@ -376,3 +376,61 @@ input range; this applies to any replacement preamp as well.
 the loop) to confirm the acoustic path is transmitting and receiving. This validates
 the transducer pair and acoustic coupling independent of the broken preamp choice.
 Full signal-chain test (with preamp) waits on the replacement part arriving.
+
+### DL-2 — Thruster downgrade 545 → RF-370 (LICHIFIT) + thrust gate (decided June 17, 2026, Week 4 Day 3)
+
+**Question:** The planned 545-class brushed underwater thruster (~$32.50/unit,
+~$65/pair) draws ~3.6 A at 11.1 V (interpolated from QX-Motor OEM load table),
+which **structurally exceeds the already-purchased L298N** (2 A continuous / 3 A
+peak per channel). What thruster fits the L298N, and is it strong enough for the
+mission?
+
+**Decision: SWITCH to 2× LICHIFIT RC Jet Boat Underwater Motor (RF-370 class,
+Amazon ASIN B07WY4MDYZ, ~$23.99/kit, CW+CCW pair per kit). Buy 2 kits (~$48).
+Drive at ~9 V via a PWM duty cap. Gate hull final assembly on a bench thrust check.**
+
+1. **Electrical:** RF-370 stall <1.8 A (RF-370CA datasheet: stall 1.1–1.5 A @ 12 V,
+   running ~0.5–0.8 A) → **L298N PASS**. The 545 was never viable on the purchased
+   L298N regardless of cost. **Do NOT replace the L298N — it is purchased and the
+   RF-370 fits it.**
+2. **hw-validation CONDITION (carry into ESP32 motor firmware):** PWM duty ceiling so
+   motor voltage stays ~9 V. Reviews report DOA units and burn-outs at 12 V; the
+   L298N's ~2 V drop helps but an explicit duty cap is required in the motor driver.
+3. **Quantity — buy 2 kits (~$48):** one kit is one full counter-rotating vehicle set
+   (CW+CCW props cancel net prop torque → helps heading hold during SCAN/HOMING).
+   The second kit is a spare-pair hedge against the documented reliability risk. At
+   $24, a spare pair is cheap insurance against a burned motor stalling the
+   propulsion track during the tightest build weeks. Still **cheaper than the
+   rejected 545 pair (~$65)**. Budget line ($20–24) roughly doubles to ~$48
+   (~+$24, ~5–8% of project total — acceptable).
+
+**Thrust-to-weight assessment (systems-integrator):**
+- Bottom-up dry mass ~3.95 kg; ~4.5 kg operating (water/sealant/contingency).
+  4" Sch 40 PVC ≈ 0.56 kg/m (published Sch 40 pipe weight tables).
+- **T/W is the wrong gate for a boat** — the two 4"×70 cm pontoons displace ~11 kg
+  of buoyancy, so the hull floats with >2× reserve at 4.5 kg. Thrust fights
+  **hydrodynamic drag, not weight.** Estimated drag at the 0.1–0.3 m/s this mission
+  needs is only ~25–70 g-force.
+- Per-motor thrust: 100 g = marginal (weak rotation/heading authority, drift-prone);
+  **150 g = viability floor**; **175–200 g = adequate** (~5:1 over drag, good SCAN
+  rotation and gradient-ascent HOMING); 250 g = ideal. RF-370 estimate is
+  ~100–250 g (no OEM load table — estimate from motor class), so it **straddles the
+  floor** — must be bench-confirmed.
+- **FC-6 helps:** SNR-gradient homing tolerates low/slow thrust far better than the
+  old range-PID model would have — no station-keeping at a computed range, just keep
+  SNR climbing. The downgrade is survivable under the current control law.
+
+**GATE (the load-bearing part of this entry):**
+> **Before ANY thruster is epoxied / cable-glanded into the hull (Week 6 thruster
+> mounting), bench-verify ≥150 g/motor (200 g target) at the ~9 V capped drive
+> using a luggage scale / spring gauge.** If a motor reads <150 g, the RF-370 choice
+> must be revisited (gear/prop change, or accept slower homing) BEFORE the
+> irreversible hull bond. This gate sits at the Week 5/6 boundary and naturally
+> precedes the Week 6 mounting task. Rationale: a $24 part with DOA/burn-out reviews
+> and a thrust estimate straddling the viability floor must not propagate an
+> unverified physical assumption into a never-revisitable epoxy/silicone joint.
+
+**Rejected — keep the 545 and upgrade the H-bridge:** out of scope; L298N is
+purchased and locked. **Rejected — buy only 1 kit:** functionally sufficient, but
+leaves zero spare against documented reliability risk during the most
+schedule-constrained weeks; the $24 hedge is worth it.
