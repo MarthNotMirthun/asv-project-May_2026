@@ -1,8 +1,16 @@
 // ============================================================
 // Module:      fir_filter_bank2
-// Description: 32-tap symmetric linear-phase bandpass FIR, 42-46kHz
-//              (Buoy 2 chirp band, center 44kHz). Sequential 1-MAC-per-
-//              clock datapath; one output sample per input sample.
+// Description: 32-tap symmetric linear-phase bandpass FIR, 38.5-41.5kHz
+//              (SHARED transducer passband, center 40kHz). Sequential
+//              1-MAC-per-clock datapath; one output sample per input sample.
+//              FC-7 (Jun 17): band moved from 42-46kHz to the shared
+//              38.5-41.5kHz passband — IDENTICAL coefficients to
+//              fir_filter_bank1. Both buoys transmit in the same 3kHz
+//              transducer passband; beacon ID is CODE-DIVISION (Buoy 1 =
+//              up-sweep, Buoy 2 = down-sweep) and is resolved downstream by
+//              the matched filter reference chirp, NOT by FIR band. This
+//              bank2 instance is retained as a separate datapath because the
+//              pipeline wires bank2 -> matched_filter_2.
 // Target:      Tang Nano 20K (GW2AR-18), 27MHz system clock
 // Pipeline:    cic_decimator -> THIS -> matched_filter (bank 2)
 // Latency:     dout ready ~35 system clocks after a din_valid strobe
@@ -14,28 +22,27 @@
 // Date:        2026-06-10
 // ============================================================
 //
-// COEFFICIENT DESIGN (windowed-sinc bandpass, Hamming window)
+// COEFFICIENT DESIGN (windowed-sinc bandpass, Hamming window) — FC-7 RE-SPIN
 //   fs = 421875 Hz EXACTLY (CIC output rate, NOT 400000 — see CLAUDE.md)
-//   N  = 32 taps, passband 42-46kHz, design bandwidth 4kHz, center 44kHz.
-//   Q1.15: q[i] = round(float[i] * 32768), clamped to [-32768,+32767].
-//   Symmetric: h[i] == h[31-i] (verified). Max |coeff| = 587 -> no Q1.15 overflow.
+//   N  = 32 taps, passband 38.5-41.5kHz, bandwidth 3kHz, center 40kHz.
+//   Signed-16 INTEGER scale (FC-1, NOT Q1.15): float taps normalized so
+//   max|coeff| -> 32767, rounded to nearest int16. IDENTICAL coefficient set
+//   to fir_filter_bank1 (both banks share the 38.5-41.5kHz passband per FC-7).
+//   Symmetric: h[i] == h[31-i] (verified by design script). Max |coeff| = 32767.
 //
-//   Q1.15 taps:
-//     -36, -54, -59, -33,  42, 150, 233, 219,
-//      70,-177,-411,-500,-365, -39, 337, 587,
-//     587, 337, -39,-365,-500,-411,-177,  70,
-//     219, 233, 150,  42, -33, -59, -54, -36
+//   int16 taps (max-normalized):
+//     -2645, -2132,  -744,  2182,  6391, 10096, 10525,  5529,
+//     -4660,-16708,-25218,-25241,-15011,  2632, 21071, 32767,
+//     32767, 21071,  2632,-15011,-25241,-25218,-16708, -4660,
+//      5529, 10525, 10096,  6391,  2182,  -744, -2132, -2645
 //
-//   ACHIEVED SELECTIVITY (honest, simulation-confirmed): at fs=421.875kHz the
-//   44kHz and 36kHz bands are only ~0.019 apart in normalized frequency while a
-//   32-tap FIR resolves ~1/32=0.031. A 32-tap windowed FIR CANNOT reach 30dB
-//   adjacent-band rejection at this 8kHz separation — physically impossible at
-//   this tap count and sample rate. This bank gives ~2-3dB pre-selection plus
-//   out-of-band roll-off; the matched filter supplies the real selectivity
-//   (per the consolidated fix list note). The testbench therefore asserts
-//   RELATIVE selectivity (passband response > adjacent-band response) rather
-//   than an unachievable absolute 30dB. Conservative interpretation of an
-//   internally-inconsistent fs/taps/30dB spec triad.
+//   SELECTIVITY ROLE (per FIR-selectivity-limit memory): a 32-tap FIR at this
+//   fs cannot achieve sharp adjacent-band rejection. Under FC-7 both beacons
+//   occupy the SAME 38.5-41.5kHz band, so this FIR is purely an anti-alias /
+//   band-limiting pre-filter. Beacon discrimination is supplied entirely by
+//   the matched filter: bank2 -> matched_filter_2 correlates against the
+//   DOWN-sweep (41.5->38.5kHz) reference chirp (Buoy 2). The testbench asserts
+//   passband retention at 40kHz and relative attenuation at 36kHz / 44kHz.
 // ============================================================
 
 module fir_filter_bank2 #(
@@ -53,28 +60,29 @@ module fir_filter_bank2 #(
 );
 
     // ---------------------------------------------------------------
-    // Q1.15 coefficient table (compile-time constants, symmetric).
+    // FC-7 38.5-41.5kHz signed-16 INTEGER coefficient table (compile-time
+    // constants, symmetric). Synthesizable case-statement ROM — Gowin
+    // ignores initial blocks. IDENTICAL table to fir_filter_bank1 per FC-7.
     // ---------------------------------------------------------------
-    // Synthesizable case-statement ROM — Gowin ignores initial blocks.
     function signed [15:0] coeff_rom;
         input [5:0] addr;
         case (addr)
-            6'd0:  coeff_rom = -16'sd36;  6'd1:  coeff_rom = -16'sd54;
-            6'd2:  coeff_rom = -16'sd59;  6'd3:  coeff_rom = -16'sd33;
-            6'd4:  coeff_rom =  16'sd42;  6'd5:  coeff_rom =  16'sd150;
-            6'd6:  coeff_rom =  16'sd233; 6'd7:  coeff_rom =  16'sd219;
-            6'd8:  coeff_rom =  16'sd70;  6'd9:  coeff_rom = -16'sd177;
-            6'd10: coeff_rom = -16'sd411; 6'd11: coeff_rom = -16'sd500;
-            6'd12: coeff_rom = -16'sd365; 6'd13: coeff_rom = -16'sd39;
-            6'd14: coeff_rom =  16'sd337; 6'd15: coeff_rom =  16'sd587;
-            6'd16: coeff_rom =  16'sd587; 6'd17: coeff_rom =  16'sd337;
-            6'd18: coeff_rom = -16'sd39;  6'd19: coeff_rom = -16'sd365;
-            6'd20: coeff_rom = -16'sd500; 6'd21: coeff_rom = -16'sd411;
-            6'd22: coeff_rom = -16'sd177; 6'd23: coeff_rom =  16'sd70;
-            6'd24: coeff_rom =  16'sd219; 6'd25: coeff_rom =  16'sd233;
-            6'd26: coeff_rom =  16'sd150; 6'd27: coeff_rom =  16'sd42;
-            6'd28: coeff_rom = -16'sd33;  6'd29: coeff_rom = -16'sd59;
-            6'd30: coeff_rom = -16'sd54;  6'd31: coeff_rom = -16'sd36;
+            6'd0:  coeff_rom = -16'sd2645;  6'd1:  coeff_rom = -16'sd2132;
+            6'd2:  coeff_rom = -16'sd744;   6'd3:  coeff_rom =  16'sd2182;
+            6'd4:  coeff_rom =  16'sd6391;  6'd5:  coeff_rom =  16'sd10096;
+            6'd6:  coeff_rom =  16'sd10525; 6'd7:  coeff_rom =  16'sd5529;
+            6'd8:  coeff_rom = -16'sd4660;  6'd9:  coeff_rom = -16'sd16708;
+            6'd10: coeff_rom = -16'sd25218; 6'd11: coeff_rom = -16'sd25241;
+            6'd12: coeff_rom = -16'sd15011; 6'd13: coeff_rom =  16'sd2632;
+            6'd14: coeff_rom =  16'sd21071; 6'd15: coeff_rom =  16'sd32767;
+            6'd16: coeff_rom =  16'sd32767; 6'd17: coeff_rom =  16'sd21071;
+            6'd18: coeff_rom =  16'sd2632;  6'd19: coeff_rom = -16'sd15011;
+            6'd20: coeff_rom = -16'sd25241; 6'd21: coeff_rom = -16'sd25218;
+            6'd22: coeff_rom = -16'sd16708; 6'd23: coeff_rom = -16'sd4660;
+            6'd24: coeff_rom =  16'sd5529;  6'd25: coeff_rom =  16'sd10525;
+            6'd26: coeff_rom =  16'sd10096; 6'd27: coeff_rom =  16'sd6391;
+            6'd28: coeff_rom =  16'sd2182;  6'd29: coeff_rom = -16'sd744;
+            6'd30: coeff_rom = -16'sd2132;  6'd31: coeff_rom = -16'sd2645;
             default: coeff_rom = 16'sd0;
         endcase
     endfunction
