@@ -1,6 +1,6 @@
 # TRAJECTORY.md — ASV Technical Compass
 
-**Last Updated:** June 17, 2026 (Week 4 Day 3 of 11 — peak_detector + packet_framer VALIDATED)
+**Last Updated:** June 18, 2026 (Week 4 Day 4 of 11 — all 9 FPGA modules VERIFIED, FIR banks validated at 38.5–41.5 kHz)
 
 This is the living technical compass for the GPS-denied acoustic-homing
 catamaran USV. It records the **verified pipeline state**, the
@@ -28,20 +28,21 @@ AD9226 → adc_interface → cic_decimator → FIR banks → matched filters →
 | `uart_tx` | ✅ DONE & verified | 8-byte back-to-back packet verified in sim; .cst written and verified |
 | `adc_interface` | ✅ DONE & verified | MSB-flip applied, OTR port added, signed declaration; all 14 pins LVCMOS33-compatible (.cst verified) |
 | `cic_decimator` | ✅ DONE & verified | R=8, N=3, shift=5 corrected, saturation clamp added |
-| `fir_filter_bank1` | ⚠️ COEFFICIENTS NEED UPDATE (FC-7) | RTL/structure verified, but band must move 34–38 kHz → **38.5–41.5 kHz** (center 40 kHz). Coeff-table edit + re-sim only |
-| `fir_filter_bank2` | ⚠️ COEFFICIENTS NEED UPDATE (FC-7) | RTL/structure verified, but band must move 42–46 kHz → **38.5–41.5 kHz** (same as bank1; both buoys share the band). Coeff-table edit + re-sim only |
+| `fir_filter_bank1` | ✅ DONE & verified | 38.5–41.5 kHz per FC-7; 32-tap Hamming windowed-sinc coefficients; passband ripple <1dB; stopband confirmed; RTL unchanged ← VALIDATED Jun 18 |
+| `fir_filter_bank2` | ✅ DONE & verified | 38.5–41.5 kHz per FC-7 (identical coefficients to bank1); code-division beacon ID via sweep direction; RTL unchanged ← VALIDATED Jun 18 |
 | `matched_filter_1` (Buoy 1 = UP-sweep) | ✅ RTL verified — NEW REFERENCE DATA (FC-7) | 2109-sample block correlator, 48-bit acc, CORR_SHIFT=16, OTR window-OR, 200Hz out ← VALIDATED Jun 16. RTL UNCHANGED; load UP-sweep 38.5→41.5 kHz reference over UART |
 | `matched_filter_2` (Buoy 2 = DOWN-sweep) | ✅ RTL verified — NEW REFERENCE DATA (FC-7) | Same architecture ← VALIDATED Jun 16. RTL UNCHANGED; load DOWN-sweep 41.5→38.5 kHz reference over UART |
 | `peak_detector` | ✅ DONE & verified | Dual-channel RELATIVE gating (abs → ratio `\|ch1\|>(\|ch2\|<<K_SHIFT)` AND `\|ch_n\|>FLOOR`) per FC-7; SNR proxy (8-bit), corr_peak (32-bit magnitude), peak_lag diagnostic (11-bit); 12/12 sim checks ALL PASS ← VALIDATED Jun 17 |
 | `packet_framer` | ✅ DONE & verified | 8-byte FSM [target_id][peak_lag_H/L][corr_peak_H/L][snr][XOR checksum][0xFF], tx_busy gating between peak_detector and uart_tx; 12/12 sim checks ALL PASS ← VALIDATED Jun 17 |
 | `uart_rx` (config + ref-chirp load) | ⏳ NOT STARTED (Week 5) | Inbound UART path for K_SHIFT/FLOOR/SNR_SHIFT config AND matched-filter reference-chirp BSRAM loading. Deferred from peak_detector deliverable per systems-integrator Jun 17 ruling |
-| Full pipeline integration | ⏳ NOT STARTED | FIR coeff re-spin to 38.5–41.5kHz required first (FC-7); then chain all modules into top-level |
+| Full pipeline integration | ⏳ NOT STARTED | ALL upstream modules verified — ready to build top-level integration (chain all 9 modules: AD9226 → adc_interface → CIC → FIR ×2 → matched_filter ×2 → peak_detector → packet_framer → uart_tx) |
 
-**Status as of June 17:** All nine FPGA modules now VERIFIED and DONE:
-- **Authored core pipeline (7):** ADC interface ✅ → CIC decimator ✅ → FIR banks ✅ (need coeff re-spin) → matched filters ✅ → peak detector ✅ → packet framer ✅ → UART TX ✅
-- **Peak detector + packet framer (2):** just completed and validated Jun 17 — dual-channel RELATIVE gating (FC-7), SNR proxy, 8-byte packet FSM; 12/12 sim checks ALL PASS
+**Status as of June 18:** All nine FPGA modules now VERIFIED and DONE:
+- **Authored core pipeline (7):** ADC interface ✅ → CIC decimator ✅ → FIR banks ✅ (re-spun to 38.5–41.5 kHz, validated Jun 18) → matched filters ✅ → peak detector ✅ → packet framer ✅ → UART TX ✅
+- **Peak detector + packet framer (2):** completed and validated Jun 17 — dual-channel RELATIVE gating (FC-7), SNR proxy, 8-byte packet FSM; 12/12 sim checks ALL PASS
+- **FIR coefficient re-spin (Jun 18):** both banks re-generated for 38.5–41.5 kHz single passband per FC-7 code-division architecture; verilog-sim-runner ALL PASS, passband ripple <1dB, stopband confirmed
 
-**Critical next step: FIR coefficient re-spin to 38.5–41.5 kHz (FC-7).** The RTL structure is verified; only the coefficient tables need recalculation for the single shared 40 kHz passband (code-division beacon ID by sweep direction). This unblocks full pipeline integration.
+**Critical next step: Full pipeline integration.** All 9 FPGA modules are now verified and ready to chain into a top-level integration module. This unblocks Week 5 synthesis and hardware testing.
 
 **Architecture frozen (FC-5/FC-6/FC-7/FC-8):**
 - FC-5: SNR-gradient homing (not absolute range); `peak_detector` outputs `corr_peak`/`snr` as primary, `peak_lag` kept diagnostic only.

@@ -8,9 +8,9 @@
 
 \# Hard Demo Deadline: August 10, 2026
 
-\# Current Status: Week 4 of 11 — Peak detector + packet framer VALIDATED, FIR coeff re-spin required (FC-7), full pipeline integration next
+\# Current Status: Week 4 of 11 — All 9 FPGA modules VERIFIED, FIR banks validated at 38.5–41.5 kHz (FC-7), full pipeline integration UNBLOCKED
 
-\# Last Updated: June 17, 2026
+\# Last Updated: June 18, 2026
 
 
 
@@ -137,9 +137,9 @@ AD9226 parallel input (12-bit, 65MSPS)
 
 \- ✅ CIC decimation module — written, corrected (R=8, shift=5), and simulated ← VALIDATED Jun 10
 
-\- ⚠️ FIR filter bank 1 (34–38kHz) — RTL verified, but coefficients must be re-spun to 38.5–41.5 kHz per FC-7 (single 40 kHz passband, code-division beacon ID) ← RE-SIM REQUIRED
+\- ✅ FIR filter bank 1 (38.5–41.5kHz per FC-7) — 32-tap Hamming windowed-sinc, passband ripple <1dB, stopband confirmed, VALIDATED Jun 18
 
-\- ⚠️ FIR filter bank 2 (42–46kHz) — RTL verified, but coefficients must be re-spun to 38.5–41.5 kHz per FC-7 (same as bank 1; both buoys share the passband) ← RE-SIM REQUIRED
+\- ✅ FIR filter bank 2 (38.5–41.5kHz per FC-7) — identical coefficients to bank1 (code-division beacon ID via sweep direction, not frequency bands), VALIDATED Jun 18
 
 \- ✅ Matched filter correlators ×2 — block correlator, 2109-tap, 48-bit acc, OTR window-OR, 200Hz output, CORR_SHIFT=16, up-sweep/down-sweep channels; RTL unchanged per FC-7 (reference chirp data loaded at runtime) ← VALIDATED Jun 16
 
@@ -608,25 +608,21 @@ telemetry\_node
 
 
 
-\### ⏳ IMMEDIATE NEXT TASKS (Week 4 priority order, updated Jun 17)
+\### ⏳ IMMEDIATE NEXT TASKS (Week 4 priority order, updated Jun 18)
 
 1\. ✅ Matched filter correlators ×2 — DONE Jun 16
 
 2\. ✅ Peak detector + packet framer — DONE Jun 17
 
-3\. FIR coefficient re-spin (CRITICAL): both banks must move from 34–38 kHz / 42–46 kHz to single shared 38.5–41.5 kHz passband per FC-7
+3\. ✅ FIR coefficient re-spin — DONE Jun 18 (both banks re-spun to 38.5–41.5 kHz passband per FC-7, both validated, verilog-sim-runner ALL PASS)
 
-&#x20;  (Transducer narrowband constraint; code-division beacon ID via sweep direction, not frequency bands; RTL structure unchanged, coefficient tables only)
+4\. Full pipeline integration: chain AD9226 → CIC → FIR banks → matched filters → peak detector → packet framer → UART into top-level module
 
-&#x20;  (Re-generate 32-tap Hamming windowed-sinc coefficients for 40 kHz center, 3 kHz BW; load into both fir_filter_bank1.v and fir_filter_bank2.v; re-simulate both)
-
-4\. Full pipeline integration: chain AD9226 → CIC → FIR banks → matched filters → peak detector → packet framer → UART
-
-&#x20;  (verify end-to-end latency; delete fir\_test\_top.v per FC-4)
+&#x20;  (verify end-to-end latency; simulate for X/Z states; confirm all 9 modules connect correctly)
 
 5\. Synthesis verification: run full design through Gowin EDA, verify positive timing slack at 27MHz
 
-&#x20;  (both .cst files now in place, ready for layout)
+&#x20;  (both .cst files in place, ready for layout)
 
 6\. Order replacement preamp: MAX9814 disqualified (audio-only, cannot pass 40 kHz) — replace with fixed-gain wideband op-amp front end (e.g., MCP6022 ~10 MHz GBW or TLV2462); ~$2–8 impact
 
@@ -771,9 +767,9 @@ asv-project/
 
 │   │   ├── cic\_decimator.v    ← DONE — R=8 N=3 CIC
 
-│   │   ├── fir\_filter\_bank1.v ← ⚠️ COEFF RE-SPIN NEEDED (38.5–41.5kHz per FC-7)
+│   │   ├── fir\_filter\_bank1.v ← DONE — 38.5–41.5kHz per FC-7
 
-│   │   ├── fir\_filter\_bank2.v ← ⚠️ COEFF RE-SPIN NEEDED (same band as bank1)
+│   │   ├── fir\_filter\_bank2.v ← DONE — 38.5–41.5kHz per FC-7 (identical coeff)
 
 │   │   ├── matched\_filter\_1.v ← DONE — RTL unchanged, up-sweep ref loaded at runtime
 

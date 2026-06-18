@@ -1,3 +1,36 @@
+## 2026-06-18 — FIR banks VALIDATED at 38.5–41.5kHz - all 9 FPGA modules verified
+
+**Completed:**
+- FIR filter bank 1: re-spun to 38.5–41.5 kHz passband per FC-7 code-division architecture
+- FIR filter bank 2: re-spun to 38.5–41.5 kHz passband, identical coefficients to bank1 (sweep direction differentiation, not frequency bands)
+- Both banks: 32-tap Hamming windowed-sinc, centered at 40 kHz, 3 kHz bandwidth, passband ripple <1dB, stopband confirmed
+- All 9 FPGA pipeline modules now verified: uart_tx, adc_interface, cic_decimator, fir_filter_bank1, fir_filter_bank2, matched_filter_1, matched_filter_2, peak_detector, packet_framer
+
+**Verified:**
+- verilog-sim-runner: ALL PASS both banks, no X/Z states detected
+- Commit: 5d2edde (FIR re-spin)
+- Commit: 13c0d99 (CLAUDE.md file structure updates)
+
+**Validator Findings:**
+- dsp-signal-validator: Passband gain linear, stopband rejection adequate, FC-7 code-division architecture validated
+- systems-integrator: All 9 modules confirmed ready for integration; no resource conflicts; pipeline latency within 50ms budget
+
+**CLAUDE.md Updated:**
+- FPGA Build Status: FIR banks ⚠️ → ✅, both marked VALIDATED Jun 18
+- File structure: FIR banks marked DONE (no longer showing "⚠️ COEFF RE-SPIN NEEDED")
+- IMMEDIATE NEXT TASKS: reordered — FIR re-spin marked complete (task 3), full pipeline integration now top priority (task 4)
+- Last Updated: June 18, 2026
+
+**TRAJECTORY.md Updated:**
+- Pipeline status table: FIR banks ✅ DONE & verified with FC-7 architecture confirmed
+- Full pipeline integration: status changed from "blocked on FIR coeff re-spin only" to "ALL upstream modules verified — ready to build top-level"
+- Section 1 narrative: Updated to reflect all 9 modules verified as of Jun 18
+
+**Next Priority:**
+Full pipeline integration — chain all 9 modules into top-level integration module (fpga-verilog-engineer agent)
+
+---
+
 ## 2026-06-17 — peak_detector.v + packet_framer.v VALIDATED
 
 **Completed:**
