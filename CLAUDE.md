@@ -765,7 +765,23 @@ asv-project/
 
 │   ├── src/               ← Verilog modules
 
-│   │   └── uart\_tx.v      ← DONE — UART TX module
+│   │   ├── uart\_tx.v          ← DONE — single-byte UART serializer (PHY layer)
+
+│   │   ├── adc\_interface.v    ← DONE — AD9226 parallel capture
+
+│   │   ├── cic\_decimator.v    ← DONE — R=8 N=3 CIC
+
+│   │   ├── fir\_filter\_bank1.v ← ⚠️ COEFF RE-SPIN NEEDED (38.5–41.5kHz per FC-7)
+
+│   │   ├── fir\_filter\_bank2.v ← ⚠️ COEFF RE-SPIN NEEDED (same band as bank1)
+
+│   │   ├── matched\_filter\_1.v ← DONE — RTL unchanged, up-sweep ref loaded at runtime
+
+│   │   ├── matched\_filter\_2.v ← DONE — RTL unchanged, down-sweep ref loaded at runtime
+
+│   │   ├── peak\_detector.v    ← DONE — dual-channel relative gating (FC-7), SNR proxy
+
+│   │   └── packet\_framer.v    ← DONE — 8-byte FSM ([target\_id][peak\_lag\_H/L][corr\_peak\_H/L][snr][XOR][0xFF]) feeding uart\_tx byte-by-byte
 
 │   ├── sim/               ← Icarus testbenches
 
