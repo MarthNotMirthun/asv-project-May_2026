@@ -1,3 +1,44 @@
+## 2026-06-17 — peak_detector.v + packet_framer.v VALIDATED
+
+**Completed:**
+- peak_detector.v: dual-channel RELATIVE gating per FC-7, SNR proxy (8-bit), corr_peak magnitude (32-bit), peak_lag diagnostic (11-bit), OTR passthrough
+- packet_framer.v: 8-byte FSM [target_id][peak_lag_H/L][corr_peak_H/L][snr][XOR checksum][0xFF], tx_busy gating, sits between peak_detector and uart_tx
+- Both modules testbenches: tb_peak_detector.v
+- Simulation: all 12/12 checks PASS, no X/Z states
+
+**Verified:**
+- hw-validation: APPROVED WITH CONDITIONS — found missing packet framer and uart_rx, both addressed (packet_framer now added, uart_rx deferred to Week 5 per systems-integrator ruling)
+- dsp-signal-validator: BLOCKED resolved — dual-channel RELATIVE gating (|ch1| > 4×|ch2|) confirmed superior to absolute thresholding per FC-7; abs-value stage added for signed corr_peak inputs
+- systems-integrator: reconciled relative gating to peak_detector architecture, separated uart_rx config path to Week 5 task list, confirmed packet_framer fits between peak_detector and uart_tx
+- verilog-sim-runner: ALL PASS (12/12 checks, no X/Z)
+- Commit: 7ee44f0
+
+**Architecture decisions locked today:**
+- FC-7: Code-division beacon ID (Buoy 1 = UP-sweep 38.5→41.5 kHz, Buoy 2 = DOWN-sweep 41.5→38.5 kHz) — both in shared transducer passband; sweep direction, not frequency band, distinguishes beacons
+- FC-8: Egress maneuver required after each ARRIVED state to increase separation distance and prevent cross-talk blinding at 1–2 m range
+- MAX9814 pre-amp DISQUALIFIED: audio-only (20 Hz–20 kHz), cannot pass 40 kHz — must replace with fixed-gain wideband op-amp front end (MCP6022 ~10 MHz GBW or TLV2462); ~$2–8 additional cost
+
+**CLAUDE.md Updated:**
+- FPGA Build Status: peak_detector + packet_framer marked ✅ VALIDATED Jun 17
+- FPGA Build Status: FIR banks marked ⚠️ (coefficients need re-spin to 38.5–41.5 kHz per FC-7)
+- IMMEDIATE NEXT TASKS: peak_detector now complete; FIR coeff re-spin now task #3 (CRITICAL); full pipeline integration task #4
+
+**TRAJECTORY.md Updated:**
+- Pipeline status table: peak_detector → ✅ DONE, packet_framer → ✅ DONE
+- Full pipeline integration blocked only on FIR coeff re-spin
+- Status narrative: all 9 modules verified; FC-7/FC-8 frozen
+
+**Remaining Week 4 tasks:**
+1. FIR coefficient re-spin: recalculate 32-tap Hamming windowed-sinc for 38.5–41.5 kHz center, 3 kHz BW; load into both fir_filter_bank1.v and fir_filter_bank2.v; re-simulate both
+2. Full pipeline integration: top-level module chaining all 9 verified modules (fpga-sim agent)
+3. Synthesis verification: run full design through Gowin EDA, confirm positive timing slack at 27MHz
+4. Order replacement preamp: wideband op-amp instead of MAX9814 (~$2–8)
+
+**Next priority:**
+FIR coefficient re-spin (task #3 IMMEDIATE NEXT TASKS in CLAUDE.md)
+
+---
+
 ## 2026-06-17 — Procurement Status Corrected (Jun 17)
 
 **Completed:**

@@ -8,9 +8,9 @@
 
 \# Hard Demo Deadline: August 10, 2026
 
-\# Current Status: Week 4 of 11 — FIR banks verified, matched filters CRITICAL PATH, SNR-gradient architecture (FC-5/FC-6)
+\# Current Status: Week 4 of 11 — Peak detector + packet framer VALIDATED, FIR coeff re-spin required (FC-7), full pipeline integration next
 
-\# Last Updated: June 16, 2026
+\# Last Updated: June 17, 2026
 
 
 
@@ -123,7 +123,7 @@ AD9226 parallel input (12-bit, 65MSPS)
 
 
 
-\### FPGA Build Status (as of June 13, 2026)
+\### FPGA Build Status (as of June 17, 2026)
 
 \- ✅ Gowin EDA installed and confirmed working
 
@@ -137,15 +137,17 @@ AD9226 parallel input (12-bit, 65MSPS)
 
 \- ✅ CIC decimation module — written, corrected (R=8, shift=5), and simulated ← VALIDATED Jun 10
 
-\- ✅ FIR filter bank 1 (34–38kHz) — written, 32-tap Hamming windowed-sinc, signed-16 INTEGER scale, and simulated ← VALIDATED Jun 13
+\- ⚠️ FIR filter bank 1 (34–38kHz) — RTL verified, but coefficients must be re-spun to 38.5–41.5 kHz per FC-7 (single 40 kHz passband, code-division beacon ID) ← RE-SIM REQUIRED
 
-\- ✅ FIR filter bank 2 (42–46kHz) — written, 32-tap Hamming windowed-sinc, signed-16 INTEGER scale, and simulated ← VALIDATED Jun 13
+\- ⚠️ FIR filter bank 2 (42–46kHz) — RTL verified, but coefficients must be re-spun to 38.5–41.5 kHz per FC-7 (same as bank 1; both buoys share the passband) ← RE-SIM REQUIRED
 
-\- ✅ Matched filter correlators ×2 — block correlator, 2109-tap, 48-bit acc, OTR window-OR, 200Hz output, CORR_SHIFT=16 ← VALIDATED Jun 16
+\- ✅ Matched filter correlators ×2 — block correlator, 2109-tap, 48-bit acc, OTR window-OR, 200Hz output, CORR_SHIFT=16, up-sweep/down-sweep channels; RTL unchanged per FC-7 (reference chirp data loaded at runtime) ← VALIDATED Jun 16
 
 \- ✅ AD9226 parallel interface — corrected (MSB-flip, OTR port, signed declaration) and simulated ← VALIDATED Jun 13
 
-\- ⏳ Full pipeline integration — not started
+\- ✅ Peak detector + packet framer (peak_detector.v, packet_framer.v) — dual-channel relative gating (FC-7), SNR proxy, 8-byte FSM; 12/12 sim checks passed ← VALIDATED Jun 17
+
+\- ⏳ Full pipeline integration — not started; blocked on FIR coeff re-spin only
 
 
 
@@ -606,26 +608,29 @@ telemetry\_node
 
 
 
-\### ⏳ IMMEDIATE NEXT TASKS (Week 4 priority order, updated Jun 16)
+\### ⏳ IMMEDIATE NEXT TASKS (Week 4 priority order, updated Jun 17)
 
 1\. ✅ Matched filter correlators ×2 — DONE Jun 16
 
-2\. Peak detector — outputs corr\_peak (32-bit, CORR\_SHIFT=16 scale from matched filter), snr (8-bit = corr\_peak/noise\_floor in same scale), peak\_lag (11-bit diagnostic passthrough); NO range\_cm, NO ToF (FC-5)
+2\. ✅ Peak detector + packet framer — DONE Jun 17
 
-&#x20;  (Consume otr\_out from matched filters; snr is the primary homing gradient; peak\_lag kept for V2 TDOA upgrade hook only)
+3\. FIR coefficient re-spin (CRITICAL): both banks must move from 34–38 kHz / 42–46 kHz to single shared 38.5–41.5 kHz passband per FC-7
 
-3\. Full pipeline integration: chain AD9226 → CIC → FIR banks → matched filters → peak detector → UART
+&#x20;  (Transducer narrowband constraint; code-division beacon ID via sweep direction, not frequency bands; RTL structure unchanged, coefficient tables only)
+
+&#x20;  (Re-generate 32-tap Hamming windowed-sinc coefficients for 40 kHz center, 3 kHz BW; load into both fir_filter_bank1.v and fir_filter_bank2.v; re-simulate both)
+
+4\. Full pipeline integration: chain AD9226 → CIC → FIR banks → matched filters → peak detector → packet framer → UART
 
 &#x20;  (verify end-to-end latency; delete fir\_test\_top.v per FC-4)
 
-4\. Synthesis verification: run full design through Gowin EDA, verify positive timing slack at 27MHz
+5\. Synthesis verification: run full design through Gowin EDA, verify positive timing slack at 27MHz
 
 &#x20;  (both .cst files now in place, ready for layout)
 
-5\. Place pending Amazon orders (thrusters ×2 kits LICHIFIT RF-370, enclosure, JSN-SR04T)
-&#x20;  (L298N ✅ delivered. MAX9814 ✅ delivered but BLOCKED — replaced by wideband op-amp preamp, see DL-1/BLOCKER B2.)
+6\. Order replacement preamp: MAX9814 disqualified (audio-only, cannot pass 40 kHz) — replace with fixed-gain wideband op-amp front end (e.g., MCP6022 ~10 MHz GBW or TLV2462); ~$2–8 impact
 
-6\. Coordinate Home Depot run with Dad (PVC, epoxy, brackets, silicone)
+7\. Coordinate Home Depot run with Dad (PVC, epoxy, brackets, silicone) — hull assembly still pending
 
 
 

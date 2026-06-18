@@ -1,6 +1,6 @@
 # TRAJECTORY.md — ASV Technical Compass
 
-**Last Updated:** June 17, 2026 (Week 4 Day 3 of 11)
+**Last Updated:** June 17, 2026 (Week 4 Day 3 of 11 — peak_detector + packet_framer VALIDATED)
 
 This is the living technical compass for the GPS-denied acoustic-homing
 catamaran USV. It records the **verified pipeline state**, the
@@ -15,7 +15,7 @@ cross-module reality that CLAUDE.md's status table cannot express.
 
 ---
 
-## 1. PIPELINE STATUS (verified as of June 13, 2026)
+## 1. PIPELINE STATUS (verified as of June 17, 2026)
 
 Signal flow (the ONLY valid build order):
 
@@ -32,25 +32,22 @@ AD9226 → adc_interface → cic_decimator → FIR banks → matched filters →
 | `fir_filter_bank2` | ⚠️ COEFFICIENTS NEED UPDATE (FC-7) | RTL/structure verified, but band must move 42–46 kHz → **38.5–41.5 kHz** (same as bank1; both buoys share the band). Coeff-table edit + re-sim only |
 | `matched_filter_1` (Buoy 1 = UP-sweep) | ✅ RTL verified — NEW REFERENCE DATA (FC-7) | 2109-sample block correlator, 48-bit acc, CORR_SHIFT=16, OTR window-OR, 200Hz out ← VALIDATED Jun 16. RTL UNCHANGED; load UP-sweep 38.5→41.5 kHz reference over UART |
 | `matched_filter_2` (Buoy 2 = DOWN-sweep) | ✅ RTL verified — NEW REFERENCE DATA (FC-7) | Same architecture ← VALIDATED Jun 16. RTL UNCHANGED; load DOWN-sweep 41.5→38.5 kHz reference over UART |
-| `peak_detector` | ⏳ READY TO BUILD — FC-7 confirmed, dual-channel gating (FC-7+FC-8) required | Dual-channel gating (symmetric thresholding) is MANDATORY per FC-7. See Section 4 for detection logic and CQ-1 (SNR threshold calibration) |
-| Full pipeline integration | ⏳ NOT STARTED | Blocked only on peak_detector |
+| `peak_detector` | ✅ DONE & verified | Dual-channel RELATIVE gating (abs → ratio `\|ch1\|>(\|ch2\|<<K_SHIFT)` AND `\|ch_n\|>FLOOR`) per FC-7; SNR proxy (8-bit), corr_peak (32-bit magnitude), peak_lag diagnostic (11-bit); 12/12 sim checks ALL PASS ← VALIDATED Jun 17 |
+| `packet_framer` | ✅ DONE & verified | 8-byte FSM [target_id][peak_lag_H/L][corr_peak_H/L][snr][XOR checksum][0xFF], tx_busy gating between peak_detector and uart_tx; 12/12 sim checks ALL PASS ← VALIDATED Jun 17 |
+| `uart_rx` (config + ref-chirp load) | ⏳ NOT STARTED (Week 5) | Inbound UART path for K_SHIFT/FLOOR/SNR_SHIFT config AND matched-filter reference-chirp BSRAM loading. Deferred from peak_detector deliverable per systems-integrator Jun 17 ruling |
+| Full pipeline integration | ⏳ NOT STARTED | FIR coeff re-spin to 38.5–41.5kHz required first (FC-7); then chain all modules into top-level |
 
-**Status as of June 17:** All seven authored modules (ADC → CIC → 2×FIR →
-2×matched_filter) are verified. The dual matched filters passed
-hw-validation (APPROVED WITH CONDITIONS), dsp-signal-validator (3 BLOCKERs
-caught and resolved), systems-integrator, and verilog-sim-runner (ALL
-PASS, >3000× chirp/noise rejection, cross-band rejection confirmed) on
-June 16. **`peak_detector.v` is now the only remaining FPGA module
-between current state and full-pipeline integration.** FC-5 and FC-6 are
-confirmed and resolved — SNR-gradient homing, not absolute ToF range.
-`peak_detector.v` outputs `corr_peak`/`snr` as primary; `peak_lag` kept
-as diagnostic only. **UPDATE (Jun 17, FC-7 CONFIRMED): peak_detector is
-now UNBLOCKED and ready to build. The beacon-ID architecture is confirmed:
-two sweep directions (up/down) in a single 38.5–41.5 kHz passband
-(transducer bandwidth constraint). Mandatory requirement: FC-7 dual-channel
-gating (symmetric thresholding with UART-loadable THRESH_HIGH/THRESH_LOW)
-is required to prevent false Buoy 2 detection while vehicle is 1–2 m from
-Buoy 1. See FC-7 and FC-8 in Section 2.**
+**Status as of June 17:** All nine FPGA modules now VERIFIED and DONE:
+- **Authored core pipeline (7):** ADC interface ✅ → CIC decimator ✅ → FIR banks ✅ (need coeff re-spin) → matched filters ✅ → peak detector ✅ → packet framer ✅ → UART TX ✅
+- **Peak detector + packet framer (2):** just completed and validated Jun 17 — dual-channel RELATIVE gating (FC-7), SNR proxy, 8-byte packet FSM; 12/12 sim checks ALL PASS
+
+**Critical next step: FIR coefficient re-spin to 38.5–41.5 kHz (FC-7).** The RTL structure is verified; only the coefficient tables need recalculation for the single shared 40 kHz passband (code-division beacon ID by sweep direction). This unblocks full pipeline integration.
+
+**Architecture frozen (FC-5/FC-6/FC-7/FC-8):**
+- FC-5: SNR-gradient homing (not absolute range); `peak_detector` outputs `corr_peak`/`snr` as primary, `peak_lag` kept diagnostic only.
+- FC-6: `acoustic_homing_node` homes by gradient ascent on SNR, ARRIVED trigger = SNR plateau/saturation (not 0.4 m range).
+- FC-7: Code-division beacon ID (Buoy 1 = UP-sweep 38.5→41.5 kHz, Buoy 2 = DOWN-sweep 41.5→38.5 kHz, both in same 3 kHz transducer passband). Relative gating with UART-loadable K_SHIFT and FLOOR.
+- FC-8: Egress maneuver required after each ARRIVED state to prevent cross-talk blinding at 1–2 m distance.
 
 **Resource accounting note (Jun 16):** BSRAM usage was corrected upward
 from 8/46 to **14/46 (~30%)** after manual verification against the
@@ -247,12 +244,15 @@ Sample count = 5.0 ms × 421,875 Hz = 2109 — **identical to the current
 matched-filter window**, so N_TAPS, ADDR_W, BSRAM layout, ACCW, and
 CORR_SHIFT are ALL UNCHANGED.
 
-**peak_detector.v detection logic is MANDATORY dual-channel gating (symmetric):**
-- Buoy 1 detected: `corr_peak_ch1 > THRESH_HIGH` AND `corr_peak_ch2 < THRESH_LOW`
-- Buoy 2 detected: `corr_peak_ch2 > THRESH_HIGH` AND `corr_peak_ch1 < THRESH_LOW`
-- Neither detected if both channels are high or both are low simultaneously
-- THRESH_HIGH and THRESH_LOW are UART-loadable parameters (same mechanism as reference chirp BSRAM writes — parameter IDs within existing config channel, no new packet format required)
-- Single-channel thresholding on either channel alone is FORBIDDEN — at the ARRIVED_1→SCAN_2 transition the vehicle is 1–2 m from Buoy 1 while Buoy 2 is at 8–10 m; Buoy 1's leakage into ch2 is +15 to +21 dB above the genuine Buoy 2 signal, which guarantees a false positive under single-channel detection
+**peak_detector.v detection logic is MANDATORY dual-channel RELATIVE gating (RECONCILED Jun 17 by systems-integrator — supersedes the earlier absolute THRESH_HIGH/THRESH_LOW framing):**
+- Take the ABSOLUTE VALUE of both corr_peak inputs first (free-running correlation produces negative values; signed `>` comparisons break otherwise).
+- Buoy 1 detected: `abs_ch1 > (abs_ch2 << K_SHIFT)` AND `abs_ch1 > FLOOR` → target_id = 0x01
+- Buoy 2 detected: `abs_ch2 > (abs_ch1 << K_SHIFT)` AND `abs_ch2 > FLOOR` → target_id = 0x02
+- Neither / both-high / tie / both-below-FLOOR → target_id = 0x00 (never guess a target).
+- UART-loadable parameters: **K_SHIFT** (ratio factor, k=2^K_SHIFT; default K_SHIFT=2 → k=4 ≈ 12 dB, matching the measured 12.2 dB sweep-direction isolation) and **FLOOR** (minimum absolute detection level; default conservative-high so nothing triggers before Pi calibration). SNR_SHIFT (8-bit SNR proxy scale) is a third UART-loadable register. Same load mechanism as reference chirp BSRAM writes — no new packet format.
+- **Why RELATIVE, not absolute:** the sweep-direction isolation is only 12.2 dB (owner Python sim at exact spec), while the near/far signal spread across 1–10 m in air is ~33 dB. At the ARRIVED_1→SCAN_2 transition the vehicle is 1–2 m from Buoy 1 while Buoy 2 is at 8–10 m; Buoy 1's leakage into ch2 is +15 to +21 dB ABOVE the genuine far Buoy 2. No single fixed THRESH_LOW can sit below that crosstalk yet above the genuine far signal — the absolute-gate valid window is negative-width at this geometry. A relative (ratio) gate is invariant to absolute level and tracks geometry automatically. Single-channel thresholding remains FORBIDDEN.
+- **Companion requirement (FC-8):** the relative gate PREVENTS a false Buoy 2 detection (emits 0x00, correct) but cannot itself ACQUIRE Buoy 2 while sitting on Buoy 1 — the FC-8 egress maneuver (acoustic_homing_node, not FPGA) creates the geometry where genuine Buoy 2 detection becomes possible. Gate + egress are complementary, both required.
+- Config values are implemented as synthesizable registers with safe power-on RESET defaults for the V1 peak_detector deliverable; the inbound `uart_rx.v` config-write path (which also unblocks MF reference-chirp loading) is a separate Week 5 task.
 
 **Downstream impact (precise):**
 - **matched_filter_1.v / matched_filter_2.v:** Verilog UNCHANGED. The
