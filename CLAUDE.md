@@ -181,6 +181,21 @@ AD9226 parallel input (12-bit, 65MSPS)
   AD9226 is in hand (arrived Jun 8) — verify DFS pin is unconnected or tied to AVSS,
   not AVDD, before first power-on.
 
+### Preamp Hardware Contract (MANDATORY — DO NOT USE AGC)
+- Replacement preamp MUST be fixed-gain (resistor-set), NOT auto-gain-control (AGC)
+- REASON: AGC corrupts the FC-6 SNR-gradient homing assumption. FC-6 depends on
+  corr_peak increasing monotonically as the vehicle approaches a buoy. An AGC preamp
+  automatically compensates for received signal level, flattening the gradient and
+  making homing impossible.
+- MAX9814 (original spec) is DISQUALIFIED: it is an audio AGC preamp (20 Hz–20 kHz)
+  with two separate disqualifying flaws: (1) bandwidth ends at 20 kHz, cannot pass
+  40 kHz signals, and (2) its AGC would corrupt the FC-6 gradient even if bandwidth
+  were adequate.
+- Approved replacement: wideband fixed-gain op-amp (e.g. MCP6022, TLV2462) in a
+  non-inverting gain stage with bandpass centered on 40 kHz, OR a dedicated ultrasonic
+  receiver amplifier board with fixed gain setting. ~$2–8, unbudgeted minor delta.
+- Output must be AC-coupled and biased to the AD9226 ±1V (VREF=1.0V) input range.
+
 ### adc_interface.cst Pin Configuration (verified Jun 13)
 - D[0] = pin 73, D[1] = pin 74, D[2] = pin 75, D[3] = pin 85, D[4] = pin 77
 - D[5] = pin 27, D[6] = pin 28, D[7] = pin 25, D[8] = pin 26, D[9] = pin 29
@@ -304,11 +319,12 @@ AD9226 parallel input (12-bit, 65MSPS)
 
 \- Transmission medium: AIR (above waterline, not underwater)
 
-\- Pre-amp: MAX9814 auto-gain between TCT40-16R and AD9226
+\- Pre-amp: ~~MAX9814 auto-gain~~ **DISQUALIFIED** (20 Hz–20 kHz audio band, AGC corrupts SNR gradient)
+  **REPLACEMENT REQUIRED:** fixed-gain wideband op-amp (MCP6022/TLV2462) or ultrasonic receiver board; see Preamp Hardware Contract above
 
-\- Chirp 1: 34–38 kHz LFM sweep → Buoy 1
+\- Chirp 1: ~~34–38 kHz LFM sweep~~ **38.5–41.5 kHz UP-sweep** → Buoy 1 (FC-7 confirmed)
 
-\- Chirp 2: 42–46 kHz LFM sweep → Buoy 2
+\- Chirp 2: ~~42–46 kHz LFM sweep~~ **38.5–41.5 kHz DOWN-sweep** → Buoy 2 (FC-7 confirmed)
 
 
 
@@ -523,7 +539,7 @@ telemetry\_node
 
 &#x20; resistors, capacitors, soldering iron, multimeter, drill
 
-\- MAX9814 pre-amp module (delivered Jun 2026)
+\- ~~MAX9814 pre-amp module (delivered Jun 2026)~~ **DISQUALIFIED** — audio AGC band (20 Hz–20 kHz), cannot pass 40 kHz; AGC corrupts SNR-gradient homing (FC-6)
 
 \- JSN-SR04T waterproof ultrasonic sensor (delivered Jun 2026)
 
@@ -536,6 +552,11 @@ telemetry\_node
 
 
 \### 🔴 Not Yet Ordered — Action Required
+
+\- Preamp replacement: wideband fixed-gain op-amp (e.g. MCP6022, TLV2462) or ultrasonic receiver board — ORDER NOW
+&#x20; \* MAX9814 (arrived Jun 2026) is DISQUALIFIED: audio AGC band (20 Hz–20 kHz), cannot pass 40 kHz signals; AGC flattens SNR-gradient needed for FC-6 homing
+&#x20; \* Replacement must be fixed-gain (no AGC), centered on 40 kHz, ~$2–8. AC-couple output to match AD9226 ±1V input range (VREF=1.0V)
+&#x20; \* See Preamp Hardware Contract in CLAUDE.md
 
 \- Thrusters: 2× LICHIFIT RC Jet Boat Underwater Motor (RF-370 class, ASIN B07WY4MDYZ) — ORDER NOW
 &#x20; \* Buy **2 kits (~$48)**: each kit ships a CW+CCW pair (one kit = one full vehicle set); 2nd kit is a spare-pair hedge against documented DOA / 12V burn-out reviews (see DL-2)

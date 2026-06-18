@@ -28,14 +28,14 @@ AD9226 → adc_interface → cic_decimator → FIR banks → matched filters →
 | `uart_tx` | ✅ DONE & verified | 8-byte back-to-back packet verified in sim; .cst written and verified |
 | `adc_interface` | ✅ DONE & verified | MSB-flip applied, OTR port added, signed declaration; all 14 pins LVCMOS33-compatible (.cst verified) |
 | `cic_decimator` | ✅ DONE & verified | R=8, N=3, shift=5 corrected, saturation clamp added |
-| `fir_filter_bank1` (34–38 kHz) | ✅ DONE & verified | 32-tap Hamming windowed-sinc, signed-16 integer scale |
-| `fir_filter_bank2` (42–46 kHz) | ✅ DONE & verified | 32-tap Hamming windowed-sinc, signed-16 integer scale |
-| `matched_filter_1` (Buoy 1) | ✅ DONE & verified | 2109-sample block correlator, 48-bit acc, CORR_SHIFT=16, OTR window-OR, 200Hz out; sim >3000× chirp/noise ratio ← VALIDATED Jun 16 |
-| `matched_filter_2` (Buoy 2) | ✅ DONE & verified | Same architecture; cross-band rejection verified ← VALIDATED Jun 16 |
-| `peak_detector` | ⏳ NOT STARTED | **NOW THE SINGLE REMAINING FPGA MODULE** before integration — see Section 4 |
+| `fir_filter_bank1` | ⚠️ COEFFICIENTS NEED UPDATE (FC-7) | RTL/structure verified, but band must move 34–38 kHz → **38.5–41.5 kHz** (center 40 kHz). Coeff-table edit + re-sim only |
+| `fir_filter_bank2` | ⚠️ COEFFICIENTS NEED UPDATE (FC-7) | RTL/structure verified, but band must move 42–46 kHz → **38.5–41.5 kHz** (same as bank1; both buoys share the band). Coeff-table edit + re-sim only |
+| `matched_filter_1` (Buoy 1 = UP-sweep) | ✅ RTL verified — NEW REFERENCE DATA (FC-7) | 2109-sample block correlator, 48-bit acc, CORR_SHIFT=16, OTR window-OR, 200Hz out ← VALIDATED Jun 16. RTL UNCHANGED; load UP-sweep 38.5→41.5 kHz reference over UART |
+| `matched_filter_2` (Buoy 2 = DOWN-sweep) | ✅ RTL verified — NEW REFERENCE DATA (FC-7) | Same architecture ← VALIDATED Jun 16. RTL UNCHANGED; load DOWN-sweep 41.5→38.5 kHz reference over UART |
+| `peak_detector` | ⏳ READY TO BUILD — FC-7 confirmed, dual-channel gating (FC-7+FC-8) required | Dual-channel gating (symmetric thresholding) is MANDATORY per FC-7. See Section 4 for detection logic and CQ-1 (SNR threshold calibration) |
 | Full pipeline integration | ⏳ NOT STARTED | Blocked only on peak_detector |
 
-**Status as of June 16:** All seven authored modules (ADC → CIC → 2×FIR →
+**Status as of June 17:** All seven authored modules (ADC → CIC → 2×FIR →
 2×matched_filter) are verified. The dual matched filters passed
 hw-validation (APPROVED WITH CONDITIONS), dsp-signal-validator (3 BLOCKERs
 caught and resolved), systems-integrator, and verilog-sim-runner (ALL
@@ -44,8 +44,13 @@ June 16. **`peak_detector.v` is now the only remaining FPGA module
 between current state and full-pipeline integration.** FC-5 and FC-6 are
 confirmed and resolved — SNR-gradient homing, not absolute ToF range.
 `peak_detector.v` outputs `corr_peak`/`snr` as primary; `peak_lag` kept
-as diagnostic only. **Proceed to peak_detector implementation
-immediately.**
+as diagnostic only. **UPDATE (Jun 17, FC-7 CONFIRMED): peak_detector is
+now UNBLOCKED and ready to build. The beacon-ID architecture is confirmed:
+two sweep directions (up/down) in a single 38.5–41.5 kHz passband
+(transducer bandwidth constraint). Mandatory requirement: FC-7 dual-channel
+gating (symmetric thresholding with UART-loadable THRESH_HIGH/THRESH_LOW)
+is required to prevent false Buoy 2 detection while vehicle is 1–2 m from
+Buoy 1. See FC-7 and FC-8 in Section 2.**
 
 **Resource accounting note (Jun 16):** BSRAM usage was corrected upward
 from 8/46 to **14/46 (~30%)** after manual verification against the
@@ -184,6 +189,134 @@ more robust than range-PID, requires zero new hardware, and removes the
 impossible synchronization dependency. The only added cost is one
 empirical SNR-threshold calibration during pool test #1.
 
+### FC-7 — Beacon-ID is by CHIRP SWEEP DIRECTION (up vs down), NOT by frequency band. Both buoys share the 38.5–41.5 kHz transducer passband.
+**This supersedes the two-band (34–38 / 42–46 kHz) beacon architecture in
+CLAUDE.md. Resolves BLOCKER B1 (DL-1 addendum). PEAK_DETECTOR IS BLOCKED
+until the new chirp specs below are accepted by the owner.**
+
+**Confirmed hardware constraint:** the TCT40-16T/R are high-Q narrowband
+resonant piezo transducers, efficient ONLY within ~**38.5–41.5 kHz**
+(±1.5 kHz around 40 kHz resonance) — a usable passband of only ~3 kHz.
+Both original chirp bands (34–38 kHz, 42–46 kHz) sit entirely OFF
+resonance; neither buoy would radiate or the receiver capture meaningful
+acoustic energy at those frequencies. Bench-confirmed by hw-validation
+(DL-1 addendum, Jun 17). Verify on the scope at the Layer A bench check.
+
+**Why not frequency-division (rejected):** two distinguishable LFM bands
+cannot fit in 3 kHz. A 32-tap FIR at fs=421,875 Hz resolves a transition
+width of fs/N ≈ 13.2 kHz and CANNOT produce meaningful rejection across
+the ≤1 kHz guard a 3 kHz budget would allow (the existing banks already
+admit only ~2–3 dB of selectivity at 8 kHz separation — see
+fir_filter_bank1.v header). Frequency-division is physically impossible
+with this transducer + this FIR.
+
+**Why not time-division (rejected):** alternating transmit slots require
+buoy-to-buoy slot synchronization with NO shared clock — the same
+impossibility that killed absolute ToF in FC-5. Free-running ESP32 slot
+timers drift and collide. More firmware risk, more failure modes, the
+Pi must infer slot identity. Inferior to code-division.
+
+**Why not wider-band transducers (rejected for V1):** broadband
+ultrasonic transducers are ~$15–40 each (×6 = ~$90–240, a real budget
+hit on a $310–463 project) and may force a different drive/preamp chain.
+Unnecessary because code-division works within the transducers in hand.
+
+**Chosen architecture — CODE-DIVISION by sweep direction:**
+- **Buoy 1:** UP-sweep LFM chirp, **38.5 → 41.5 kHz**.
+- **Buoy 2:** DOWN-sweep LFM chirp, **41.5 → 38.5 kHz**.
+- Both occupy the SAME full ~3 kHz passband. The vehicle correlates the
+  received signal against TWO reference templates (up-ref in channel 1,
+  down-ref in channel 2). An up-LFM vs down-LFM of equal B,T are
+  quasi-orthogonal: cross-correlation is suppressed relative to the
+  matched auto-correlation by ~√(BT)..(BT). With B = 3 kHz, T = 5 ms,
+  **BT ≈ 15 → ~12–24 dB discrimination**, meeting the ≥20 dB beacon-ID
+  target at the upper end. The 2109-sample window is more than long
+  enough; longer T only improves separation.
+
+**New chirp specifications (both buoys):**
+| Param | Buoy 1 | Buoy 2 |
+|---|---|---|
+| Type | LFM (linear chirp) | LFM (linear chirp) |
+| f_start → f_stop | 38.5 → 41.5 kHz (UP) | 41.5 → 38.5 kHz (DOWN) |
+| Center / bandwidth | 40 kHz / 3 kHz | 40 kHz / 3 kHz |
+| Duration T | 5.0 ms | 5.0 ms |
+| Reference samples @ 421,875 Hz | **2109** (unchanged) | **2109** (unchanged) |
+| BT product | 15 | 15 |
+
+Sample count = 5.0 ms × 421,875 Hz = 2109 — **identical to the current
+matched-filter window**, so N_TAPS, ADDR_W, BSRAM layout, ACCW, and
+CORR_SHIFT are ALL UNCHANGED.
+
+**peak_detector.v detection logic is MANDATORY dual-channel gating (symmetric):**
+- Buoy 1 detected: `corr_peak_ch1 > THRESH_HIGH` AND `corr_peak_ch2 < THRESH_LOW`
+- Buoy 2 detected: `corr_peak_ch2 > THRESH_HIGH` AND `corr_peak_ch1 < THRESH_LOW`
+- Neither detected if both channels are high or both are low simultaneously
+- THRESH_HIGH and THRESH_LOW are UART-loadable parameters (same mechanism as reference chirp BSRAM writes — parameter IDs within existing config channel, no new packet format required)
+- Single-channel thresholding on either channel alone is FORBIDDEN — at the ARRIVED_1→SCAN_2 transition the vehicle is 1–2 m from Buoy 1 while Buoy 2 is at 8–10 m; Buoy 1's leakage into ch2 is +15 to +21 dB above the genuine Buoy 2 signal, which guarantees a false positive under single-channel detection
+
+**Downstream impact (precise):**
+- **matched_filter_1.v / matched_filter_2.v:** Verilog UNCHANGED. The
+  reference chirp is loaded at runtime over UART into BSRAM
+  (ref_wr_en/ref_addr/ref_din). Channel 1 gets the up-sweep reference,
+  channel 2 gets the down-sweep reference. Only the DATA loaded by the
+  Pi's fpga_uart_node changes — not a single line of RTL. Both modules
+  remain (one per template); neither is redundant under code-division.
+  Reference must be signed-16 INTEGER scale per FC-1.
+- **fir_filter_bank1.v / fir_filter_bank2.v:** Both must now pass the
+  SAME 38.5–41.5 kHz band (center 40 kHz, ~3 kHz BW). This is a
+  COEFFICIENT change only (edit the coeff_rom case-statement values +
+  re-simulate); the sequential-MAC RTL structure is unchanged. The two
+  banks become IDENTICAL in coefficients — bank2 may be collapsed to
+  reuse bank1's coefficients, or kept as a separate instance for
+  clarity. Recommendation: keep both instances, same coefficients, so
+  the dual-channel top-level wiring is unchanged. NOTE: the FIR provides
+  only coarse pre-selection regardless — the sweep-direction matched
+  filters supply the actual beacon discrimination (consistent with the
+  FIR headers' own honest selectivity note).
+- **peak_detector.v:** STILL outputs corr_peak/snr/peak_lag per FC-5/FC-6.
+  No structural change from FC-7 — but it is **BLOCKED from being written
+  until the owner confirms these chirp specs**, because its two input
+  channels now mean up-buoy (ch1) and down-buoy (ch2) rather than
+  low-band/high-band. target_id semantics: ch1 = Buoy 1 (up), ch2 =
+  Buoy 2 (down). Wire format and 8-byte packet UNCHANGED.
+- **adc_interface / cic_decimator / uart_tx:** UNCHANGED. They never see
+  the chirp frequency content.
+
+**FCs affected:** FC-7 supersedes the band definitions in CLAUDE.md only.
+FC-1 (integer scale), FC-2 (OTR), FC-3 (421,875 Hz), FC-5 (no ToF), FC-6
+(SNR-gradient homing) ALL still hold without amendment. The 2109-sample
+window (FC-3-derived) is preserved exactly.
+
+**Net answer to the owner's load-bearing question:** the fix requires
+REBUILD of only the FIR coefficient tables (a coefficient edit + re-sim,
+not an architecture rebuild) and NEW BSRAM REFERENCE DATA loaded by the
+Pi for the matched filters (zero RTL change). No verified matched-filter
+RTL is thrown away. Week 4–5 FPGA work at risk is small: two coefficient
+recomputations and their testbench re-runs.
+
+**Also resolves BLOCKER B2 (MAX9814) — HARDWARE FIX ONLY, VERILOG
+UNCHANGED:** the MAX9814 (20 Hz–20 kHz audio band) cannot pass 40 kHz and
+must be replaced with a wideband op-amp front end (e.g. MCP6022 ~10 MHz
+GBW, TLV2462) AC-coupled and re-biased to the AD9226 ±1V (VREF=1.0V)
+input window. ~$2–8, minor net delta over the already-budgeted $8
+MAX9814. The FPGA only ever sees the AD9226 digital output, so
+adc_interface, cic_decimator, both FIR banks, and both matched filters
+are ALL unaffected. No Verilog changes for B2.
+
+### FC-8 — Egress Maneuver Required After Each ARRIVED State
+
+**Constraint:** After each ARRIVED_N state (ARRIVED_1 and ARRIVED_2), the `acoustic_homing_node` must execute a dead-reckoning egress maneuver away from the just-arrived buoy before beginning SCAN for the next target. This is mandatory, not optional.
+
+**Why:** Even with the FC-7 dual-channel gating (M2), when the vehicle is 1–2 m from Buoy 1 during SCAN_2, Buoy 1's cross-talk into the down-sweep matched filter (ch2) remains +15 to +21 dB above the genuine Buoy 2 signal at 8–10 m — far above any workable THRESH_HIGH setting. Dual-channel gating prevents false ARRIVED_2 detection, but cannot enable genuine Buoy 2 detection while sitting on Buoy 1. The vehicle must physically increase distance from the just-arrived buoy until the near/far signal advantage drops below the dual-channel gate's isolation margin.
+
+**Required egress distance:** ~2–3 m estimated from physics (33 dB dynamic range / 10 dB per decade in air → need ~1 decade of range ratio reduction → egress until Buoy 1 advantage < 8.2 dB worst-case isolation). Exact calibrated value joins CQ-1 in the Calibration Queue for pool test #1.
+
+**Implementation target:** `acoustic_homing_node` (Pi ROS 2 node, not FPGA). After ARRIVED state confirmed (corr_snr > SNR_ARRIVED_THRESHOLD for 3 consecutive readings per CQ-1), publish a reverse/egress Twist command to /cmd_vel for the calibrated egress duration, then transition to SCAN state for next buoy.
+
+**FPGA impact:** NONE. This is a mission state machine change only.
+
+**State machine update required:** ARRIVED_N → EGRESS_N → SCAN_(N+1), replacing the current direct ARRIVED_N → SCAN_(N+1) transition.
+
 ---
 
 ## 3. PHYSICAL VERIFICATION QUEUE (before first hardware power-on)
@@ -206,6 +339,15 @@ The matched filter correlators ×2 are **DONE and verified (Jun 16)**. The
 critical path has advanced to `peak_detector.v` — the last module before
 full-pipeline integration and synthesis. It is far simpler than the
 matched filter; the hardest DSP block is now behind us.
+
+**UNBLOCKED (FC-7 CONFIRMED, Jun 17):** The FC-7 chirp specifications are
+confirmed: up/down sweep in 38.5–41.5 kHz band. Write `peak_detector.v`
+now with the mandatory dual-channel gating logic per FC-7 (symmetric
+thresholding). The co-dependent immediate FPGA work: re-spin the two FIR
+coefficient tables to the 38.5–41.5 kHz band (coeff edit + re-sim, no
+architecture change). FC-7 does not change peak_detector's outputs, only
+the meaning of its two channels (ch1 = up-sweep Buoy 1, ch2 = down-sweep
+Buoy 2).
 
 Requirements (inherits all forward constraints above):
 - Consumes `corr_peak` (matched filter, CORR_SHIFT=16 scale) and `otr_out`
