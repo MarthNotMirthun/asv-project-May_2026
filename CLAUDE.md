@@ -147,7 +147,7 @@ AD9226 parallel input (12-bit, 65MSPS)
 
 \- ✅ Peak detector + packet framer (peak_detector.v, packet_framer.v) — dual-channel relative gating (FC-7), SNR proxy, 8-byte FSM; 12/12 sim checks passed ← VALIDATED Jun 17
 
-\- ⏳ Full pipeline integration — not started; blocked on FIR coeff re-spin only
+\- ⏳ Full pipeline integration — ready to start, all 9 modules verified, no blockers
 
 
 
