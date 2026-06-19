@@ -1,3 +1,5 @@
+## 2026-06-19 — Post-commit hook installed (status-report + AIS-OS notification)
+
 ## 2026-06-18 — FIR banks VALIDATED at 38.5–41.5kHz - all 9 FPGA modules verified
 
 **Completed:**
