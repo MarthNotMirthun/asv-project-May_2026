@@ -6,3 +6,5 @@ docs/daily_briefing.txt
 docs/agent_log.txt
 node_modules/
 .env
+.claude/agent-memory/
+.claude/settings.local.json

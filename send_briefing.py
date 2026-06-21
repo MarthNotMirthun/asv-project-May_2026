@@ -342,9 +342,11 @@ html = (
 )
 
 # ── Send ──────────────────────────────────────────────────────────
-SENDER_EMAIL    = "asv.briefing.bot@gmail.com"
-SENDER_PASSWORD = "avwv chmi vidb dlzj"
-RECEIVER_EMAIL  = "mirthmoh@gmail.com"
+# Credentials must be set as environment variables — never hardcode here.
+# Copy .env.example to .env and fill in values before running.
+SENDER_EMAIL    = os.environ["ASV_SENDER_EMAIL"]
+SENDER_PASSWORD = os.environ["ASV_SENDER_PASSWORD"]
+RECEIVER_EMAIL  = os.environ["ASV_RECEIVER_EMAIL"]
 
 today_label = date.today().strftime('%A, %b %d')
 msg = MIMEMultipart('alternative')

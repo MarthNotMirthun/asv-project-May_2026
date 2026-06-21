@@ -225,7 +225,7 @@ AD9226 parallel input (12-bit, 65MSPS)
 
 \- ROS: ROS 2 Jazzy ros-base (installed, talker/listener verified ✅)
 
-\- SSH: mirthmoh1379@mirthuns-rp4.local (working ✅)
+\- SSH: &lt;pi-user&gt;@&lt;pi-hostname&gt;.local (working ✅)
 
 \- Colcon and rosdep: installed ✅
 

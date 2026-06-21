@@ -377,7 +377,7 @@ Getting any one wrong risks FPGA GPIO damage or silently wrong data.
 
 ### Pi — Raspberry Pi 4 1GB
 - Ubuntu 24.04.4 LTS, ROS 2 Jazzy
-- SSH: `mirthmoh1379@mirthuns-rp4.local`
+- SSH: `<pi-user>@<pi-hostname>.local`
 - UART: `/dev/ttyAMA0` at 115,200 baud (freed Jun 8)
 - ROS_DOMAIN_ID: set consistently across Pi and laptop
 
