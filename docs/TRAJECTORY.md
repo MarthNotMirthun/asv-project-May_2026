@@ -1,6 +1,6 @@
 # TRAJECTORY.md — ASV Technical Compass
 
-**Last Updated:** June 18, 2026 (Week 4 Day 4 of 11 — all 9 FPGA modules VERIFIED, FIR banks validated at 38.5–41.5 kHz)
+**Last Updated:** June 26, 2026 (Week 5 Day 5 of 11 — component audit firmware requirements added: stall-current protection, LEDC PWM, ESTOP threshold, preamp gain, PWM noise isolation)
 
 This is the living technical compass for the GPS-denied acoustic-homing
 catamaran USV. It records the **verified pipeline state**, the
@@ -334,49 +334,87 @@ silently wrong data. Complete ALL before applying power to a wired ADC.
 
 ---
 
-## 4. CRITICAL PATH — `peak_detector.v` (single remaining FPGA module)
+## 4. CRITICAL PATH — Pipeline integration + synthesis + ROS 2 (as of June 25, 2026)
 
-The matched filter correlators ×2 are **DONE and verified (Jun 16)**. The
-critical path has advanced to `peak_detector.v` — the last module before
-full-pipeline integration and synthesis. It is far simpler than the
-matched filter; the hardest DSP block is now behind us.
+**Peak detector and packet framer are DONE (validated Jun 17). All 9 FPGA
+modules are verified. The critical path has shifted entirely to integration,
+synthesis, and the ROS 2/hardware stack.**
 
-**UNBLOCKED (FC-7 CONFIRMED, Jun 17):** The FC-7 chirp specifications are
-confirmed: up/down sweep in 38.5–41.5 kHz band. Write `peak_detector.v`
-now with the mandatory dual-channel gating logic per FC-7 (symmetric
-thresholding). The co-dependent immediate FPGA work: re-spin the two FIR
-coefficient tables to the 38.5–41.5 kHz band (coeff edit + re-sim, no
-architecture change). FC-7 does not change peak_detector's outputs, only
-the meaning of its two channels (ch1 = up-sweep Buoy 1, ch2 = down-sweep
-Buoy 2).
+### ⚠️ SCHEDULE STATUS (June 25 — Week 5 Day 4)
 
-Requirements (inherits all forward constraints above):
-- Consumes `corr_peak` (matched filter, CORR_SHIFT=16 scale) and `otr_out`
-  from both matched filter channels
-- Outputs: `corr_peak` (32-bit, same scale), `snr` (8-bit = corr_peak /
-  noise_floor in the same scale), `peak_lag` (11-bit diagnostic passthrough)
-- **NO range_cm, NO ToF conversion** (per **FC-5**) — `snr` is the primary
-  homing gradient; `peak_lag` is V2-TDOA hook only
-- `otr_in` / `otr_out` carried through (per **FC-2**)
-- Watch BSRAM: if noise-floor averaging or threshold-history buffers are
-  added, they consume blocks on top of the current 14/46 — keep them in
-  LUT/registers if small (see Q2 below). Budget for ≤2 added blocks.
-- Pipeline all MAC chains; companion testbench in `fpga/sim/`; iverilog,
-  check X/Z
+Six days of zero engineering progress (Jun 19–24) on top of the two weeks
+of existing carryover. Pool test #1 target is Week 9 (Jul 20) — **25 days
+away.** An integrated vehicle with working acoustics, propulsion, and ROS 2
+must exist by then. Nothing in the back half of the project (ROS 2, ESP32
+firmware, hull, buoys, pool tests) has started.
 
-### After peak_detector
-1. Full pipeline integration: chain ADC → CIC → FIR ×2 → MF ×2 →
-   peak_detector → uart_tx; verify end-to-end latency within 50 ms budget
-2. Synthesis in Gowin EDA: confirm positive timing slack at 27 MHz, and
-   **re-confirm actual LUT/BSRAM/DSP from the synthesis report** vs the
-   estimates in CLAUDE.md (the BSRAM correction shows estimates can be off)
+**The hard truth:** "All 9 modules verified" describes isolated Verilog
+simulations. The FPGA design has never been synthesized, never run on
+hardware, and has never been wired into a top-level module. Until synthesis
+passes, resource estimates (HW multipliers, BSRAM) remain unverified
+simulation-phase numbers. This is the single largest de-risking action
+remaining on the FPGA side.
 
-### Schedule reality
-Two weeks of carryover from Weeks 1–2 still exist. Weeks 3–6 are reserved
-as FPGA-focused; ROS 2 work stays deferred until the FPGA pipeline is
-done. With the matched filter complete, the schedule risk has dropped
-materially — but the carryover means peak_detector + integration +
-synthesis must finish inside Week 5 to hold the Week 5 milestone.
+### Unordered parts (as of June 25) — shipping latency is compounding
+
+| Part | Why it gates | Action |
+|---|---|---|
+| MCP6022-I/P + TLV2462CP (~$5) | Gates ALL acoustic bench testing (Layer A, Layer B, CQ-1 calibration) | ORDER TODAY |
+| LICHIFIT RF-370 thrusters ×2 kits (~$48) | Gates hull assembly, pool test #1, propulsion demo | ORDER TODAY |
+| IP65 enclosure + M12 glands (~$20-25) | Gates electronics bay, waterproofing, pool readiness | ORDER THIS WEEK |
+| PVC pipe, end caps, L-brackets, epoxy, silicone | Gates hull build (requires Home Depot run with Dad) | THIS WEEK |
+
+Every day these are unordered is shipping latency stacked on the existing 6-day stall.
+
+### Absolute Minimum Viable Sequence (46 days to Aug 10)
+
+The cut-down demo that still hits the portfolio goal:
+**One-buoy acoustic homing in a pool, on video, by Aug 10.**
+Two-buoy sequential homing is the full spec; treat it as a stretch goal.
+
+```
+TODAY         — Order preamp (MCP6022 + TLV2462). Order thrusters. Order enclosure.
+W5 (rest)     — Commit loose sim outputs to git (out_mf1, out_mf2, out_pd, out_fir1, out_fir2)
+                Write top_level.v: chain all 9 modules end-to-end
+                Sim the integrated pipeline for X/Z states
+                Run Gowin EDA synthesis — get the timing/utilization report
+                (THIS IS THE HIGHEST-VALUE DE-RISK REMAINING ON THE FPGA SIDE)
+W6 Jun 29     — Home Depot run with Dad → start hull
+                Layer A bench check (analog scope, TCT40-16R/T + new preamp when it arrives)
+                Start fpga_uart_node (Pi, Python) — parse 8-byte packet, publish /acoustic/corr_snr
+W7 Jul 6      — Layer B: AD9226 + FPGA in loop reading real ADC samples (after PV-1/2/3 cleared)
+                acoustic_homing_node skeleton: SCAN→ACQUIRING→HOMING state machine
+                ESP32 motor firmware: LEDC PWM for ENA/ENB (not GPIO toggle), stall-current trip >1.5A/ch (see DL-4); buoy chirp firmware for 40 kHz sweep
+W8 Jul 13     — Mission state machine, vehicle integration, dry-land E2E rehearsal
+                Bench thrust test: RF-370 motors at ~9V, verify ≥150g/motor (DL-2 GATE)
+W9 Jul 20     — POOL TEST #1: One buoy, home on corr_snr gradient, record CQ-1 calibration
+W10 Jul 27    — Fix regressions, try two-buoy sequential if W9 was clean
+W11 Aug 3     — Demo video, clean commit history, README
+```
+
+### What to cut first if the schedule slips further
+
+1. Second buoy (do one-buoy homing; document two-buoy as designed-but-not-demo'd)
+2. Egress maneuver (FC-8) — simplify to a fixed timeout reverse before SCAN_2
+3. Telemetry / Arduino shore display
+4. Collision avoidance polish (keep the safety ESTOP logic; skip distance display)
+
+**Never cut:** FPGA synthesis proof, one clean acoustic-homing run in water on video,
+and a coherent git commit history. These are the portfolio deliverables.
+
+### Next two actions (do in this order, today)
+
+1. **Order MCP6022-I/P + TLV2462CP** — ~$5, blocks every acoustic test downstream.
+   Every hour unordered is shipping latency you cannot buy back.
+2. **Commit the loose sim outputs** that prove W4's hardest modules are real:
+   ```
+   git add fpga/sim/out_mf1.out fpga/sim/out_mf2.out fpga/sim/out_pd.out
+   git add fpga/sim/out_fir1.out fpga/sim/out_fir2.out
+   git commit -m "Week 4 sim evidence: matched filters, peak detector, FIR banks validated"
+   ```
+
+Then write `top_level.v`. The synthesis pass converts 9 isolated simulations into a
+real, proven FPGA design. That is the current critical path item.
 
 ---
 
@@ -520,6 +558,41 @@ the loop) to confirm the acoustic path is transmitting and receiving. This valid
 the transducer pair and acoustic coupling independent of the broken preamp choice.
 Full signal-chain test (with preamp) waits on the replacement part arriving.
 
+### DL-3 — Schedule compression acknowledgment + MVS pivot (June 25, 2026, Week 5 Day 4)
+
+**Situation:** Six days of zero engineering progress (Jun 19–24). Nothing from
+the Week 5 plan (pipeline integration, Gowin synthesis) is complete. Four
+categories of parts remain unordered with non-trivial shipping latency: preamp
+replacement, thrusters, enclosure, and hull materials. Pool test #1 is 25 days
+away (Week 9, Jul 20). The full two-buoy sequential homing demo is at risk of not
+completing within the Aug 10 deadline.
+
+**Decision: Declare FPGA module phase DONE. Freeze all module work. Pivot
+to integration + synthesis + ordered parts NOW.**
+
+Rationale:
+1. Nine modules are individually verified. No further module-level work is needed
+   or justified. Any further "polish" on verified modules is scope creep that
+   consumes the one resource that cannot be recovered: calendar time.
+2. The synthesis pass is the highest-value de-risking action remaining on the FPGA
+   side. Resource estimates (multipliers, BSRAM) are still unverified simulation
+   numbers. A synthesis failure discovered in Week 7 with no schedule slack is a
+   project-level crisis. Discovered this week, it is a solvable engineering problem.
+3. The preamp and thrusters gate every downstream milestone. Ordering them today
+   vs. next week costs exactly the difference in shipping time — typically 3–7 days
+   that cannot be compressed later.
+
+**Minimum viable demo (MVS):** One-buoy acoustic homing on video by Aug 10.
+Second buoy and egress maneuver are stretch goals. This still demonstrates
+the full signal chain (FPGA matched filter → ROS 2 SNR-gradient homing → 
+motor control), which is the portfolio claim.
+
+**Rejected — continue FPGA module refinement:** The modules are done.
+Refinement at this stage is a focus-avoidance pattern, not engineering.
+
+**Rejected — wait on parts order until synthesis is confirmed:** Synthesis
+takes a day; parts take a week to ship. These are parallel actions, not sequential.
+
 ### DL-2 — Thruster downgrade 545 → RF-370 (LICHIFIT) + thrust gate (decided June 17, 2026, Week 4 Day 3)
 
 **Question:** The planned 545-class brushed underwater thruster (~$32.50/unit,
@@ -577,3 +650,53 @@ Drive at ~9 V via a PWM duty cap. Gate hull final assembly on a bench thrust che
 purchased and locked. **Rejected — buy only 1 kit:** functionally sufficient, but
 leaves zero spare against documented reliability risk during the most
 schedule-constrained weeks; the $24 hedge is worth it.
+
+### DL-4 — Component Audit Firmware and Hardware Build Requirements (June 26, 2026, Week 5 Day 5)
+
+**Source:** Component audit Jun 25–26. Five firmware and hardware build requirements
+discovered that were not previously documented. All are mandatory before Week 9 pool test.
+
+**Requirement 1 — Motor stall-current protection (MANDATORY, Week 6 ESP32 firmware):**
+LICHIFIT RF-370 stall current = 5–8.6A at ~9V. L298N thermal limit is 2A continuous / 3A peak.
+At full stall the motor destroys the L298N within seconds if PWM is not cut. The ≤80% duty
+cap enforces voltage, NOT current — it does not protect against stall.
+`motor_driver_node` (ESP32, Week 6) MUST implement:
+- Monitor current per channel (shunt resistor + ESP32 ADC, OR estimated from PWM duty × V_bus)
+- If current > 1.5A for > ~100ms on any channel: immediately cut PWM to zero, wait 500ms, resume at 50% duty
+- This is a required safety feature. Do not close out Week 6 without it.
+
+**Requirement 2 — ESP32 LEDC hardware PWM for L298N ENA/ENB (MANDATORY):**
+ENA and ENB pins MUST be driven by ESP32 LEDC hardware PWM channels, NOT software GPIO toggle.
+Software toggle frequency is CPU-load-dependent and can drift above 80% duty under interrupt
+pressure (micro-ROS + IMU + ultrasonic all competing). LEDC channels are timer-driven and
+maintain duty cycle in hardware regardless of CPU load.
+Recommended: ENA → GPIO25 (LEDC timer 0, channel 0), ENB → GPIO26 (LEDC timer 0, channel 1).
+Verify against MPU-6050 I2C (GPIO21/22) and UART (GPIO1/3) before breadboard commit.
+
+**Requirement 3 — collision_safety_node ESTOP threshold raised to 30cm:**
+JSN-SR04T has a documented blind zone of ~25cm. At 25cm ESTOP threshold the sensor may be
+returning invalid/stale data — the obstacle is already inside the dead zone. Threshold raised to
+30cm to clear the blind zone with 5cm margin. `collision_safety_node` ESTOP condition updated in
+CLAUDE.md ROS 2 node graph and ESP32 #1 peripheral spec.
+
+**Requirement 4 — Preamp gain capped at ×100 / 40dB (NOT ×196):**
+At ×196 total gain, the ADC clips at 5.1mV input signal level. Within 1m homing range, received
+acoustic SPL increases sharply — 5.1mV clipping is easily reached in the final approach, corrupting
+the SNR gradient precisely where FC-6 homing is most critical (ACQUIRING → HOMING → ARRIVED).
+Revised spec: two-stage non-inverting amplifier, Rf=9.1kΩ (or standard 10kΩ) / Rg=1kΩ per stage
+= ×10/stage = ×100 total (~40 dB). ADC clips at ~10mV — adequate headroom through close-range approach.
+See CLAUDE.md Preamp Hardware Contract for full gain spec.
+
+**Requirement 5 — PWM noise isolation (hardware build, mandatory before Layer B):**
+L298N motor switching couples high-frequency transients onto the motor power rail and through
+shared ground into the analog front-end. Required before any FPGA-in-the-loop testing:
+- 100nF ceramic + 100µF electrolytic decoupling on L298N motor supply, placed close to the IC
+- Star ground: analog ground (preamp, ADC) and motor ground (L298N, motors) on separate copper
+  paths, joined at ONE point only at the LiPo negative terminal
+- Ferrite bead (e.g. BLM18PG221SN1) in series on MCP6022/TLV2462 VCC pin to block motor
+  switching noise from entering op-amp supply rail
+Violating star ground on motor-driven vehicles has historically raised analog noise floors 20–30dB,
+masking legitimate acoustic signals at range.
+
+**Downstream impact:** All five requirements affect Week 6–7 firmware/hardware work only. No FPGA
+RTL changes. No impact on the FPGA pipeline, synthesis, or Week 5 integration work.

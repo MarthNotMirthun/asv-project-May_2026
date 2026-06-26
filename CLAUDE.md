@@ -10,7 +10,7 @@
 
 \# Current Status: Week 4 of 11 — All 9 FPGA modules VERIFIED, FIR banks validated at 38.5–41.5 kHz (FC-7), full pipeline integration UNBLOCKED
 
-\# Last Updated: June 18, 2026
+\# Last Updated: June 26, 2026
 
 
 
@@ -157,7 +157,7 @@ AD9226 parallel input (12-bit, 65MSPS)
 
 \- Ordered AliExpress \~May 31 — arrived June 8, 2026 ✅
 
-\- Signal path: TCT40-16R → MAX9814 preamp → AD9226 → FPGA
+\- Signal path: TCT40-16R → fixed-gain wideband preamp (×100/40dB, see Preamp Hardware Contract) → AD9226 → FPGA
 
 ### AD9226 Hardware Contract (from datasheet)
 - ENCODE pin: FPGA must drive this as the ADC sampling clock
@@ -197,6 +197,11 @@ AD9226 parallel input (12-bit, 65MSPS)
   non-inverting gain stage with bandpass centered on 40 kHz, OR a dedicated ultrasonic
   receiver amplifier board with fixed gain setting. ~$2–8, unbudgeted minor delta.
 - Output must be AC-coupled and biased to the AD9226 ±1V (VREF=1.0V) input range.
+- Gain specification (two-stage non-inverting):
+  Rf=9.1kΩ (or standard 10kΩ), Rg=1kΩ per stage → ×10/stage = ×100 total (~40 dB)
+  WARNING: ×196 total gain clips ADC at 5.1mV input signal — this occurs within 1m homing
+  range where received acoustic power peaks, corrupting the SNR gradient right before ARRIVED.
+  Use ×100 (~40 dB): ADC clips at ~10mV, providing adequate headroom through the final approach.
 
 ### adc_interface.cst Pin Configuration (verified Jun 13)
 - D[0] = pin 73, D[1] = pin 74, D[2] = pin 75, D[3] = pin 85, D[4] = pin 77
@@ -216,6 +221,15 @@ AD9226 parallel input (12-bit, 65MSPS)
 - Idle line: tx must idle HIGH between packets
 - Packet rate: up to 20Hz (50ms between packets) — well within 
   115200 baud capacity
+
+### Hardware Build Notes — PWM Noise Isolation (MANDATORY)
+- L298N motor switching generates high-frequency transients on the motor power rail
+- Motor power rail decoupling: 100nF ceramic + 100µF electrolytic capacitor placed close to L298N motor supply pins
+- Star ground topology REQUIRED: analog ground (preamp, ADC) and motor ground (L298N, motors)
+  kept on separate copper paths, joined at ONE point only at the LiPo negative terminal.
+  Mixing analog/motor grounds at any intermediate node couples switching transients into preamp/ADC.
+- MCP6022/TLV2462 VCC: ferrite bead (e.g. BLM18PG221SN1) in series on preamp VCC pin
+  to block motor switching noise from entering op-amp supply rail and modulating gain stage
 
 
 
@@ -277,13 +291,17 @@ AD9226 parallel input (12-bit, 65MSPS)
 
 \- Peripherals: L298N H-bridge (motor control), MPU-6050 IMU (I2C),
 
-&#x20; JSN-SR04T waterproof ultrasonic (collision avoidance, triggers <25cm)
+&#x20; JSN-SR04T waterproof ultrasonic (collision avoidance, ESTOP at <30cm — raised from 25cm; JSN-SR04T blind zone is 25cm, 25cm threshold risks missing obstacles in sensor dead zone)
 
 \- Publishes: /imu/data, /odom
 
 \- Subscribes: /cmd\_vel (Twist)
 
 \- PWM ceiling: 80% max duty cycle enforced in firmware (L298N ~2V drop → 9V effective at 80% on 11.1V rail; full duty risks over-voltage on thrusters)
+
+\- L298N ENA/ENB: MUST use ESP32 LEDC hardware PWM channels (not GPIO toggle) to maintain clean ≤80% duty cap. Suggested: ENA → GPIO25 (LEDC ch0), ENB → GPIO26 (LEDC ch1) — verify against MPU-6050 I2C pins (GPIO21/22) and UART pins before wiring.
+
+\- Stall-current protection (MANDATORY, Week 6 firmware): if estimated motor current exceeds 1.5A per channel (via shunt+ADC or estimated from PWM duty × V_bus), immediately cut PWM to zero for 500ms then resume at 50% duty. LICHIFIT RF-370 stall = 5–8.6A → destroys L298N at sustained stall. Do NOT rely solely on the duty cap. See DL-4.
 
 \- Status: not started
 
@@ -333,7 +351,9 @@ AD9226 parallel input (12-bit, 65MSPS)
 \### Propulsion
 
 \- 2× LICHIFIT RC Jet Boat Underwater Motor (RF-370 class, ASIN B07WY4MDYZ) — NOT YET ORDERED
-&#x20; (replaced 545-class: 545 ~3.6A exceeds L298N 2A/3A rating; RF-370 stall <1.8A. Drive at ~9V via PWM duty cap. Buy 2 kits — spare-pair hedge. See DL-2.)
+&#x20; (replaced 545-class: 545 ~3.6A exceeds L298N 2A/3A rating. Drive at ~9V via PWM duty cap. Buy 2 kits — spare-pair hedge. See DL-2.)
+  WARNING (Jun 25 component audit): LICHIFIT 16800-RPM variant stall current = 5–8.6A at ~9V — EXCEEDS L298N 3A peak on prop stall.
+  Running current ~0.5–0.8A/motor is fine. MITIGATION REQUIRED: firmware stall-current trip in ESP32 motor_driver (cut PWM if current >2A for >100ms via shunt+ADC). Bench-measure actual stall current at 9V before hull assembly. Do NOT rely solely on the PWM duty cap.
 
 \- Driver: L298N dual H-bridge ✅ delivered Jun 2026
 
@@ -429,13 +449,13 @@ mission\_state\_machine node
 
 collision\_safety\_node
 
-&#x20; /collision/range\_cm < 25cm → hard ESTOP override on /cmd\_vel
+&#x20; /collision/range\_cm < 30cm → hard ESTOP override on /cmd\_vel (raised from 25cm — JSN-SR04T blind zone is 25cm; 25cm threshold could miss obstacles in sensor dead zone)
 
 
 
 motor\_driver\_node
 
-&#x20; subscribes /cmd\_vel → drives L298N PWM (scale linear.x to ≤80% PWM duty; firmware hard cap)
+&#x20; subscribes /cmd\_vel → drives L298N PWM via LEDC channels (≤80% duty hard cap); stall-current trip: cut PWM if >1.5A/channel for >~100ms, resume at 50% duty after 500ms
 
 
 
@@ -562,7 +582,8 @@ telemetry\_node
 
 \- Thrusters: 2× LICHIFIT RC Jet Boat Underwater Motor (RF-370 class, ASIN B07WY4MDYZ) — ORDER NOW
 &#x20; \* Buy **2 kits (~$48)**: each kit ships a CW+CCW pair (one kit = one full vehicle set); 2nd kit is a spare-pair hedge against documented DOA / 12V burn-out reviews (see DL-2)
-&#x20; \* REJECTED the 545-class (~$65/pair): ~3.6A draw STRUCTURALLY EXCEEDS the purchased L298N (2A cont / 3A peak per channel). RF-370 stall <1.8A → L298N PASS
+&#x20; \* REJECTED the 545-class (~$65/pair): ~3.6A draw STRUCTURALLY EXCEEDS the purchased L298N (2A cont / 3A peak per channel). RF-370 running current ~0.5–0.8A → L298N PASS at running load
+  \* WARNING (Jun 25 component audit): LICHIFIT 16800-RPM stall = 5–8.6A — L298N EXPOSED ON STALL. Firmware stall-current trip REQUIRED (ESP32: cut PWM if >2A for >100ms). Bench-measure stall at 9V before hull assembly.
 &#x20; \* hw-validation CONDITION: PWM duty cap so motor sees ~9V (12V burns these out); L298N's ~2V drop helps but set an explicit ceiling
 &#x20; \* GATE before hull final assembly (DL-2): bench-verify ≥150g/motor (200g target) with a luggage scale BEFORE any thruster is epoxied/glanded in
 
