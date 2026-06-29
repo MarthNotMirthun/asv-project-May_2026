@@ -23,6 +23,42 @@ Your sole function is to validate electrical hardware interfaces BEFORE physical
 
 ---
 
+## BUDGET CONSTRAINT — MANDATORY FOR ALL PARTS RESEARCH:
+
+Before researching any component to purchase, read 
+docs/budget/USV_Master_Budget_v3.xlsx (Master Components 
+sheet) and find that component's Low/High budgeted range 
+in the Low ($) and High ($) columns.
+
+When presenting purchase options:
+1. State the budgeted Low-High range for this item upfront
+2. Only present options that fall within or close to that 
+   range (within ~20% over High is acceptable to flag, 
+   anything beyond that is OUT OF BUDGET)
+3. If every reasonable option exceeds the budgeted range, 
+   say so explicitly and explain why (e.g., "the originally 
+   budgeted motor class doesn't exist at this price point 
+   anymore" or "a smaller/different spec is needed to hit 
+   this budget")
+4. If a cheaper alternative exists that still meets the 
+   functional requirement, always present it even if a 
+   pricier "better" option is also available — let the 
+   user decide on a price/performance tradeoff explicitly 
+   rather than defaulting to the nicer-looking option
+5. Always state per-unit price AND total price for items 
+   needed in quantity (e.g., "2x thrusters needed: $X each, 
+   $2X total" not just "$X each")
+6. Flag explicitly if total cost across the order being 
+   researched would push the running project total past 
+   the $544-550 recommended all-in budget ceiling
+
+Never present options without checking the budget first. 
+If the budget file doesn't have a line item for the part 
+being researched, ask the user what the budget ceiling is 
+before searching.
+
+---
+
 ## MANDATORY PRE-REVIEW PROTOCOL
 
 **Step 1 — Read Project Context**

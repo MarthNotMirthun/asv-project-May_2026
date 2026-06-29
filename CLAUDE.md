@@ -8,9 +8,9 @@
 
 \# Hard Demo Deadline: August 10, 2026
 
-\# Current Status: Week 4 of 11 — All 9 FPGA modules VERIFIED, FIR banks validated at 38.5–41.5 kHz (FC-7), full pipeline integration UNBLOCKED
+\# Current Status: Week 5 CLOSED — zero engineering tasks completed; Week 6 starts Jun 29; top_level.v + Gowin synthesis are Day 1-2 priorities; MCP6022 ORDER REQUIRED; 43 days to demo
 
-\# Last Updated: June 26, 2026
+\# Last Updated: June 28, 2026
 
 
 
@@ -569,27 +569,30 @@ telemetry\_node
 
 
 
-\### 🚚 In Transit
+\### 🚚 In Transit (ordered Jun 26, 2026)
+
+\- LICHIFIT RF-370 underwater thrusters ×2 kits (CW+CCW pair per kit, ASIN B07WY4MDYZ, ~$48) — ORDERED Jun 26
+&#x20; \* GATE before hull bonding: bench-verify stall current at 9V (expected 5–8.6A — destroys L298N without firmware stall trip); verify ≥150g/motor thrust; implement ESP32 stall-current trip (>2A → cut PWM) BEFORE any thruster is epoxied in
+\- Otdorpatio IP67 enclosure B0DX781Z3W (160×160×90mm external, ~150×150×80mm internal, 4×M16 glands included) — ORDERED Jun 26
+&#x20; \* Confirmed from Amazon listing: 160×160×90mm. Fits Pi4+Tang Nano+preamp+wiring (~145×115mm occupied). Need 3–4 additional M16/M12 glands for 7 penetrations.
+\- IRLZ44N MOSFET 5-pack (Infineon IRLZ44NPBF, TO-220) — ORDERED Jun 26 — Vgs(th)=1–2V; fully enhanced at 3.3V ESP32 ✓
 
 
 
 \### 🔴 Not Yet Ordered — Action Required
 
-\- Preamp replacement: wideband fixed-gain op-amp (e.g. MCP6022, TLV2462) or ultrasonic receiver board — ORDER NOW
-&#x20; \* MAX9814 (arrived Jun 2026) is DISQUALIFIED: audio AGC band (20 Hz–20 kHz), cannot pass 40 kHz signals; AGC flattens SNR-gradient needed for FC-6 homing
-&#x20; \* Replacement must be fixed-gain (no AGC), centered on 40 kHz, ~$2–8. AC-couple output to match AD9226 ±1V input range (VREF=1.0V)
-&#x20; \* See Preamp Hardware Contract in CLAUDE.md
+\- **MCP6022-I/P ×4** — ORDER NOW (Prime delivery Jun 29–30)
+&#x20; \* DEFINITIVE CHOICE per DL-5 (Jun 28): MCP6022 (GBW=10MHz, DS20001685F) over MCP6002 (GBW=1MHz)
+&#x20; \* Two-stage cascade: Rf=9.1kΩ / Rg=1kΩ per stage → ×102 total (~40dB); virtual ground 100kΩ+100kΩ to 2.5V; AC couple 100nF to AD9226; rebias 10kΩ from VREF (1.0V)
+&#x20; \* MCP6002 is acceptable fallback ONLY if MCP6022 is out of stock; do NOT order MCP6002 proactively
+&#x20; \* NE5532P (owned): permanently disqualified — needs ±5V split supply, not rail-to-rail on 5V single
 
-\- Thrusters: 2× LICHIFIT RC Jet Boat Underwater Motor (RF-370 class, ASIN B07WY4MDYZ) — ORDER NOW
-&#x20; \* Buy **2 kits (~$48)**: each kit ships a CW+CCW pair (one kit = one full vehicle set); 2nd kit is a spare-pair hedge against documented DOA / 12V burn-out reviews (see DL-2)
-&#x20; \* REJECTED the 545-class (~$65/pair): ~3.6A draw STRUCTURALLY EXCEEDS the purchased L298N (2A cont / 3A peak per channel). RF-370 running current ~0.5–0.8A → L298N PASS at running load
-  \* WARNING (Jun 25 component audit): LICHIFIT 16800-RPM stall = 5–8.6A — L298N EXPOSED ON STALL. Firmware stall-current trip REQUIRED (ESP32: cut PWM if >2A for >100ms). Bench-measure stall at 9V before hull assembly.
-&#x20; \* hw-validation CONDITION: PWM duty cap so motor sees ~9V (12V burns these out); L298N's ~2V drop helps but set an explicit ceiling
-&#x20; \* GATE before hull final assembly (DL-2): bench-verify ≥150g/motor (200g target) with a luggage scale BEFORE any thruster is epoxied/glanded in
+\- **Additional M16/M12 cable glands** (4-pack, ~$5–8) — ORDER WITH MCP6022 — enclosure ships with only 4; need 7 penetrations total
 
-\- IP65 waterproof enclosure + M12 cable glands — ORDER NOW
+\- **Pololu D24V50F5 5V/5A buck converter** (~$12) — ORDER IF owned buck < 4A rated or vcgencmd shows throttling
+&#x20; \* Check owned converter chip marking Week 6 Day 1; run vcgencmd get_throttled under full ROS 2 load; if non-zero → ORDER IMMEDIATELY
 
-\- PVC pipe, end caps, L-brackets, epoxy, silicone — HOME DEPOT RUN
+\- PVC pipe 4" Sch 40 (~1.5m), 1" PVC (~1m), end caps ×4, L-brackets ×10, JB Weld MarineWeld, marine silicone — HOME DEPOT RUN by Jun 30 (Week 6 Day 2)
 
 
 
@@ -597,7 +600,7 @@ telemetry\_node
 
 
 
-\## CURRENT BUILD STATUS (Week 4 of 11, June 16 2026)
+\## CURRENT BUILD STATUS (Week 5 closed / Week 6 starts Jun 29, 2026)
 
 
 
@@ -629,37 +632,35 @@ telemetry\_node
 
 
 
-\### ⏳ IMMEDIATE NEXT TASKS (Week 4 priority order, updated Jun 18)
+\### ⏳ WEEK 6 PRIORITIES (Jun 29–Jul 5) — carry-over from Week 5
 
-1\. ✅ Matched filter correlators ×2 — DONE Jun 16
+1\. **Jun 29 — top_level.v**: chain all 9 verified modules end-to-end (AD9226→CIC→FIR×2→MF×2→peak_detector→packet_framer→uart_tx); simulate for X/Z states
+&#x20;  ORDER MCP6022-I/P ×4 on Amazon Prime (if not yet ordered)
+&#x20;  Check owned buck converter chip marking; order Pololu D24V50F5 if < 4A rated
 
-2\. ✅ Peak detector + packet framer — DONE Jun 17
+2\. **Jun 30 — Gowin EDA synthesis**: run full design, get timing report and utilization; fix any negative slack SAME DAY
+&#x20;  HOME DEPOT RUN with Dad: 4" Sch 40 PVC, 1" PVC, end caps, L-brackets, JB Weld, marine silicone
 
-3\. ✅ FIR coefficient re-spin — DONE Jun 18 (both banks re-spun to 38.5–41.5 kHz passband per FC-7, both validated, verilog-sim-runner ALL PASS)
+3\. **Jul 1 — Hull fabrication start**: cut and test-fit PVC pontoons; MCP6022 arrives (Prime)
 
-4\. Full pipeline integration: chain AD9226 → CIC → FIR banks → matched filters → peak detector → packet framer → UART into top-level module
+4\. **Jul 2 — Layer A bench check**: TCT40-16T→MOSFET→5V→air path→TCT40-16R scope; frequency sweep 37–43 kHz in 250 Hz steps; confirm -6dB band spans 38.5–41.5 kHz (narrow chirp if not)
+&#x20;  uart_rx.v: UART inbound path for K_SHIFT/FLOOR config + matched-filter reference chirp BSRAM load
 
-&#x20;  (verify end-to-end latency; simulate for X/Z states; confirm all 9 modules connect correctly)
+5\. **Jul 3 — ESP32 vehicle firmware**: micro-ROS init, LEDC PWM on GPIO25/26 (ENA/ENB), stall-current monitoring, MPU-6050 I2C, JSN-SR04T 30cm ESTOP
 
-5\. Synthesis verification: run full design through Gowin EDA, verify positive timing slack at 27MHz
+6\. **Jul 4-5 — ESP32 buoy firmware**: LFM chirp generation (38.5→41.5 kHz up-sweep / 41.5→38.5 kHz down-sweep), IRLZ44N drive at 40 kHz, 3× TCT40-16T per buoy
 
-&#x20;  (both .cst files in place, ready for layout)
-
-6\. Order replacement preamp: MAX9814 disqualified (audio-only, cannot pass 40 kHz) — replace with fixed-gain wideband op-amp front end (e.g., MCP6022 ~10 MHz GBW or TLV2462); ~$2–8 impact
-
-7\. Coordinate Home Depot run with Dad (PVC, epoxy, brackets, silicone) — hull assembly still pending
+Week 6 exit criterion: top_level.v synthesized with positive timing slack; hull pontoons fabricated; Layer A confirms acoustic path working
 
 
 
-\### 🔴 CRITICAL PATH WARNING
+\### 🔴 CRITICAL PATH WARNING (updated Jun 28)
 
-FPGA matched filter is the hardest and most time-sensitive component.
-
-Weeks 3–6 must be FPGA-focused. Two weeks of carryover already exist.
-
-The .cst timing constraints file must be written immediately —
-
-it unlocks all downstream FPGA synthesis work.
+Week 5 was completely lost — zero tasks completed. 43 days remain.
+Pool test #1 is FIXED at Week 9 (Jul 20). This cannot slip.
+top_level.v + Gowin synthesis are the highest-value FPGA actions remaining.
+Synthesis converts 9 isolated simulations into a proven hardware design.
+A synthesis failure found Week 6 is solvable; found Week 7 or later is a crisis.
 
 
 
@@ -683,8 +684,8 @@ it unlocks all downstream FPGA synthesis work.
 #   W9:  Jul 20–Jul 26
 #   W10: Jul 27–Aug 02
 #   W11: Aug 03–Aug 09
-# Today June 16 2026 = Week 4 Day 2
-# Deadline August 10 2026 falls the day after W11 ends — hard cutoff
+# Today June 28 2026 = Week 5 Day 7 (last day of Week 5) / Week 6 starts tomorrow Jun 29
+# Deadline August 10 2026 falls the day after W11 ends — hard cutoff — 43 days remaining
 
 
 
@@ -692,17 +693,17 @@ it unlocks all downstream FPGA synthesis work.
 
 |---|---|---|---|
 
-| 1  | May 25–May 31 | Foundation + ordering        | 🔴 Partial |
-| 2  | Jun 01–Jun 07 | AD9226 interface + hull start | 🔴 Partial |
-| 3  | Jun 08–Jun 14 | Timing constraints + FIR banks verified | ✅ Done |
-| 4  | Jun 15–Jun 21 | Matched filters + peak detector | 🟡 Current |
-| 5  | Jun 22–Jun 28 | Pipeline integration + synthesis | 🎯 Milestone |
-| 6  | Jun 29–Jul 05 | ESP32 micro-ROS + buoy firmware (enforce PWM ≤80% duty cap) | ⚪ |
-| 7  | Jul 06–Jul 12 | ROS 2 nodes + PID homing     | ⚪ |
-| 8  | Jul 13–Jul 19 | Mission state machine + display | ⚪ |
-| 9  | Jul 20–Jul 26 | Pool test #1                 | 🎯 Milestone |
-| 10 | Jul 27–Aug 02 | Pool test #2 + tuning        | ⚪ |
-| 11 | Aug 03–Aug 09 | Polish + demo video          | 🏁 Deadline |
+| 1  | May 25–May 31 | Foundation + ordering                                    | 🔴 Partial |
+| 2  | Jun 01–Jun 07 | AD9226 interface + hull start                            | 🔴 Partial |
+| 3  | Jun 08–Jun 14 | Timing constraints + FIR banks verified                  | ✅ Done |
+| 4  | Jun 15–Jun 21 | Matched filters + peak detector — ALL 9 modules verified | ✅ Done |
+| 5  | Jun 22–Jun 28 | Pipeline integration + synthesis (LOST — zero tasks done) | 🔴 Lost |
+| 6  | Jun 29–Jul 05 | top_level.v + Gowin synthesis + Layer A + ESP32 + hull start | 🟡 Current |
+| 7  | Jul 06–Jul 12 | ROS 2 nodes + Layer B ADC capture                        | ⚪ |
+| 8  | Jul 13–Jul 19 | Full system integration + dry-land E2E rehearsal         | ⚪ |
+| 9  | Jul 20–Jul 26 | Pool test #1 (HARD DATE — cannot slip)                   | 🎯 Milestone |
+| 10 | Jul 27–Aug 02 | Pool test #2 + tuning + two-buoy attempt                 | ⚪ |
+| 11 | Aug 03–Aug 09 | Polish + demo video only (no new features)               | 🏁 Deadline |
 
 
 

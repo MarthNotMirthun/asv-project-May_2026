@@ -1,6 +1,6 @@
 # TRAJECTORY.md — ASV Technical Compass
 
-**Last Updated:** June 26, 2026 (Week 5 Day 5 of 11 — component audit firmware requirements added: stall-current protection, LEDC PWM, ESTOP threshold, preamp gain, PWM noise isolation)
+**Last Updated:** June 28, 2026 (Week 5 Day 7 — definitive component audit complete; 6-week timeline revised; DL-5 preamp decision locked; 43 days to August 10 demo)
 
 This is the living technical compass for the GPS-denied acoustic-homing
 catamaran USV. It records the **verified pipeline state**, the
@@ -334,87 +334,74 @@ silently wrong data. Complete ALL before applying power to a wired ADC.
 
 ---
 
-## 4. CRITICAL PATH — Pipeline integration + synthesis + ROS 2 (as of June 25, 2026)
+## 4. CRITICAL PATH — Revised 6-Week Plan (as of June 28, 2026)
 
-**Peak detector and packet framer are DONE (validated Jun 17). All 9 FPGA
-modules are verified. The critical path has shifted entirely to integration,
-synthesis, and the ROS 2/hardware stack.**
+**All 9 FPGA modules simulation-verified. Week 5 lost — zero tasks completed from
+plan. Week 6 starts tomorrow June 29. 43 days remain to August 10 demo.**
 
-### ⚠️ SCHEDULE STATUS (June 25 — Week 5 Day 4)
+### ⚠️ SCHEDULE STATUS (June 28 — Week 5 Day 7, last day of Week 5)
 
-Six days of zero engineering progress (Jun 19–24) on top of the two weeks
-of existing carryover. Pool test #1 target is Week 9 (Jul 20) — **25 days
-away.** An integrated vehicle with working acoustics, propulsion, and ROS 2
-must exist by then. Nothing in the back half of the project (ROS 2, ESP32
-firmware, hull, buoys, pool tests) has started.
+Week 5 actual completions: procurement (thrusters, enclosure, IRLZ44N ordered Jun 26),
+definitive component audit complete (docs/component_audit_june28.md).
+Week 5 NOT completed: top_level.v, Gowin synthesis, Layer A bench check, hull materials,
+MCP6022 order. All carry into Week 6 as Day 1–2 priorities.
 
-**The hard truth:** "All 9 modules verified" describes isolated Verilog
-simulations. The FPGA design has never been synthesized, never run on
-hardware, and has never been wired into a top-level module. Until synthesis
-passes, resource estimates (HW multipliers, BSRAM) remain unverified
-simulation-phase numbers. This is the single largest de-risking action
-remaining on the FPGA side.
+**The hard truth (unchanged):** 9 modules verified = 9 isolated simulations. The FPGA
+design has never been synthesized, never run on hardware, never wired into a top-level
+module. Until Gowin synthesis passes, resource estimates are unverified. This is the
+highest-value de-risking action remaining on the FPGA side.
 
-### Unordered parts (as of June 25) — shipping latency is compounding
+### Revised Weekly Plan (Weeks 6–11)
 
-| Part | Why it gates | Action |
-|---|---|---|
-| MCP6022-I/P + TLV2462CP (~$5) | Gates ALL acoustic bench testing (Layer A, Layer B, CQ-1 calibration) | ORDER TODAY |
-| LICHIFIT RF-370 thrusters ×2 kits (~$48) | Gates hull assembly, pool test #1, propulsion demo | ORDER TODAY |
-| IP65 enclosure + M12 glands (~$20-25) | Gates electronics bay, waterproofing, pool readiness | ORDER THIS WEEK |
-| PVC pipe, end caps, L-brackets, epoxy, silicone | Gates hull build (requires Home Depot run with Dad) | THIS WEEK |
+| Week | Dates | Phase | Primary Task | Exit Criterion | Deps |
+|---|---|---|---|---|---|
+| 6 🔴 | Jun 29–Jul 5 | Integration + Hardware Start | top_level.v → Gowin synthesis → Layer A bench → ESP32 skeleton → hull start | top_level.v synthesizes with positive slack; Layer A confirms acoustic path reaches scope; hull pontoons cut | All 9 sim-verified modules |
+| 7 🔴 | Jul 6–Jul 12 | ROS 2 + Layer B | fpga_uart_node, acoustic_homing_node, dead_reckoning_node, collision_safety_node; Layer B ADC capture | Pi parses FPGA packets; homing node subscribes /acoustic/corr_snr; Layer B: valid ADC samples reach Pi | Synthesis passed; MCP6022 in hand; PV-1/2/3 cleared |
+| 8 🔴 | Jul 13–Jul 19 | Full System Integration | mission_state_machine, motor_driver_node, hull completion, dry-land E2E rehearsal, buoy assembly | Dry-land E2E: FPGA→UART→Pi→/cmd_vel→motors; thrust ≥150g/motor; stall-trip confirmed | Layer B working; hull fabricated; thrusters arrived |
+| 9 🎯 | Jul 20–Jul 26 | Pool Test #1 | One-buoy acoustic homing, CQ-1 calibration | Vehicle homes to within ~0.5m of Buoy 1 on video; /acoustic/corr_snr vs distance recorded | Full dry-land E2E rehearsal passed |
+| 10 🔴 | Jul 27–Aug 2 | Pool Test #2 + Tuning | Fix W9 regressions; two-buoy if W9 was clean | At least one clean buoy-homing run on video; CQ-1 threshold set in acoustic_homing_node | W9 pool test and rosbag capture |
+| 11 🏁 | Aug 3–Aug 9 | Polish + Demo Video | Demo video, clean git history, README | Demo video committed to repo; code clean | W10 clean run on video |
 
-Every day these are unordered is shipping latency stacked on the existing 6-day stall.
-
-### Absolute Minimum Viable Sequence (46 days to Aug 10)
-
-The cut-down demo that still hits the portfolio goal:
-**One-buoy acoustic homing in a pool, on video, by Aug 10.**
-Two-buoy sequential homing is the full spec; treat it as a stretch goal.
+### Week 6 Day-by-Day (Jun 29–Jul 5) — critical detail
 
 ```
-TODAY         — Order preamp (MCP6022 + TLV2462). Order thrusters. Order enclosure.
-W5 (rest)     — Commit loose sim outputs to git (out_mf1, out_mf2, out_pd, out_fir1, out_fir2)
-                Write top_level.v: chain all 9 modules end-to-end
-                Sim the integrated pipeline for X/Z states
-                Run Gowin EDA synthesis — get the timing/utilization report
-                (THIS IS THE HIGHEST-VALUE DE-RISK REMAINING ON THE FPGA SIDE)
-W6 Jun 29     — Home Depot run with Dad → start hull
-                Layer A bench check (analog scope, TCT40-16R/T + new preamp when it arrives)
-                Start fpga_uart_node (Pi, Python) — parse 8-byte packet, publish /acoustic/corr_snr
-W7 Jul 6      — Layer B: AD9226 + FPGA in loop reading real ADC samples (after PV-1/2/3 cleared)
-                acoustic_homing_node skeleton: SCAN→ACQUIRING→HOMING state machine
-                ESP32 motor firmware: LEDC PWM for ENA/ENB (not GPIO toggle), stall-current trip >1.5A/ch (see DL-4); buoy chirp firmware for 40 kHz sweep
-W8 Jul 13     — Mission state machine, vehicle integration, dry-land E2E rehearsal
-                Bench thrust test: RF-370 motors at ~9V, verify ≥150g/motor (DL-2 GATE)
-W9 Jul 20     — POOL TEST #1: One buoy, home on corr_snr gradient, record CQ-1 calibration
-W10 Jul 27    — Fix regressions, try two-buoy sequential if W9 was clean
-W11 Aug 3     — Demo video, clean commit history, README
+Jun 29 (Mon) — top_level.v: chain all 9 modules (AD9226→CIC→FIR×2→MF×2→peak→framer→UART)
+               ORDER MCP6022-I/P ×4 on Amazon Prime (if not yet ordered)
+               Verify owned buck converter chip marking — order Pololu D24V50F5 if < 4A rated
+
+Jun 30 (Tue) — Gowin EDA synthesis: run full design, get timing and utilization report
+               Fix any timing violations SAME DAY (do not let them carry)
+               HOME DEPOT RUN with Dad: PVC pipe, end caps, L-brackets, epoxy, silicone
+               Boot Pi with ROS 2 stubs → vcgencmd get_throttled must read 0x0
+
+Jul 1 (Wed)  — Hull fabrication: cut PVC pontoons, test fit cross members
+               MCP6022 arrives (2-day Prime from Jun 29 order) → build preamp on breadboard
+
+Jul 2 (Thu)  — LAYER A BENCH CHECK: TCT40-16T → IRLZ44N→MOSFET→5V → air path → TCT40-16R
+               Frequency sweep 37–43 kHz in 250 Hz steps; scope RX output; record amplitude
+               uart_rx.v: UART inbound path for K_SHIFT/FLOOR config + MF reference chirp load
+
+Jul 3 (Fri)  — ESP32 vehicle firmware skeleton: micro-ROS init, LEDC PWM ENA/ENB (GPIO25/26),
+               stall-current monitoring via shunt+ADC, 30cm ESTOP, MPU-6050 I2C
+
+Jul 4–5 (Sat-Sun) — ESP32 buoy firmware: LFM chirp generation (38.5→41.5 kHz up-sweep /
+               41.5→38.5 kHz down-sweep), IRLZ44N drive at 40kHz, 3× TCT40-16T per buoy
 ```
 
-### What to cut first if the schedule slips further
+### What to cut if the schedule slips further
 
-1. Second buoy (do one-buoy homing; document two-buoy as designed-but-not-demo'd)
-2. Egress maneuver (FC-8) — simplify to a fixed timeout reverse before SCAN_2
-3. Telemetry / Arduino shore display
-4. Collision avoidance polish (keep the safety ESTOP logic; skip distance display)
+1. **Second buoy** — do one-buoy homing; document two-buoy as designed-but-not-demo'd
+2. **Egress maneuver (FC-8)** — simplify to fixed-duration reverse before SCAN_2
+3. **Telemetry / Arduino shore display**
+4. **Collision avoidance display** — keep ESTOP safety logic; skip range display
 
-**Never cut:** FPGA synthesis proof, one clean acoustic-homing run in water on video,
-and a coherent git commit history. These are the portfolio deliverables.
+**Never cut:** Gowin synthesis proof, Layer A/B bench validation, one clean acoustic-homing
+run in water on video, coherent git history. These are the portfolio deliverables.
 
-### Next two actions (do in this order, today)
-
-1. **Order MCP6022-I/P + TLV2462CP** — ~$5, blocks every acoustic test downstream.
-   Every hour unordered is shipping latency you cannot buy back.
-2. **Commit the loose sim outputs** that prove W4's hardest modules are real:
-   ```
-   git add fpga/sim/out_mf1.out fpga/sim/out_mf2.out fpga/sim/out_pd.out
-   git add fpga/sim/out_fir1.out fpga/sim/out_fir2.out
-   git commit -m "Week 4 sim evidence: matched filters, peak detector, FIR banks validated"
-   ```
-
-Then write `top_level.v`. The synthesis pass converts 9 isolated simulations into a
-real, proven FPGA design. That is the current critical path item.
+**Absolute minimum viable demo (MVS):** Stationary bench demo on video — Pi receives
+FPGA UART packets, publishes /acoustic/corr_snr, logs acoustic response as transducer
+is moved toward buoy. Captures full FPGA signal chain even if hull is not pool-ready.
+This is the last-resort fallback; the target is still a moving vehicle in water.
 
 ---
 
@@ -592,6 +579,48 @@ Refinement at this stage is a focus-avoidance pattern, not engineering.
 
 **Rejected — wait on parts order until synthesis is confirmed:** Synthesis
 takes a day; parts take a week to ship. These are parallel actions, not sequential.
+
+### DL-5 — Preamp: MCP6022-I/P selected over MCP6002-I/P (June 28, 2026, Week 5 Day 7)
+
+**Question:** MCP6002-I/P (GBW=1MHz, Prime-available, ~$7/10-pack) vs MCP6022-I/P (GBW=10MHz,
+also Prime-available, ~$7–15/10-pack). Which to order? Is MCP6002's 0.7dB/stage rolloff
+at 41.5kHz acceptable for this matched filter application?
+
+**Decision: ORDER MCP6022-I/P. MCP6002 is technically acceptable but MCP6022 is the correct
+engineering choice since both are Prime-available at similar delivery timelines.**
+
+Rationale:
+1. **MCP6002 analysis** (Microchip DS20001733L — confirmed): GBW=1MHz. At G=10/stage:
+   closed-loop BW=100kHz. Rolloff at 41.5kHz: -0.69dB/stage → -1.38dB total (two stages).
+   Phase at 41.5kHz: 22.5°/stage → 45° total (two stages). Differential phase across 3kHz
+   band: 2.8°. This is technically acceptable for a BT=15 matched filter (correlation peak
+   loss < 0.2dB; phase differential < 3° causes negligible discrimination degradation).
+   Supply: 1.8–6V; rail-to-rail I/O; Iq=100μA.
+
+2. **MCP6022 analysis** (Microchip DS20001685F — confirmed): GBW=10MHz. At G=10/stage:
+   closed-loop BW=1MHz. Rolloff at 41.5kHz: -0.0008dB (negligible). Phase: <0.3° total
+   across band. Offset voltage < 0.5mV (10× better than MCP6002). Supply: 2.5–5.5V;
+   rail-to-rail I/O; Iq=1.0mA.
+
+3. **Why MCP6022 despite higher Iq:** Both parts are Prime-available with identical
+   delivery timelines (Jun 29–30 if ordered today). There is no shipping advantage to
+   MCP6002. MCP6022 gives 14× more bandwidth margin, cleaner phase response, and lower
+   offset — all free at the same price/delivery. MCP6002 is acceptable as a fallback
+   ONLY if MCP6022 goes out of stock.
+
+**Rejected — MCP6002:** Technically acceptable but unnecessary compromise when MCP6022
+is equally accessible.
+**Rejected — LM358:** GBW=1MHz → at G=10: BW=100kHz; at single stage G=100: BW=10kHz
+(below the 40kHz signal). Disqualified.
+**Rejected — NE5532P:** Requires ±5V split supply (min ±5V); not rail-to-rail; completely
+out of spec on 5V single supply. Disqualified (confirmed from onsemi datasheet Jun 25).
+
+**Action:** ORDER MCP6022-I/P ×4 minimum on Amazon Prime. Build two-stage non-inverting
+cascade: Rf=9.1kΩ, Rg=1kΩ per stage → G≈10.1/stage → ×102 total (~40dB).
+Virtual ground: 100kΩ+100kΩ divider from 5V → 2.5V. AC couple to AD9226 with 100nF
+cap; rebias with 10kΩ from AD9226 VREF (1.0V).
+
+---
 
 ### DL-2 — Thruster downgrade 545 → RF-370 (LICHIFIT) + thrust gate (decided June 17, 2026, Week 4 Day 3)
 

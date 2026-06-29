@@ -1,3 +1,50 @@
+## 2026-06-28 — Week 5 close / Week 6 start: Definitive component audit + timeline revamp
+
+**Week 5 summary:** Zero engineering tasks completed from the planned workload
+(top_level.v, Gowin synthesis, Layer A bench check, hull materials not purchased).
+Parts ordered Jun 26: LICHIFIT RF-370 thrusters ×2 kits, Otdorpatio IP67 enclosure
+B0DX781Z3W (160×160×90mm external), IRLZ44N MOSFET 5-pack. MCP6022 NOT yet ordered.
+
+**Definitive component audit complete (docs/component_audit_june28.md):**
+
+Key verdicts vs June 25 audit:
+- MCP6022-I/P CONFIRMED as definitive preamp choice (DL-5 locked):
+  MCP6022 (GBW=10MHz, DS20001685F) vs MCP6002 (GBW=1MHz, DS20001733L) — both
+  Prime-available. MCP6022 gives 14× more BW margin and cleaner phase response;
+  since both are Prime-available at similar price, MCP6022 is correct engineering choice.
+  MCP6002 is technically acceptable fallback only if MCP6022 is out of stock.
+- IRLZ44N VERIFIED: Vgs(th)=1–2V → fully enhanced at 3.3V ESP32 gate.
+  Switching loss at 40kHz: ~3.3mW (negligible). Correct part for buoy transducer drive.
+- Enclosure B0DX781Z3W CONFIRMED: 160×160×90mm external from Amazon listing.
+  Internal ~150×150×80mm → all components fit. Need 3–4 additional M16/M12 glands.
+- TCT40-16T/R bandwidth: resonance 40.1kHz confirmed. -3dB bandwidth estimated ±0.65kHz
+  (Q~30). Chirp endpoints at 38.5/41.5kHz may be at/past -3dB skirts.
+  Layer A bench sweep MANDATORY Jul 2 before chirp finalization.
+- Buck converter: Pi shows throttled=0x0 at idle (35.0°C). MUST verify under full
+  ROS 2 load Week 6 Day 1. Order Pololu D24V50F5 (~$12) if < 4A rated.
+- All other components: unchanged from June 25 audit verdicts.
+
+**TRAJECTORY.md updated:**
+- Section 4 replaced with revised 6-week plan (Weeks 6–11) with day-by-day Week 6 breakdown
+- DL-5 added: MCP6022 over MCP6002 decision with full datasheet math
+- Header updated to June 28
+
+**CLAUDE.md updated:**
+- Current Status updated: Week 5 closed, Week 6 priorities
+- Parts Status: thrusters/enclosure/IRLZ44N moved to 🚚 In Transit; MCP6022 and Pololu
+  buck added to 🔴 Not Yet Ordered
+- IMMEDIATE NEXT TASKS replaced with Week 6 day-by-day plan
+- Weekly timeline table updated: Week 4 ✅, Week 5 🔴 Lost, Week 6 🟡 Current
+
+**Week 6 Day 1 (Jun 29) first actions:**
+1. ORDER MCP6022-I/P ×4 on Amazon Prime (gates all acoustic testing)
+2. Write top_level.v (gates synthesis, gates pool test timeline)
+3. Check owned buck converter rating; order Pololu if < 4A
+
+43 days to August 10 demo.
+
+---
+
 ## 2026-06-19 — Post-commit hook installed (status-report + AIS-OS notification)
 
 ## 2026-06-18 — FIR banks VALIDATED at 38.5–41.5kHz - all 9 FPGA modules verified
