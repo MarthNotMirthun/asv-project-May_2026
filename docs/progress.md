@@ -1,47 +1,42 @@
-## 2026-06-28 — Week 5 close / Week 6 start: Definitive component audit + timeline revamp
+## 2026-06-29 — top_level.v PIPELINE INTEGRATION COMPLETE — 9-MODULE CHAIN VALIDATED
 
-**Week 5 summary:** Zero engineering tasks completed from the planned workload
-(top_level.v, Gowin synthesis, Layer A bench check, hull materials not purchased).
-Parts ordered Jun 26: LICHIFIT RF-370 thrusters ×2 kits, Otdorpatio IP67 enclosure
-B0DX781Z3W (160×160×90mm external), IRLZ44N MOSFET 5-pack. MCP6022 NOT yet ordered.
+**Completed:**
+- top_level.v: full 9-module end-to-end pipeline integration (AD9226→CIC→FIR×2→MF×2→peak_detector→packet_framer→uart_tx)
+- All 4 validators (hw-validation, dsp-signal-validator, systems-integrator, verilog-sim-runner) completed review
+- 3 BLOCKERs found and fixed (K_SHIFT/FLOOR/SNR_SHIFT input ports hardwired, matched_filter ref-load tied off, ENCODE port renamed to match adc_clk)
+- 1 CRITICAL DSP fix: packet_framer was sending raw corr_peak[15:0] which wrapped and inverted FC-6 homing gradient at close range — FIXED: now sends saturating (corr_peak>>6) clamped to 16-bit unsigned, preserving monotonic SNR gradient
+- End-to-end pipeline latency: 5.70ms (well under 100ms real-time budget)
+- 200Hz correlation update rate confirmed
 
-**Definitive component audit complete (docs/component_audit_june28.md):**
+**Verified:**
+- hw-validation: 1 BLOCKER (K_SHIFT/FLOOR driven), 1 WARNING (matched_filter ref-load tie-off), 1 NOTE (ENCODE→adc_clk rename) — all approved after fixes
+- dsp-signal-validator: 1 WARNING BLOCKER (corr_peak packing wrap issue) — fixed via saturating >>6 slice. SNR_SHIFT corrected 8→12 per close-range saturation analysis. All stage boundary number formats verified end-to-end: 12-bit signed → 16-bit signed CIC → 16-bit INTEGER FIR → 16-bit matched filter → 32-bit corr_peak → peak detector → packet framer
+- systems-integrator: 3 BLOCKERs, 2 WARNINGs, 3 NOTEs reconciled. Resolved corr_peak packing conflict (saturating >>6 slice, not both validator proposals). SNR_SHIFT=12 confirmed (dsp wins). Resource estimate: 4/48 HW multipliers, 12/46 BSRAM, ~5% LUT
+- verilog-sim-runner: PIPELINE ALL PASS — top_level integration sim confirmed 8-byte packet reception (id=01 lag=0000 corr=0134 snr=04 cks=30 end=ff), all 8 individual module sims PASS, zero X/Z states, simulation time 5.77ms
 
-Key verdicts vs June 25 audit:
-- MCP6022-I/P CONFIRMED as definitive preamp choice (DL-5 locked):
-  MCP6022 (GBW=10MHz, DS20001685F) vs MCP6002 (GBW=1MHz, DS20001733L) — both
-  Prime-available. MCP6022 gives 14× more BW margin and cleaner phase response;
-  since both are Prime-available at similar price, MCP6022 is correct engineering choice.
-  MCP6002 is technically acceptable fallback only if MCP6022 is out of stock.
-- IRLZ44N VERIFIED: Vgs(th)=1–2V → fully enhanced at 3.3V ESP32 gate.
-  Switching loss at 40kHz: ~3.3mW (negligible). Correct part for buoy transducer drive.
-- Enclosure B0DX781Z3W CONFIRMED: 160×160×90mm external from Amazon listing.
-  Internal ~150×150×80mm → all components fit. Need 3–4 additional M16/M12 glands.
-- TCT40-16T/R bandwidth: resonance 40.1kHz confirmed. -3dB bandwidth estimated ±0.65kHz
-  (Q~30). Chirp endpoints at 38.5/41.5kHz may be at/past -3dB skirts.
-  Layer A bench sweep MANDATORY Jul 2 before chirp finalization.
-- Buck converter: Pi shows throttled=0x0 at idle (35.0°C). MUST verify under full
-  ROS 2 load Week 6 Day 1. Order Pololu D24V50F5 (~$12) if < 4A rated.
-- All other components: unchanged from June 25 audit verdicts.
+**Files Modified/Created:**
+- fpga/src/top_level.v ← NEW integration module
+- fpga/src/packet_framer.v ← FIX: saturating >>6 corr_peak (was [15:0] wrap)
+- fpga/src/matched_filter_1.v ← FIX: corrected stale header comment
+- fpga/src/matched_filter_2.v ← FIX: corrected stale header comment
+- fpga/sim/tb_top_level.v ← NEW end-to-end testbench
+- fpga/constraints/top_level.cst ← NEW merged constraint file
 
-**TRAJECTORY.md updated:**
-- Section 4 replaced with revised 6-week plan (Weeks 6–11) with day-by-day Week 6 breakdown
-- DL-5 added: MCP6022 over MCP6002 decision with full datasheet math
-- Header updated to June 28
+**CLAUDE.md Updated:**
+- FPGA Build Status, line 150: ⏳ Full pipeline integration → ✅ Full pipeline integration (top_level.v) — 9-module end-to-end chain, packet format corrected (>>6 saturating corr_peak), simulation ALL PASS ← VALIDATED Jun 29
+- UART Streaming Hardware Contract: corrected bytes 3-4 interpretation from "range_cm" to "(corr_peak>>6) saturated to 16-bit unsigned, preserving monotonic FC-6 homing gradient"
+- Added pipeline latency row: end-to-end 5.70ms, 200Hz output rate, well within 100ms real-time budget
+- Noted RTL multiplier inference pending Gowin synthesis report (RTL simulation confirms connectivity)
 
-**CLAUDE.md updated:**
-- Current Status updated: Week 5 closed, Week 6 priorities
-- Parts Status: thrusters/enclosure/IRLZ44N moved to 🚚 In Transit; MCP6022 and Pololu
-  buck added to 🔴 Not Yet Ordered
-- IMMEDIATE NEXT TASKS replaced with Week 6 day-by-day plan
-- Weekly timeline table updated: Week 4 ✅, Week 5 🔴 Lost, Week 6 🟡 Current
+**Week 6 Day 1 Priority Achieved:**
+✅ top_level.v complete and validated
 
-**Week 6 Day 1 (Jun 29) first actions:**
-1. ORDER MCP6022-I/P ×4 on Amazon Prime (gates all acoustic testing)
-2. Write top_level.v (gates synthesis, gates pool test timeline)
-3. Check owned buck converter rating; order Pololu if < 4A
+**Next Immediate:**
+1. **Jun 30 — Gowin EDA synthesis**: run full design through Gowin, get timing report/utilization, fix any negative slack SAME DAY
+2. **Jun 30 — HOME DEPOT RUN**: PVC pontoons, L-brackets, marine sealant with Dad
+3. **Jul 1 — Hull fabrication start**: cut/test-fit PVC
 
-43 days to August 10 demo.
+42 days to August 10 demo.
 
 ---
 

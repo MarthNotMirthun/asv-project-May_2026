@@ -1,0 +1,53 @@
+// Constraint file: top_level.cst
+// Format: Gowin .cst (Tang Nano 20K, GW2AR-18 QFN88)
+// Module: top_level — full ASV acoustic-homing pipeline top
+//
+// FIX-N1: MERGED constraint file. Combines the verified pin assignments
+//   from adc_interface.cst and uart_tx.cst onto the top_level port names.
+//   Pin numbers and IO_TYPE are unchanged from those validated files; only
+//   the port NAMES are adapted to top_level's interface:
+//     adc_interface.cst  "otr"     -> top_level "adc_otr"     (pin 80)
+//     adc_interface.cst  "adc_clk" -> top_level "adc_clk"     (pin 76, unchanged)
+//     uart_tx.cst        "tx"      -> top_level "uart_tx_out" (pin 86)
+//     adc_data[11:0], clk, rst_n keep their names.
+//
+//   FIX-W1: the ENCODE output port is named exactly "adc_clk" in both the
+//   RTL and this IO_LOC string — Gowin matches IO_LOC by exact port name,
+//   so this MUST stay "adc_clk" (never adc_clk_out).
+//
+// PIN SOURCE OF TRUTH (verified 2026-06-12, carried from the two source
+//   .cst files): official Sipeed Tang_Nano_20K_3921_Schematics.pdf rev 1.22
+//   (J5/J6 headers) + tang_nano_20k_pinlabel.png. All header banks LVCMOS33.
+//
+// ---- System clock + reset (from uart_tx.cst) ----
+//   clk   = 4  : 27MHz onboard oscillator (NOT pin 52 = 9K clock)
+//   rst_n = 88 : user button S1 (active-low, idles HIGH via internal pull-up)
+
+IO_LOC "clk" 4;
+IO_PORT "clk" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+
+IO_LOC "rst_n" 88;
+IO_PORT "rst_n" PULL_MODE=UP IO_TYPE=LVCMOS33;
+
+// ---- AD9226 12-bit parallel data bus (from adc_interface.cst, J6 header) ----
+IO_LOC "adc_data[0]"  73;  IO_PORT "adc_data[0]"  PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_LOC "adc_data[1]"  74;  IO_PORT "adc_data[1]"  PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_LOC "adc_data[2]"  75;  IO_PORT "adc_data[2]"  PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_LOC "adc_data[3]"  85;  IO_PORT "adc_data[3]"  PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_LOC "adc_data[4]"  77;  IO_PORT "adc_data[4]"  PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_LOC "adc_data[5]"  27;  IO_PORT "adc_data[5]"  PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_LOC "adc_data[6]"  28;  IO_PORT "adc_data[6]"  PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_LOC "adc_data[7]"  25;  IO_PORT "adc_data[7]"  PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_LOC "adc_data[8]"  26;  IO_PORT "adc_data[8]"  PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_LOC "adc_data[9]"  29;  IO_PORT "adc_data[9]"  PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_LOC "adc_data[10]" 30;  IO_PORT "adc_data[10]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_LOC "adc_data[11]" 31;  IO_PORT "adc_data[11]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+
+// ---- AD9226 OTR flag (from adc_interface.cst "otr" -> "adc_otr", pin 80) ----
+IO_LOC "adc_otr" 80;  IO_PORT "adc_otr" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+
+// ---- AD9226 ENCODE clock (FIX-W1: exact name "adc_clk", pin 76, DRIVE=8) ----
+IO_LOC "adc_clk" 76;  IO_PORT "adc_clk" PULL_MODE=NONE DRIVE=8 IO_TYPE=LVCMOS33;
+
+// ---- UART TX to Pi /dev/ttyAMA0 (from uart_tx.cst "tx" -> "uart_tx_out", pin 86) ----
+IO_LOC "uart_tx_out" 86;  IO_PORT "uart_tx_out" PULL_MODE=NONE DRIVE=8 IO_TYPE=LVCMOS33;

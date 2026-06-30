@@ -37,9 +37,11 @@
 //
 //   corr_peak = accumulator >>> CORR_SHIFT, saturating to signed 32-bit.
 //   CORR_SHIFT = 16 is the DOCUMENTED scaling contract for the
-//   downstream peak_detector. UART TX sends corr_peak[31:16] (the upper
-//   16 bits of the 32-bit output) in packet bytes 3-4. The peak_detector
-//   computes snr = corr_peak / noise_floor with BOTH operands in this
+//   downstream peak_detector. FIX-B3: bytes 3-4 carry (corr_peak>>6)
+//   clamped to 16-bit, maintaining a monotonic homing gradient — they do
+//   NOT carry corr_peak[31:16]. The packing/saturation happens in
+//   packet_framer; this module just emits the full 32-bit corr_peak. The
+//   peak_detector computes snr = corr_peak / noise_floor with BOTH operands in this
 //   same >>>16 scale. Any module that consumes corr_peak MUST assume
 //   CORR_SHIFT = 16. Do not change CORR_SHIFT without updating
 //   peak_detector and the UART packing simultaneously.

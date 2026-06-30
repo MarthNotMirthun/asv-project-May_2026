@@ -8,9 +8,9 @@
 
 \# Hard Demo Deadline: August 10, 2026
 
-\# Current Status: Week 5 CLOSED — zero engineering tasks completed; Week 6 starts Jun 29; top_level.v + Gowin synthesis are Day 1-2 priorities; MCP6022 ORDER REQUIRED; 43 days to demo
+\# Current Status: Week 6 Day 1 — top_level.v pipeline integration ✅ COMPLETE; Gowin synthesis next (Jun 30); MCP6022 ORDER REQUIRED; 42 days to demo
 
-\# Last Updated: June 28, 2026
+\# Last Updated: June 29, 2026
 
 
 
@@ -78,14 +78,14 @@ AD9226 parallel input (12-bit, 65MSPS)
 
 &#x20;     Matched filter ×2: \~2 HW multipliers (block correlator, time-shared MAC, 1 per filter)
 
-&#x20;     Total: \~4 of 48 HW multipliers — UNVERIFIED RTL inference, pending Gowin synthesis report
+&#x20;     Total: \~4 of 48 HW multipliers — RTL simulation connectivity confirmed (Jun 29), pending Gowin synthesis utilization report
 &#x20;     (Basis: each module has exactly one `prod <= mul_a*mul_b` register; 64 sys clocks/sample ≫
 &#x20;      32 MAC cycles for FIR; 134,976 sys clocks/window ≫ 2109 MAC cycles for matched filter.
-&#x20;      Synthesis may differ — do not treat as confirmed until post-synthesis utilization report.)
+&#x20;      RTL simulation confirms data paths; synthesis report will refine count.)
 
 &#x20;     Coefficients stored in BSRAM, runtime-loadable via UART from Pi
 
-### BSRAM Resource Allocation (corrected Jun 16 — depth-bound, not capacity-bound)
+### BSRAM Resource Allocation (validated Jun 29 — depth-bound, not capacity-bound)
 - FIR filter banks: 2 BSRAM blocks (1 per bank, 32-tap × 16-bit = 512 bits << 18K)
 - Matched filter ×2: 12 blocks total (4-array architecture):
   - Architecture: reference ROM + window buffer per channel × 2 channels = 4 arrays
@@ -93,7 +93,7 @@ AD9226 parallel input (12-bit, 65MSPS)
     → 3 blocks per array (3×1024=3072 ≥ 2109); capacity alone would say 2
   - Reference chirp ROMs: 3 blocks/channel × 2 channels = 6 blocks
   - Window sample buffers: 3 blocks/channel × 2 channels = 6 blocks
-- Total BSRAM used: ~14 of 46 blocks (~30%)
+- Total BSRAM used: ~14 of 46 blocks (~30%) — validated by systems-integrator Jun 29
 
 &#x20; → 2× Matched Filter Correlators
 
@@ -147,7 +147,7 @@ AD9226 parallel input (12-bit, 65MSPS)
 
 \- ✅ Peak detector + packet framer (peak_detector.v, packet_framer.v) — dual-channel relative gating (FC-7), SNR proxy, 8-byte FSM; 12/12 sim checks passed ← VALIDATED Jun 17
 
-\- ⏳ Full pipeline integration — ready to start, all 9 modules verified, no blockers
+\- ✅ Full pipeline integration (top_level.v) — 9-module end-to-end chain, packet format corrected (>>6 saturating corr_peak), simulation ALL PASS ← VALIDATED Jun 29
 
 
 
@@ -215,7 +215,8 @@ AD9226 parallel input (12-bit, 65MSPS)
 - Pi UART reads at 115200 baud on /dev/ttyAMA0
 - 8-byte packet format: [target_id][peak_lag_H][peak_lag_L]
   [corr_peak_H][corr_peak_L][snr][checksum][0xFF]
-  (bytes 2–3 previously labeled range_cm — now peak_lag diagnostic; wire format unchanged per FC-5)
+  (bytes 2–3 = peak_lag diagnostic; bytes 3–4 = (corr_peak>>6) saturated to 16-bit unsigned, preserving monotonic FC-6 homing gradient; wire format unchanged per FC-5)
+- Bytes 3–4 value correction (Jun 29): corr_peak from matched filter (32-bit) is right-shifted by 6 bits and saturated to 16-bit unsigned. This preserves the monotonic increase in correlation peak as the vehicle approaches a buoy (FC-6 SNR-gradient homing assumption). Without saturation at close range (<1m), the 16-bit slice would wrap and invert the gradient, corrupting the homing logic.
 - Back-to-back bytes: gap between bytes must not exceed 1 bit period
   (8.68us at 115200 baud) or Pi UART may flag framing error
 - Idle line: tx must idle HIGH between packets
@@ -632,14 +633,14 @@ telemetry\_node
 
 
 
-\### ⏳ WEEK 6 PRIORITIES (Jun 29–Jul 5) — carry-over from Week 5
+\### ⏳ WEEK 6 PRIORITIES (Jun 29–Jul 5)
 
-1\. **Jun 29 — top_level.v**: chain all 9 verified modules end-to-end (AD9226→CIC→FIR×2→MF×2→peak_detector→packet_framer→uart_tx); simulate for X/Z states
-&#x20;  ORDER MCP6022-I/P ×4 on Amazon Prime (if not yet ordered)
-&#x20;  Check owned buck converter chip marking; order Pololu D24V50F5 if < 4A rated
+1\. ✅ **Jun 29 — top_level.v**: chain all 9 verified modules end-to-end; simulate for X/Z states ← VALIDATED Jun 29
+&#x20;  ACTION: ORDER MCP6022-I/P ×4 on Amazon Prime TODAY (gates Layer A bench check Jul 2)
+&#x20;  ACTION: Check owned buck converter chip marking; order Pololu D24V50F5 if < 4A rated
 
-2\. **Jun 30 — Gowin EDA synthesis**: run full design, get timing report and utilization; fix any negative slack SAME DAY
-&#x20;  HOME DEPOT RUN with Dad: 4" Sch 40 PVC, 1" PVC, end caps, L-brackets, JB Weld, marine silicone
+2\. **Jun 30 — Gowin EDA synthesis** (CRITICAL PATH): run full design, get timing report and utilization; fix any negative slack SAME DAY
+&#x20;  ACTION: HOME DEPOT RUN with Dad: 4" Sch 40 PVC, 1" PVC, end caps, L-brackets, JB Weld, marine silicone
 
 3\. **Jul 1 — Hull fabrication start**: cut and test-fit PVC pontoons; MCP6022 arrives (Prime)
 

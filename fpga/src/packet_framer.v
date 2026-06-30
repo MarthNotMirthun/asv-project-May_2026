@@ -19,15 +19,22 @@
 //   Byte 0: target_id          [7:0]
 //   Byte 1: peak_lag_H         {5'd0, peak_lag[10:8]}  (zero-padded)
 //   Byte 2: peak_lag_L         peak_lag[7:0]
-//   Byte 3: corr_peak_H        corr_peak_out[15:8]
-//   Byte 4: corr_peak_L        corr_peak_out[7:0]
+//   Byte 3: corr_peak_H        cp_field[15:8]
+//   Byte 4: corr_peak_L        cp_field[7:0]
 //   Byte 5: snr                [7:0]
 //   Byte 6: checksum           XOR of bytes 0-5
 //   Byte 7: 0xFF               end marker
 //
-//   corr_peak bytes carry corr_peak_out[15:8]/[7:0] — the low 16 bits of
-//   the 32-bit detected magnitude. The matched filter already applies
-//   CORR_SHIFT=16, so this is the documented wire field (FC-5/FC-6).
+//   FIX-B3: corr_peak_in is an UNSIGNED magnitude (~16..26 significant bits
+//   after peak_detector's abs()). The earlier code wired the raw low 16 bits
+//   ([15:8]/[7:0]) into the field, which WRAPS at close range: as the vehicle
+//   approaches a buoy and the magnitude grows past 2^16, the field rolls over
+//   and the homing gradient becomes non-monotonic (corr_peak appears to drop
+//   right when it should be rising). The corrected field is a SATURATING >>6
+//   slice: cp_field = min(corr_peak_in >> 6, 0xFFFF). The >>6 keeps the field
+//   in range across the full close-approach span while remaining strictly
+//   monotonic with corr_peak_in up to the 0xFFFF clamp (which only saturates
+//   at extreme clip, where "max" is the correct, still-monotonic reading).
 //   otr_in is carried into the module but NOT in the current 8-byte
 //   format per CLAUDE.md — reserved for a future packet revision.
 //
@@ -85,6 +92,12 @@ module packet_framer (
     // Checksum is combinational across the latched data bytes (XOR 0-5).
     wire [7:0] checksum_w = b0 ^ b1 ^ b2 ^ b3 ^ b4 ^ b5;
 
+    // FIX-B3: saturating >>6 slice of the unsigned corr_peak magnitude so the
+    // 16-bit wire field stays monotonic through close range (never wraps).
+    // cp_scaled = corr_peak_in >> 6; cp_field = min(cp_scaled, 0xFFFF).
+    wire [31:0] cp_scaled = corr_peak_in >> 6;
+    wire [15:0] cp_field  = (cp_scaled > 32'hFFFF) ? 16'hFFFF : cp_scaled[15:0];
+
     // Map state -> outgoing byte (combinational mux over latched bytes).
     reg [7:0] cur_byte;
     always @(*) begin
@@ -123,16 +136,18 @@ module packet_framer (
                         b0 <= target_id;
                         b1 <= {5'd0, peak_lag_in[10:8]};
                         b2 <= peak_lag_in[7:0];
-                        b3 <= corr_peak_in[15:8];
-                        b4 <= corr_peak_in[7:0];
+                        b3 <= cp_field[15:8];   // FIX-B3: saturating >>6 slice
+                        b4 <= cp_field[7:0];    // FIX-B3: saturating >>6 slice
                         b5 <= snr_in;
                         // checksum over the just-latched bytes; recompute
                         // explicitly here since checksum_w reads the OLD b*.
+                        // FIX-B3: checksum must use cp_field (the actual b3/b4
+                        // bytes), NOT the raw corr_peak_in slices.
                         b6 <= target_id
                               ^ {5'd0, peak_lag_in[10:8]}
                               ^ peak_lag_in[7:0]
-                              ^ corr_peak_in[15:8]
-                              ^ corr_peak_in[7:0]
+                              ^ cp_field[15:8]
+                              ^ cp_field[7:0]
                               ^ snr_in;
                         b7 <= 8'hFF;
                         otr_latched <= otr_in;
