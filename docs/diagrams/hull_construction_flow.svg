@@ -1,0 +1,379 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1060 760" font-family="Arial, sans-serif">
+  <rect x="0" y="0" width="1060" height="760" fill="#f5f6fa"/>
+
+  <!-- ═══════════════════════ TITLE ═══════════════════════ -->
+  <rect x="0" y="0" width="1060" height="62" fill="#1a2640"/>
+  <text x="530" y="24" text-anchor="middle" font-size="18" font-weight="bold" fill="#ffffff">Hull Construction — Step-by-Step Visual Guide</text>
+  <text x="530" y="44" text-anchor="middle" font-size="11" fill="#aab8cc">ASV Catamaran · Pool test #1 fixed: Week 9 (Jul 20) · Read left column top→bottom, then right column top→bottom</text>
+  <text x="530" y="57" text-anchor="middle" font-size="10" fill="#6e86a0">Reference: hull_construction_guide.md · vehicle_top_view.svg · vehicle_side_view.svg · wiring_overview.svg</text>
+
+  <!-- Column headers -->
+  <text x="260" y="76" text-anchor="middle" font-size="12" font-weight="bold" fill="#444">◀ PHASES 1–5 (left column)</text>
+  <text x="800" y="76" text-anchor="middle" font-size="12" font-weight="bold" fill="#444">PHASES 6–10 (right column) ▶</text>
+
+  <defs>
+    <marker id="arrowFlow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#555"/>
+    </marker>
+    <marker id="arrowCross" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#2980b9"/>
+    </marker>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="1" dy="2" stdDeviation="2" flood-color="#00000022"/>
+    </filter>
+  </defs>
+
+  <!-- ═══════════════════════════════════════════════════════
+       CARD MACRO — each card is defined with these layers:
+       1. shadow  2. card body  3. color band  4. badge circle
+       5. title + duration  6. description  7. icon  8. file ref
+       ═══════════════════════════════════════════════════════ -->
+
+  <!-- ──────────────────── PHASE 1 ──────────────────── -->
+  <!-- color: #7f8c8d (gray / Preparation) y=82 -->
+  <rect x="32" y="84" width="460" height="92" rx="8" fill="#c8cacc" opacity="0.5"/>
+  <rect x="30" y="82" width="460" height="92" rx="8" fill="white" filter="url(#shadow)"/>
+  <rect x="30" y="82" width="12" height="92" rx="6" fill="#7f8c8d"/>
+  <circle cx="60" cy="128" r="18" fill="#7f8c8d"/>
+  <text x="60" y="133" text-anchor="middle" font-size="15" font-weight="bold" fill="white">1</text>
+  <text x="86" y="100" font-size="13" font-weight="bold" fill="#1a1a1a">Cut &amp; Label All PVC</text>
+  <rect x="400" y="83" width="82" height="17" rx="8" fill="#ecf0f1"/>
+  <text x="441" y="95" text-anchor="middle" font-size="9" fill="#555">~30 min</text>
+  <text x="86" y="117" font-size="10" fill="#333">2× 700mm pontoons · 3× 440mm cross members</text>
+  <text x="86" y="131" font-size="10" fill="#333">280mm mast · 165mm bow brace · deburr all cuts</text>
+  <text x="86" y="146" font-size="9" fill="#888">Dry-fit everything before any adhesive touches PVC</text>
+  <!-- file ref badge -->
+  <rect x="86" y="155" width="140" height="14" rx="7" fill="#eaf2ff" stroke="#2471a3" stroke-width="0.8"/>
+  <text x="156" y="165" text-anchor="middle" font-size="8" fill="#1a5276">↗ vehicle_top_view.svg</text>
+  <!-- icon: two pipes with cut mark -->
+  <g transform="translate(390,90)">
+    <rect x="5" y="12" width="56" height="12" rx="6" fill="#bbb" stroke="#888" stroke-width="1"/>
+    <rect x="5" y="32" width="56" height="12" rx="6" fill="#bbb" stroke="#888" stroke-width="1"/>
+    <line x1="28" y1="6" x2="40" y2="62" stroke="#e74c3c" stroke-width="3"/>
+    <line x1="36" y1="6" x2="48" y2="62" stroke="#e74c3c" stroke-width="1.5" opacity="0.5"/>
+    <text x="33" y="80" text-anchor="middle" font-size="8" fill="#888">CUT</text>
+  </g>
+
+  <!-- down arrow 1→2 -->
+  <line x1="260" y1="174" x2="260" y2="188" stroke="#555" stroke-width="2" marker-end="url(#arrowFlow)"/>
+
+  <!-- ──────────────────── PHASE 2 ──────────────────── -->
+  <!-- color: #2980b9 (blue / Waterproofing) y=190 -->
+  <rect x="32" y="192" width="460" height="92" rx="8" fill="#a9cde8" opacity="0.5"/>
+  <rect x="30" y="190" width="460" height="92" rx="8" fill="white" filter="url(#shadow)"/>
+  <rect x="30" y="190" width="12" height="92" rx="6" fill="#2980b9"/>
+  <circle cx="60" cy="236" r="18" fill="#2980b9"/>
+  <text x="60" y="241" text-anchor="middle" font-size="15" font-weight="bold" fill="white">2</text>
+  <text x="86" y="208" font-size="13" font-weight="bold" fill="#1a1a1a">Seal &amp; Pressure-Test End Caps</text>
+  <rect x="380" y="191" width="102" height="17" rx="8" fill="#ecf0f1"/>
+  <text x="431" y="203" text-anchor="middle" font-size="9" fill="#555">1hr + 24hr cure</text>
+  <text x="86" y="225" font-size="10" fill="#333">JB Weld MarineWeld on all 4 end caps</text>
+  <text x="86" y="239" font-size="10" fill="#333">Marine silicone secondary bead around each joint</text>
+  <text x="86" y="254" font-size="9" fill="#888">Submerge + blow air — zero bubbles required before proceeding</text>
+  <rect x="86" y="263" width="160" height="14" rx="7" fill="#fef9e7" stroke="#d68910" stroke-width="0.8"/>
+  <text x="166" y="273" text-anchor="middle" font-size="8" fill="#7d6608">↗ hull_construction_guide.md</text>
+  <!-- icon: pipe with end caps + water drop X -->
+  <g transform="translate(390,198)">
+    <rect x="14" y="22" width="38" height="14" rx="2" fill="#bbb" stroke="#888" stroke-width="1"/>
+    <rect x="8"  y="18" width="8"  height="22" rx="4" fill="#999" stroke="#666" stroke-width="1"/>
+    <rect x="52" y="18" width="8"  height="22" rx="4" fill="#999" stroke="#666" stroke-width="1"/>
+    <!-- water drop -->
+    <path d="M50,55 Q57,45 57,52 Q57,60 50,60 Q43,60 43,52 Q43,45 50,55 Z" fill="#3498db" opacity="0.7"/>
+    <line x1="44" y1="47" x2="56" y2="62" stroke="#e74c3c" stroke-width="2"/>
+    <line x1="56" y1="47" x2="44" y2="62" stroke="#e74c3c" stroke-width="2"/>
+    <text x="33" y="80" text-anchor="middle" font-size="8" fill="#888">SEALED</text>
+  </g>
+
+  <!-- ⚠ CURE GATE 1 -->
+  <rect x="40" y="286" width="440" height="24" rx="12" fill="#fdebd0" stroke="#e67e22" stroke-width="1.5"/>
+  <text x="260" y="302" text-anchor="middle" font-size="11" fill="#9a4901" font-weight="bold">⏱  24-HOUR CURE GATE — do not proceed until end caps are fully set</text>
+
+  <!-- down arrow 2→3 -->
+  <line x1="260" y1="310" x2="260" y2="324" stroke="#555" stroke-width="2" marker-end="url(#arrowFlow)"/>
+
+  <!-- ──────────────────── PHASE 3 ──────────────────── -->
+  <!-- color: #e67e22 (orange / Structural) y=326 -->
+  <rect x="32" y="328" width="460" height="92" rx="8" fill="#f5cba7" opacity="0.5"/>
+  <rect x="30" y="326" width="460" height="92" rx="8" fill="white" filter="url(#shadow)"/>
+  <rect x="30" y="326" width="12" height="92" rx="6" fill="#e67e22"/>
+  <circle cx="60" cy="372" r="18" fill="#e67e22"/>
+  <text x="60" y="377" text-anchor="middle" font-size="15" font-weight="bold" fill="white">3</text>
+  <text x="86" y="344" font-size="13" font-weight="bold" fill="#1a1a1a">Dry-Fit &amp; Drill L-Bracket Holes</text>
+  <rect x="400" y="327" width="82" height="17" rx="8" fill="#ecf0f1"/>
+  <text x="441" y="339" text-anchor="middle" font-size="9" fill="#555">~45 min</text>
+  <text x="86" y="361" font-size="10" fill="#333">Position cross members at 150 / 350 / 550mm from bow</text>
+  <text x="86" y="375" font-size="10" fill="#333">Mark + drill M4 bolt holes through pontoon walls</text>
+  <text x="86" y="390" font-size="9" fill="#888">Check square (equal diagonals) before drilling — no glue yet</text>
+  <rect x="86" y="399" width="140" height="14" rx="7" fill="#eaf2ff" stroke="#2471a3" stroke-width="0.8"/>
+  <text x="156" y="409" text-anchor="middle" font-size="8" fill="#1a5276">↗ vehicle_top_view.svg</text>
+  <!-- icon: mini catamaran top view -->
+  <g transform="translate(388,332)">
+    <rect x="4"  y="8"  width="60" height="14" rx="7" fill="#ccc" stroke="#888" stroke-width="1"/>
+    <rect x="4"  y="48" width="60" height="14" rx="7" fill="#ccc" stroke="#888" stroke-width="1"/>
+    <rect x="16" y="22" width="6"  height="26" fill="#aaa" stroke="#666" stroke-width="0.8"/>
+    <rect x="32" y="22" width="6"  height="26" fill="#aaa" stroke="#666" stroke-width="0.8"/>
+    <rect x="46" y="22" width="6"  height="26" fill="#aaa" stroke="#666" stroke-width="0.8"/>
+    <circle cx="17" cy="26" r="3" fill="#e74c3c"/>
+    <circle cx="17" cy="44" r="3" fill="#e74c3c"/>
+    <circle cx="33" cy="26" r="3" fill="#e74c3c"/>
+    <circle cx="33" cy="44" r="3" fill="#e74c3c"/>
+    <circle cx="47" cy="26" r="3" fill="#e74c3c"/>
+    <circle cx="47" cy="44" r="3" fill="#e74c3c"/>
+    <text x="34" y="80" text-anchor="middle" font-size="8" fill="#888">TOP VIEW</text>
+  </g>
+
+  <!-- down arrow 3→4 -->
+  <line x1="260" y1="418" x2="260" y2="432" stroke="#555" stroke-width="2" marker-end="url(#arrowFlow)"/>
+
+  <!-- ──────────────────── PHASE 4 ──────────────────── -->
+  <!-- color: #e67e22 (orange) y=434 -->
+  <rect x="32" y="436" width="460" height="92" rx="8" fill="#f5cba7" opacity="0.5"/>
+  <rect x="30" y="434" width="460" height="92" rx="8" fill="white" filter="url(#shadow)"/>
+  <rect x="30" y="434" width="12" height="92" rx="6" fill="#e67e22"/>
+  <circle cx="60" cy="480" r="18" fill="#e67e22"/>
+  <text x="60" y="485" text-anchor="middle" font-size="15" font-weight="bold" fill="white">4</text>
+  <text x="86" y="452" font-size="13" font-weight="bold" fill="#1a1a1a">Permanent Bond — Hull Frame</text>
+  <rect x="380" y="435" width="102" height="17" rx="8" fill="#ecf0f1"/>
+  <text x="431" y="447" text-anchor="middle" font-size="9" fill="#555">1hr + 24hr cure</text>
+  <text x="86" y="469" font-size="10" fill="#333">JB Weld + marine silicone at all cross-member contact points</text>
+  <text x="86" y="483" font-size="10" fill="#333">L-brackets + M4 bolts · hose clamp at each pontoon junction</text>
+  <text x="86" y="498" font-size="9" fill="#888">Re-check square while curing · brace until fully set</text>
+  <rect x="86" y="507" width="160" height="14" rx="7" fill="#fef9e7" stroke="#d68910" stroke-width="0.8"/>
+  <text x="166" y="517" text-anchor="middle" font-size="8" fill="#7d6608">↗ hull_construction_guide.md</text>
+  <!-- icon: glue tube + bond line -->
+  <g transform="translate(390,440)">
+    <rect x="18" y="8"  width="30" height="38" rx="4" fill="#e8e8e8" stroke="#999" stroke-width="1"/>
+    <rect x="28" y="4"  width="10" height="10" rx="2" fill="#999"/>
+    <path d="M33,46 Q33,56 28,60 Q38,60 38,56 Z" fill="#f39c12" opacity="0.8"/>
+    <!-- bond line -->
+    <line x1="6" y1="72" x2="60" y2="72" stroke="#f39c12" stroke-width="4"/>
+    <text x="33" y="86" text-anchor="middle" font-size="8" fill="#888">BOND</text>
+  </g>
+
+  <!-- ⚠ CURE GATE 2 -->
+  <rect x="40" y="530" width="440" height="24" rx="12" fill="#fdebd0" stroke="#e67e22" stroke-width="1.5"/>
+  <text x="260" y="546" text-anchor="middle" font-size="11" fill="#9a4901" font-weight="bold">⏱  24-HOUR CURE GATE — hull bond must fully set before deck load</text>
+
+  <!-- down arrow 4→5 -->
+  <line x1="260" y1="554" x2="260" y2="568" stroke="#555" stroke-width="2" marker-end="url(#arrowFlow)"/>
+
+  <!-- ──────────────────── PHASE 5 ──────────────────── -->
+  <!-- color: #e67e22 (orange) y=570 -->
+  <rect x="32" y="572" width="460" height="92" rx="8" fill="#f5cba7" opacity="0.5"/>
+  <rect x="30" y="570" width="460" height="92" rx="8" fill="white" filter="url(#shadow)"/>
+  <rect x="30" y="570" width="12" height="92" rx="6" fill="#e67e22"/>
+  <circle cx="60" cy="616" r="18" fill="#e67e22"/>
+  <text x="60" y="621" text-anchor="middle" font-size="15" font-weight="bold" fill="white">5</text>
+  <text x="86" y="588" font-size="13" font-weight="bold" fill="#1a1a1a">Deck Platform Installation</text>
+  <rect x="400" y="571" width="82" height="17" rx="8" fill="#ecf0f1"/>
+  <text x="441" y="583" text-anchor="middle" font-size="9" fill="#555">~30 min</text>
+  <text x="86" y="605" font-size="10" fill="#333">440×314mm marine ply or Al sheet · seal all edges first</text>
+  <text x="86" y="619" font-size="10" fill="#333">Bolt through cross members · M3 standoffs at 160×160mm pattern</text>
+  <text x="86" y="634" font-size="9" fill="#888">Enclosure footprint centered on deck — see top-view diagram</text>
+  <rect x="86" y="643" width="140" height="14" rx="7" fill="#eaf2ff" stroke="#2471a3" stroke-width="0.8"/>
+  <text x="156" y="653" text-anchor="middle" font-size="8" fill="#1a5276">↗ vehicle_top_view.svg</text>
+  <!-- icon: deck on cross members on pontoons -->
+  <g transform="translate(388,576)">
+    <!-- two pontoon arches (side view) -->
+    <ellipse cx="22" cy="56" rx="16" ry="10" fill="#ccc" stroke="#888" stroke-width="1"/>
+    <ellipse cx="48" cy="56" rx="16" ry="10" fill="#ccc" stroke="#888" stroke-width="1"/>
+    <!-- cross member dots -->
+    <circle cx="22" cy="46" r="5" fill="#aaa" stroke="#666" stroke-width="1"/>
+    <circle cx="48" cy="46" r="5" fill="#aaa" stroke="#666" stroke-width="1"/>
+    <!-- deck platform flat -->
+    <rect x="6" y="35" width="56" height="8" rx="2" fill="#e8d5b0" stroke="#9a6a1f" stroke-width="1.5"/>
+    <text x="34" y="80" text-anchor="middle" font-size="8" fill="#888">DECK</text>
+  </g>
+
+  <!-- ═══════════════ CROSS-COLUMN CONNECTOR ═══════════════ -->
+  <!-- Curved path from Phase 5 right edge (490,616) to Phase 6 left edge (570,122) -->
+  <path d="M 490,616 C 530,616 530,122 570,122" fill="none" stroke="#2980b9" stroke-width="2.5" stroke-dasharray="6,4" marker-end="url(#arrowCross)"/>
+  <rect x="496" y="360" width="62" height="22" rx="11" fill="#2980b9"/>
+  <text x="527" y="375" text-anchor="middle" font-size="10" fill="white" font-weight="bold">→ cont.</text>
+
+  <!-- ═══════════════════════════════════════════════════════
+       RIGHT COLUMN  (x=570)
+       ═══════════════════════════════════════════════════════ -->
+
+  <!-- ──────────────────── PHASE 6 ──────────────────── -->
+  <!-- color: #8e44ad (purple / Mounting) y=82 -->
+  <rect x="572" y="84" width="460" height="92" rx="8" fill="#d2b4de" opacity="0.5"/>
+  <rect x="570" y="82" width="460" height="92" rx="8" fill="white" filter="url(#shadow)"/>
+  <rect x="570" y="82" width="12" height="92" rx="6" fill="#8e44ad"/>
+  <circle cx="600" cy="128" r="18" fill="#8e44ad"/>
+  <text x="600" y="133" text-anchor="middle" font-size="15" font-weight="bold" fill="white">6</text>
+  <text x="626" y="100" font-size="13" font-weight="bold" fill="#1a1a1a">Mast &amp; Bow Brace</text>
+  <rect x="940" y="83" width="82" height="17" rx="8" fill="#ecf0f1"/>
+  <text x="981" y="95" text-anchor="middle" font-size="9" fill="#555">~30 min</text>
+  <text x="626" y="117" font-size="10" fill="#333">Bow brace at deck level (CM1 face to mast foot) · mast vertical</text>
+  <text x="626" y="131" font-size="10" fill="#333">Mast top 250–300mm above waterline · zip-tie coax every 50mm</text>
+  <text x="626" y="146" font-size="9" fill="#888">Route RX coax from transducer down mast into enclosure gland</text>
+  <rect x="626" y="155" width="150" height="14" rx="7" fill="#eaf2ff" stroke="#2471a3" stroke-width="0.8"/>
+  <text x="701" y="165" text-anchor="middle" font-size="8" fill="#1a5276">↗ vehicle_side_view.svg</text>
+  <!-- icon: mast + transducer on deck -->
+  <g transform="translate(928,90)">
+    <!-- deck line -->
+    <line x1="4" y1="64" x2="64" y2="64" stroke="#9a6a1f" stroke-width="4"/>
+    <!-- mast vertical -->
+    <rect x="30" y="12" width="8" height="52" fill="#bbb" stroke="#888" stroke-width="1"/>
+    <!-- transducer at top -->
+    <rect x="22" y="6" width="24" height="10" rx="3" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
+    <!-- bow brace horizontal -->
+    <line x1="10" y1="64" x2="30" y2="64" stroke="#9a6a1f" stroke-width="3"/>
+    <text x="34" y="82" text-anchor="middle" font-size="8" fill="#888">MAST</text>
+  </g>
+
+  <!-- down arrow 6→7 -->
+  <line x1="800" y1="174" x2="800" y2="188" stroke="#555" stroke-width="2" marker-end="url(#arrowFlow)"/>
+
+  <!-- ──────────────────── PHASE 7 ──────────────────── -->
+  <!-- color: #e74c3c (red / GATED) y=190 -->
+  <rect x="572" y="192" width="460" height="92" rx="8" fill="#f1948a" opacity="0.5"/>
+  <rect x="570" y="190" width="460" height="92" rx="8" fill="white" filter="url(#shadow)"/>
+  <rect x="570" y="190" width="12" height="92" rx="6" fill="#e74c3c"/>
+  <circle cx="600" cy="236" r="18" fill="#e74c3c"/>
+  <text x="600" y="241" text-anchor="middle" font-size="15" font-weight="bold" fill="white">7</text>
+  <text x="626" y="208" font-size="13" font-weight="bold" fill="#1a1a1a">Thruster Mounting</text>
+  <rect x="885" y="191" width="136" height="17" rx="8" fill="#fdecea" stroke="#e74c3c" stroke-width="1"/>
+  <text x="953" y="203" text-anchor="middle" font-size="9" fill="#922b21" font-weight="bold">⚠ GATED — see below</text>
+  <text x="626" y="225" font-size="10" fill="#333">JB Weld thruster mount + silicone seal at pontoon gland</text>
+  <text x="626" y="239" font-size="10" fill="#333">Motor leads through cable gland · cure 24hr before water contact</text>
+  <text x="626" y="254" font-size="9" fill="#e74c3c" font-weight="bold">⚠ Stall current (5–8.6A) destroys L298N — firmware trip required first</text>
+  <rect x="626" y="263" width="160" height="14" rx="7" fill="#fef9e7" stroke="#d68910" stroke-width="0.8"/>
+  <text x="706" y="273" text-anchor="middle" font-size="8" fill="#7d6608">↗ hull_construction_guide.md</text>
+  <!-- icon: propeller + warning -->
+  <g transform="translate(930,197)">
+    <!-- warning triangle -->
+    <polygon points="34,4 58,46 10,46" fill="#f39c12" stroke="#d68910" stroke-width="1.5"/>
+    <text x="34" y="39" text-anchor="middle" font-size="18" font-weight="bold" fill="#fff">!</text>
+    <!-- propeller below -->
+    <circle cx="34" cy="64" r="10" fill="#ddd" stroke="#999" stroke-width="1"/>
+    <line x1="34" y1="54" x2="34" y2="74" stroke="#888" stroke-width="3"/>
+    <line x1="24" y1="64" x2="44" y2="64" stroke="#888" stroke-width="3"/>
+    <text x="34" y="84" text-anchor="middle" font-size="8" fill="#e74c3c">GATED</text>
+  </g>
+
+  <!-- 🔴 BENCH TEST GATE -->
+  <rect x="580" y="286" width="440" height="24" rx="12" fill="#fdecea" stroke="#e74c3c" stroke-width="1.5"/>
+  <text x="800" y="302" text-anchor="middle" font-size="11" fill="#922b21" font-weight="bold">🔴  BENCH TEST GATE — stall current measured + thrust ≥150g confirmed + firmware trip verified</text>
+
+  <!-- down arrow 7→8 -->
+  <line x1="800" y1="310" x2="800" y2="324" stroke="#555" stroke-width="2" marker-end="url(#arrowFlow)"/>
+
+  <!-- ──────────────────── PHASE 8 ──────────────────── -->
+  <!-- color: #27ae60 (green / Testing) y=326 -->
+  <rect x="572" y="328" width="460" height="92" rx="8" fill="#a9dfbf" opacity="0.5"/>
+  <rect x="570" y="326" width="460" height="92" rx="8" fill="white" filter="url(#shadow)"/>
+  <rect x="570" y="326" width="12" height="92" rx="6" fill="#27ae60"/>
+  <circle cx="600" cy="372" r="18" fill="#27ae60"/>
+  <text x="600" y="377" text-anchor="middle" font-size="15" font-weight="bold" fill="white">8</text>
+  <text x="626" y="344" font-size="13" font-weight="bold" fill="#1a1a1a">Float Test &amp; Waterline Check</text>
+  <rect x="940" y="327" width="82" height="17" rx="8" fill="#ecf0f1"/>
+  <text x="981" y="339" text-anchor="middle" font-size="9" fill="#555">~30 min</text>
+  <text x="626" y="361" font-size="10" fill="#333">Bare hull in pool/tub · mark actual waterline on each pontoon</text>
+  <text x="626" y="375" font-size="10" fill="#333">Check bow/stern trim · repeat loaded with ~400g dead weight</text>
+  <text x="626" y="390" font-size="9" fill="#888">Target: deck ≥60mm above WL · adjust cross-member height if needed</text>
+  <rect x="626" y="399" width="150" height="14" rx="7" fill="#eaf2ff" stroke="#2471a3" stroke-width="0.8"/>
+  <text x="701" y="409" text-anchor="middle" font-size="8" fill="#1a5276">↗ vehicle_side_view.svg</text>
+  <!-- icon: hull in water (tub) -->
+  <g transform="translate(928,332)">
+    <!-- water fill -->
+    <rect x="4" y="44" width="60" height="28" rx="3" fill="#d6eaf8"/>
+    <!-- tub outline -->
+    <path d="M4,44 L4,72 L64,72 L64,44" fill="none" stroke="#2980b9" stroke-width="2"/>
+    <!-- waterline dashed -->
+    <line x1="4" y1="52" x2="64" y2="52" stroke="#2980b9" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <!-- hull floating -->
+    <rect x="14" y="44" width="40" height="10" rx="5" fill="#d9d9d9" stroke="#666" stroke-width="1"/>
+    <text x="34" y="82" text-anchor="middle" font-size="8" fill="#888">FLOAT</text>
+  </g>
+
+  <!-- down arrow 8→9 -->
+  <line x1="800" y1="418" x2="800" y2="432" stroke="#555" stroke-width="2" marker-end="url(#arrowFlow)"/>
+
+  <!-- ──────────────────── PHASE 9 ──────────────────── -->
+  <!-- color: #16a085 (teal / Integration) y=434 -->
+  <rect x="572" y="436" width="460" height="92" rx="8" fill="#a2d9ce" opacity="0.5"/>
+  <rect x="570" y="434" width="460" height="92" rx="8" fill="white" filter="url(#shadow)"/>
+  <rect x="570" y="434" width="12" height="92" rx="6" fill="#16a085"/>
+  <circle cx="600" cy="480" r="18" fill="#16a085"/>
+  <text x="600" y="485" text-anchor="middle" font-size="15" font-weight="bold" fill="white">9</text>
+  <text x="626" y="452" font-size="13" font-weight="bold" fill="#1a1a1a">Cable Glands &amp; Enclosure Sealing</text>
+  <rect x="940" y="435" width="82" height="17" rx="8" fill="#ecf0f1"/>
+  <text x="981" y="447" text-anchor="middle" font-size="9" fill="#555">~1 hr</text>
+  <text x="626" y="469" font-size="10" fill="#333">7× M16 glands (motors×2, JSN, coax, LiPo, UART, spare)</text>
+  <text x="626" y="483" font-size="10" fill="#333">Load electronics · torque glands · IP67 gasket seated all sides</text>
+  <text x="626" y="498" font-size="9" fill="#888">Marine silicone bead on each external gland ring as backup</text>
+  <rect x="626" y="507" width="140" height="14" rx="7" fill="#eaf2ff" stroke="#16a085" stroke-width="0.8"/>
+  <text x="696" y="517" text-anchor="middle" font-size="8" fill="#0e6655">↗ wiring_overview.svg</text>
+  <!-- icon: enclosure with cables entering -->
+  <g transform="translate(930,440)">
+    <rect x="16" y="16" width="40" height="46" rx="4" fill="#f0f0f0" stroke="#888" stroke-width="1.5"/>
+    <!-- cable gland lines entering from sides -->
+    <line x1="0"  y1="28" x2="16" y2="28" stroke="#c0392b" stroke-width="3"/>
+    <line x1="0"  y1="42" x2="16" y2="42" stroke="#9b59b6" stroke-width="3"/>
+    <line x1="56" y1="28" x2="72" y2="28" stroke="#e67e22" stroke-width="3"/>
+    <line x1="56" y1="42" x2="72" y2="42" stroke="#2980b9" stroke-width="3"/>
+    <!-- gland dots -->
+    <circle cx="16" cy="28" r="4" fill="#555"/>
+    <circle cx="16" cy="42" r="4" fill="#555"/>
+    <circle cx="56" cy="28" r="4" fill="#555"/>
+    <circle cx="56" cy="42" r="4" fill="#555"/>
+    <text x="36" y="78" text-anchor="middle" font-size="8" fill="#888">GLANDS</text>
+  </g>
+
+  <!-- down arrow 9→10 -->
+  <line x1="800" y1="526" x2="800" y2="540" stroke="#555" stroke-width="2" marker-end="url(#arrowFlow)"/>
+
+  <!-- ──────────────────── PHASE 10 ──────────────────── -->
+  <!-- color: #1abc9c (emerald / Final check) y=542 -->
+  <rect x="572" y="544" width="460" height="92" rx="8" fill="#a9dfbf" opacity="0.5"/>
+  <rect x="570" y="542" width="460" height="92" rx="8" fill="white" filter="url(#shadow)"/>
+  <rect x="570" y="542" width="12" height="92" rx="6" fill="#1abc9c"/>
+  <circle cx="600" cy="588" r="18" fill="#1abc9c"/>
+  <text x="600" y="593" text-anchor="middle" font-size="14" font-weight="bold" fill="white">10</text>
+  <text x="626" y="560" font-size="13" font-weight="bold" fill="#1a1a1a">Final Integration Checklist</text>
+  <rect x="940" y="543" width="82" height="17" rx="8" fill="#ecf0f1"/>
+  <text x="981" y="555" text-anchor="middle" font-size="9" fill="#555">~1 hr</text>
+  <text x="626" y="577" font-size="10" fill="#333">PV-1/2/3 on AD9226 · buck output 4.9–5.1V · vcgencmd = 0x0</text>
+  <text x="626" y="591" font-size="10" fill="#333">ROS 2 nodes + UART 8-byte packet verified · star ground confirmed</text>
+  <text x="626" y="606" font-size="9" fill="#888">All checks pass → ready for pool test #1 (Week 9, Jul 20)</text>
+  <rect x="626" y="615" width="160" height="14" rx="7" fill="#fef9e7" stroke="#d68910" stroke-width="0.8"/>
+  <text x="706" y="625" text-anchor="middle" font-size="8" fill="#7d6608">↗ hull_construction_guide.md</text>
+  <!-- icon: checklist -->
+  <g transform="translate(932,548)">
+    <line x1="8" y1="16" x2="62" y2="16" stroke="#ddd" stroke-width="8" stroke-linecap="round"/>
+    <line x1="8" y1="30" x2="62" y2="30" stroke="#ddd" stroke-width="8" stroke-linecap="round"/>
+    <line x1="8" y1="44" x2="62" y2="44" stroke="#ddd" stroke-width="8" stroke-linecap="round"/>
+    <line x1="8" y1="58" x2="62" y2="58" stroke="#ddd" stroke-width="8" stroke-linecap="round"/>
+    <text x="10" y="20" font-size="12" fill="#27ae60" font-weight="bold">✓</text>
+    <text x="10" y="34" font-size="12" fill="#27ae60" font-weight="bold">✓</text>
+    <text x="10" y="48" font-size="12" fill="#27ae60" font-weight="bold">✓</text>
+    <text x="10" y="62" font-size="12" fill="#27ae60" font-weight="bold">✓</text>
+    <text x="34" y="78" text-anchor="middle" font-size="8" fill="#888">ALL PASS</text>
+  </g>
+
+  <!-- ✅ COMPLETE banner -->
+  <rect x="580" y="638" width="440" height="24" rx="12" fill="#eafaf1" stroke="#27ae60" stroke-width="1.5"/>
+  <text x="800" y="654" text-anchor="middle" font-size="11" fill="#1e8449" font-weight="bold">✅  Hull complete — proceed to pool test #1 (Week 9, Jul 20)</text>
+
+  <!-- ═══════════════ FILE REFERENCE FOOTER ═══════════════ -->
+  <rect x="20" y="674" width="1020" height="72" rx="8" fill="#1a2640" opacity="0.9"/>
+  <text x="530" y="694" text-anchor="middle" font-size="12" font-weight="bold" fill="#aab8cc">Connected Reference Files</text>
+
+  <rect x="36"  y="702" width="232" height="34" rx="6" fill="#253553"/>
+  <text x="38"  y="714" font-size="9" fill="#aab8cc">📐 Structure &amp; dimensions</text>
+  <text x="38"  y="727" font-size="10" fill="#4fc3f7" font-weight="bold">docs/diagrams/vehicle_top_view.svg</text>
+
+  <rect x="278" y="702" width="232" height="34" rx="6" fill="#253553"/>
+  <text x="280" y="714" font-size="9" fill="#aab8cc">📏 Heights &amp; waterline</text>
+  <text x="280" y="727" font-size="10" fill="#4fc3f7" font-weight="bold">docs/diagrams/vehicle_side_view.svg</text>
+
+  <rect x="520" y="702" width="232" height="34" rx="6" fill="#253553"/>
+  <text x="522" y="714" font-size="9" fill="#aab8cc">⚡ Wiring &amp; cable glands</text>
+  <text x="522" y="727" font-size="10" fill="#4fc3f7" font-weight="bold">docs/diagrams/wiring_overview.svg</text>
+
+  <rect x="762" y="702" width="262" height="34" rx="6" fill="#253553"/>
+  <text x="764" y="714" font-size="9" fill="#aab8cc">📋 Full phase details &amp; BOM</text>
+  <text x="764" y="727" font-size="10" fill="#4fc3f7" font-weight="bold">docs/hull_construction_guide.md</text>
+</svg>
