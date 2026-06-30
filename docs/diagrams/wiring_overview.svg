@@ -1,0 +1,167 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 980" font-family="Arial, sans-serif">
+  <rect x="0" y="0" width="1100" height="980" fill="#ffffff"/>
+
+  <text x="550" y="32" text-anchor="middle" font-size="20" font-weight="bold" fill="#1a1a1a">ASV Wiring / Block Diagram</text>
+  <text x="550" y="52" text-anchor="middle" font-size="12" fill="#555555">Functional connections only — not physical layout. Voltage domain shown on every cross-domain link.</text>
+
+  <defs>
+    <marker id="aRed" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#c0392b"/></marker>
+    <marker id="aOrange" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#d68910"/></marker>
+    <marker id="aBlue" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#2471a3"/></marker>
+    <marker id="aGreen" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#1e8449"/></marker>
+    <marker id="aPurple" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#7d3c98"/></marker>
+  </defs>
+
+  <!-- ============ POWER SOURCE CHAIN (11.1V, red) ============ -->
+  <rect x="40" y="80" width="120" height="60" rx="6" fill="#fdecea" stroke="#c0392b" stroke-width="2"/>
+  <text x="100" y="105" text-anchor="middle" font-size="12" font-weight="bold" fill="#922b21">LiPo 3S</text>
+  <text x="100" y="120" text-anchor="middle" font-size="11" fill="#922b21">11.1V 5000mAh</text>
+
+  <line x1="160" y1="110" x2="198" y2="110" stroke="#c0392b" stroke-width="3" marker-end="url(#aRed)"/>
+  <text x="178" y="100" text-anchor="middle" font-size="9" fill="#922b21">11.1V</text>
+
+  <rect x="200" y="80" width="80" height="60" rx="6" fill="#fdecea" stroke="#c0392b" stroke-width="2"/>
+  <text x="240" y="108" text-anchor="middle" font-size="11" font-weight="bold" fill="#922b21">20A</text>
+  <text x="240" y="122" text-anchor="middle" font-size="11" font-weight="bold" fill="#922b21">Fuse</text>
+
+  <line x1="280" y1="110" x2="318" y2="110" stroke="#c0392b" stroke-width="3" marker-end="url(#aRed)"/>
+  <text x="298" y="100" text-anchor="middle" font-size="9" fill="#922b21">11.1V</text>
+
+  <rect x="320" y="80" width="130" height="60" rx="6" fill="#fdecea" stroke="#c0392b" stroke-width="2"/>
+  <text x="385" y="105" text-anchor="middle" font-size="12" font-weight="bold" fill="#922b21">Buck Converter</text>
+  <text x="385" y="120" text-anchor="middle" font-size="10" fill="#922b21">(Pololu D24V50F5)</text>
+
+  <!-- 5V RAIL bus -->
+  <line x1="385" y1="140" x2="385" y2="180" stroke="#d68910" stroke-width="4"/>
+  <line x1="385" y1="180" x2="970" y2="180" stroke="#d68910" stroke-width="4"/>
+  <text x="975" y="184" font-size="12" fill="#d68910" font-weight="bold">5V RAIL</text>
+
+  <!-- 5V drops to Pi4, Tang Nano, ESP32 -->
+  <line x1="475" y1="180" x2="475" y2="218" stroke="#d68910" stroke-width="3" marker-end="url(#aOrange)"/>
+  <line x1="635" y1="180" x2="635" y2="218" stroke="#d68910" stroke-width="3" marker-end="url(#aOrange)"/>
+  <line x1="795" y1="180" x2="795" y2="218" stroke="#d68910" stroke-width="3" marker-end="url(#aOrange)"/>
+
+  <rect x="420" y="220" width="110" height="58" rx="6" fill="#fef5e7" stroke="#d68910" stroke-width="2"/>
+  <text x="475" y="245" text-anchor="middle" font-size="11" font-weight="bold" fill="#9a6a1f">Raspberry Pi 4</text>
+  <text x="475" y="260" text-anchor="middle" font-size="10" fill="#9a6a1f">1GB (ROS 2)</text>
+  <text x="475" y="273" text-anchor="middle" font-size="9" fill="#9a6a1f">5V, ~2.5A</text>
+
+  <rect x="580" y="220" width="110" height="58" rx="6" fill="#fef5e7" stroke="#d68910" stroke-width="2"/>
+  <text x="635" y="245" text-anchor="middle" font-size="11" font-weight="bold" fill="#9a6a1f">Tang Nano 20K</text>
+  <text x="635" y="260" text-anchor="middle" font-size="10" fill="#9a6a1f">(FPGA)</text>
+  <text x="635" y="273" text-anchor="middle" font-size="9" fill="#9a6a1f">5V in / 3.3V logic</text>
+
+  <rect x="740" y="220" width="110" height="58" rx="6" fill="#fef5e7" stroke="#d68910" stroke-width="2"/>
+  <text x="795" y="245" text-anchor="middle" font-size="11" font-weight="bold" fill="#9a6a1f">ESP32 #1</text>
+  <text x="795" y="260" text-anchor="middle" font-size="10" fill="#9a6a1f">(vehicle, micro-ROS)</text>
+  <text x="795" y="273" text-anchor="middle" font-size="9" fill="#9a6a1f">5V in / 3.3V logic</text>
+
+  <!-- 11.1V rail down to L298N (bypasses buck) -->
+  <line x1="100" y1="140" x2="100" y2="420" stroke="#c0392b" stroke-width="3"/>
+  <line x1="100" y1="420" x2="418" y2="420" stroke="#c0392b" stroke-width="3" marker-end="url(#aRed)"/>
+  <text x="150" y="412" font-size="9" fill="#922b21">11.1V (direct from LiPo)</text>
+
+  <rect x="420" y="392" width="130" height="58" rx="6" fill="#fdecea" stroke="#c0392b" stroke-width="2"/>
+  <text x="485" y="416" text-anchor="middle" font-size="11" font-weight="bold" fill="#922b21">L298N</text>
+  <text x="485" y="430" text-anchor="middle" font-size="10" fill="#922b21">Dual H-Bridge</text>
+  <text x="485" y="443" text-anchor="middle" font-size="8" fill="#922b21">motor 11.1V / logic 5V</text>
+
+  <!-- 5V logic supply into L298N -->
+  <line x1="475" y1="180" x2="475" y2="392" stroke="#d68910" stroke-width="2" stroke-dasharray="4,3"/>
+
+  <line x1="550" y1="408" x2="618" y2="395" stroke="#c0392b" stroke-width="3" marker-end="url(#aRed)"/>
+  <line x1="550" y1="434" x2="618" y2="450" stroke="#c0392b" stroke-width="3" marker-end="url(#aRed)"/>
+
+  <rect x="620" y="368" width="110" height="48" rx="6" fill="#fdecea" stroke="#c0392b" stroke-width="2"/>
+  <text x="675" y="388" text-anchor="middle" font-size="10" font-weight="bold" fill="#922b21">Thruster (Port)</text>
+  <text x="675" y="402" text-anchor="middle" font-size="9" fill="#922b21">RF-370, ~9V eff.</text>
+
+  <rect x="620" y="426" width="110" height="48" rx="6" fill="#fdecea" stroke="#c0392b" stroke-width="2"/>
+  <text x="675" y="446" text-anchor="middle" font-size="10" font-weight="bold" fill="#922b21">Thruster (Stbd)</text>
+  <text x="675" y="460" text-anchor="middle" font-size="9" fill="#922b21">RF-370, ~9V eff.</text>
+
+  <!-- ESP32 -> L298N control (3.3V, blue) -->
+  <line x1="795" y1="278" x2="795" y2="330" stroke="#2471a3" stroke-width="2"/>
+  <line x1="795" y1="330" x2="550" y2="395" stroke="#2471a3" stroke-width="2" marker-end="url(#aBlue)"/>
+  <text x="690" y="345" text-anchor="middle" font-size="9" fill="#1a5276">IN1–IN4, ENA, ENB — 3.3V</text>
+
+  <!-- ============ ESP32 PERIPHERALS ============ -->
+  <rect x="880" y="370" width="120" height="55" rx="6" fill="#f4ecf7" stroke="#7d3c98" stroke-width="2"/>
+  <text x="940" y="393" text-anchor="middle" font-size="11" font-weight="bold" fill="#5b2c6f">MPU-6050</text>
+  <text x="940" y="407" text-anchor="middle" font-size="10" fill="#5b2c6f">IMU (I2C, 0x68)</text>
+  <text x="940" y="419" text-anchor="middle" font-size="8" fill="#5b2c6f">VCC = 3.3V</text>
+
+  <line x1="850" y1="270" x2="940" y2="370" stroke="#7d3c98" stroke-width="2" marker-end="url(#aPurple)"/>
+  <text x="930" y="320" text-anchor="middle" font-size="9" fill="#5b2c6f">SDA/SCL — 3.3V</text>
+
+  <rect x="880" y="450" width="120" height="55" rx="6" fill="#fef5e7" stroke="#d68910" stroke-width="2"/>
+  <text x="940" y="473" text-anchor="middle" font-size="11" font-weight="bold" fill="#9a6a1f">JSN-SR04T</text>
+  <text x="940" y="487" text-anchor="middle" font-size="10" fill="#9a6a1f">Ultrasonic (5V)</text>
+  <text x="940" y="499" text-anchor="middle" font-size="8" fill="#9a6a1f">ESTOP &lt; 30cm</text>
+
+  <line x1="850" y1="278" x2="940" y2="450" stroke="#2471a3" stroke-width="2" marker-end="url(#aBlue)"/>
+  <text x="900" y="370" text-anchor="middle" font-size="9" fill="#1a5276">TRIG — 3.3V</text>
+
+  <!-- ECHO via divider -->
+  <rect x="800" y="500" width="64" height="36" rx="4" fill="#eaf2f8" stroke="#2471a3" stroke-width="1.5"/>
+  <text x="832" y="515" text-anchor="middle" font-size="8" fill="#1a5276" font-weight="bold">1k/2k</text>
+  <text x="832" y="527" text-anchor="middle" font-size="8" fill="#1a5276" font-weight="bold">divider</text>
+  <line x1="880" y1="478" x2="864" y2="510" stroke="#d68910" stroke-width="2" marker-end="url(#aOrange)"/>
+  <text x="900" y="510" font-size="8" fill="#9a6a1f">ECHO 5V</text>
+  <line x1="800" y1="518" x2="700" y2="278" stroke="#2471a3" stroke-width="2" marker-end="url(#aBlue)"/>
+  <text x="730" y="420" text-anchor="middle" font-size="9" fill="#1a5276">divider out → 3.3V</text>
+
+  <!-- ============ ACOUSTIC / FPGA SIGNAL CHAIN ============ -->
+  <rect x="40" y="600" width="120" height="58" rx="6" fill="#eafaf1" stroke="#1e8449" stroke-width="2"/>
+  <text x="100" y="624" text-anchor="middle" font-size="11" font-weight="bold" fill="#1e8449">TCT40-16R</text>
+  <text x="100" y="638" text-anchor="middle" font-size="10" fill="#1e8449">RX transducer</text>
+  <text x="100" y="650" text-anchor="middle" font-size="8" fill="#1e8449">analog, μV–mV</text>
+
+  <line x1="160" y1="629" x2="198" y2="629" stroke="#1e8449" stroke-width="3" marker-end="url(#aGreen)"/>
+
+  <rect x="200" y="600" width="130" height="58" rx="6" fill="#eafaf1" stroke="#1e8449" stroke-width="2"/>
+  <text x="265" y="624" text-anchor="middle" font-size="11" font-weight="bold" fill="#1e8449">MCP6022 Preamp</text>
+  <text x="265" y="638" text-anchor="middle" font-size="10" fill="#1e8449">×100 gain (~40dB)</text>
+  <text x="265" y="650" text-anchor="middle" font-size="8" fill="#1e8449">analog, AC-coupled</text>
+
+  <line x1="330" y1="629" x2="368" y2="629" stroke="#1e8449" stroke-width="3" marker-end="url(#aGreen)"/>
+  <text x="349" y="619" text-anchor="middle" font-size="8" fill="#1e8449">analog</text>
+
+  <rect x="370" y="600" width="120" height="58" rx="6" fill="#eafaf1" stroke="#1e8449" stroke-width="2"/>
+  <text x="430" y="624" text-anchor="middle" font-size="11" font-weight="bold" fill="#1e8449">AD9226 ADC</text>
+  <text x="430" y="638" text-anchor="middle" font-size="10" fill="#1e8449">12-bit, 65MSPS</text>
+  <text x="430" y="650" text-anchor="middle" font-size="8" fill="#1e8449">AVDD 5V / DRVDD 3.3V</text>
+
+  <!-- AD9226 <-> Tang Nano digital bus, blue -->
+  <path d="M 430 600 C 480 480, 560 350, 635 280" fill="none" stroke="#2471a3" stroke-width="2.5" marker-end="url(#aBlue)"/>
+  <text x="500" y="470" font-size="9" fill="#1a5276">ENCODE, D[11:0],</text>
+  <text x="500" y="482" font-size="9" fill="#1a5276">OTR, adc_clk — 3.3V</text>
+
+  <!-- Tang Nano -> Pi UART, blue -->
+  <path d="M 635 278 C 590 320, 530 320, 480 278" fill="none" stroke="#2471a3" stroke-width="2.5" marker-end="url(#aBlue)"/>
+  <text x="557" y="335" text-anchor="middle" font-size="9" fill="#1a5276">UART TX (Tang Nano pin 86)</text>
+  <text x="557" y="347" text-anchor="middle" font-size="9" fill="#1a5276">→ Pi /dev/ttyAMA0 — 3.3V, 115200 baud</text>
+
+  <!-- ============ LEGEND ============ -->
+  <rect x="40" y="700" width="1020" height="120" fill="#fafafa" stroke="#ccc" stroke-width="1"/>
+  <text x="60" y="722" font-size="13" font-weight="bold" fill="#333">Legend — voltage / signal domain</text>
+
+  <line x1="60" y1="745" x2="100" y2="745" stroke="#c0392b" stroke-width="3"/>
+  <text x="108" y="749" font-size="11" fill="#333">11.1V (LiPo / motor rail)</text>
+
+  <line x1="60" y1="770" x2="100" y2="770" stroke="#d68910" stroke-width="3"/>
+  <text x="108" y="774" font-size="11" fill="#333">5V (logic rail)</text>
+
+  <line x1="320" y1="745" x2="360" y2="745" stroke="#2471a3" stroke-width="3"/>
+  <text x="368" y="749" font-size="11" fill="#333">3.3V (FPGA / ESP32 logic)</text>
+
+  <line x1="320" y1="770" x2="360" y2="770" stroke="#1e8449" stroke-width="3"/>
+  <text x="368" y="774" font-size="11" fill="#333">Analog signal (acoustic chain)</text>
+
+  <line x1="620" y1="745" x2="660" y2="745" stroke="#7d3c98" stroke-width="3"/>
+  <text x="668" y="749" font-size="11" fill="#333">I2C bus (3.3V)</text>
+
+  <text x="60" y="800" font-size="10" fill="#666">All cross-domain links are labeled with voltage at the connection point. See CLAUDE.md hardware contracts for full pin assignments.</text>
+
+  <text x="550" y="870" text-anchor="middle" font-size="10" fill="#888">Block diagram only — physical cable routing shown in vehicle_side_view.svg / vehicle_top_view.svg</text>
+</svg>

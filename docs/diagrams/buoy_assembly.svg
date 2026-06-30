@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 950 800" font-family="Arial, sans-serif">
+  <rect x="0" y="0" width="950" height="800" fill="#ffffff"/>
+
+  <text x="475" y="35" text-anchor="middle" font-size="20" font-weight="bold" fill="#1a1a1a">Acoustic Beacon Buoy — Assembly Diagram</text>
+  <text x="475" y="56" text-anchor="middle" font-size="12" fill="#555555">Same physical design used for Buoy 1 and Buoy 2 (chirp direction differs — see callouts)</text>
+
+  <!-- ===================== LEFT: side/front assembly view ===================== -->
+  <text x="230" y="90" text-anchor="middle" font-size="14" font-weight="bold" fill="#333">Side View — Assembly</text>
+
+  <!-- waterline -->
+  <line x1="60" y1="430" x2="420" y2="430" stroke="#2980b9" stroke-width="2" stroke-dasharray="8,4"/>
+  <text x="425" y="434" font-size="10" fill="#2980b9">Waterline</text>
+  <rect x="0" y="430" width="460" height="120" fill="#d6eaf8" opacity="0.5"/>
+
+  <!-- pool noodle (horizontal cylinder, floats at waterline) -->
+  <rect x="90" y="400" width="280" height="60" rx="30" fill="#f5b7b1" stroke="#943126" stroke-width="2"/>
+  <text x="230" y="435" text-anchor="middle" font-size="11" fill="#6e2c1a" font-weight="bold">Pool Noodle (flotation base)</text>
+
+  <!-- ABS project box mounted on top of noodle -->
+  <rect x="160" y="290" width="140" height="115" fill="#fdebd0" stroke="#9a6a1f" stroke-width="2.5"/>
+  <text x="230" y="270" text-anchor="middle" font-size="11" fill="#7d6608" font-weight="bold">ABS Project Box</text>
+
+  <!-- 3x transducers on top face, side view shows 2 visible + 1 hidden -->
+  <rect x="172" y="276" width="22" height="16" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
+  <rect x="219" y="270" width="22" height="16" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
+  <rect x="266" y="276" width="22" height="16" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
+  <text x="230" y="258" text-anchor="middle" font-size="9" fill="#7d6608">3× TCT40-16T (top face, 120° spacing — see inset)</text>
+
+  <!-- internal cutaway dashed outline showing ESP32 + battery -->
+  <rect x="170" y="300" width="120" height="95" fill="none" stroke="#666" stroke-width="1" stroke-dasharray="3,2"/>
+  <rect x="180" y="312" width="45" height="35" fill="#2ecc71" stroke="#1e8449" stroke-width="1.5"/>
+  <text x="202" y="332" text-anchor="middle" font-size="8" fill="#0b3d24" font-weight="bold">ESP32</text>
+  <rect x="235" y="312" width="45" height="35" fill="#2ecc71" stroke="#1e8449" stroke-width="1.5"/>
+  <text x="257" y="328" text-anchor="middle" font-size="7" fill="#0b3d24" font-weight="bold">Battery</text>
+  <text x="257" y="339" text-anchor="middle" font-size="7" fill="#0b3d24" font-weight="bold">Holder</text>
+
+  <!-- IRLZ44N MOSFETs on exterior wall -->
+  <rect x="296" y="320" width="14" height="40" fill="#e74c3c" stroke="#922b21" stroke-width="1.5"/>
+  <text x="330" y="330" font-size="9" fill="#922b21" font-weight="bold">3× IRLZ44N</text>
+  <text x="330" y="342" font-size="9" fill="#922b21">MOSFETs</text>
+  <text x="330" y="354" font-size="8" fill="#922b21">(exterior wall,</text>
+  <text x="330" y="365" font-size="8" fill="#922b21">one per TX)</text>
+
+  <!-- anchor line at bottom of noodle -->
+  <line x1="230" y1="460" x2="230" y2="560" stroke="#333" stroke-width="2"/>
+  <circle cx="230" cy="568" r="8" fill="#333"/>
+  <text x="230" y="592" text-anchor="middle" font-size="10" fill="#333" font-weight="bold">Anchor line</text>
+  <text x="230" y="605" text-anchor="middle" font-size="9" fill="#666">attachment point</text>
+
+  <!-- ===================== RIGHT: top-view inset of transducer placement ===================== -->
+  <text x="720" y="90" text-anchor="middle" font-size="14" font-weight="bold" fill="#333">Top View Inset — Transducer Placement</text>
+  <rect x="610" y="120" width="220" height="220" fill="#fdebd0" stroke="#9a6a1f" stroke-width="2.5"/>
+  <text x="720" y="350" text-anchor="middle" font-size="10" fill="#7d6608">ABS box top face (viewed from above)</text>
+
+  <!-- center reference -->
+  <circle cx="720" cy="230" r="3" fill="#333"/>
+  <!-- 3 transducers at 120 deg spacing around a circle r=80 -->
+  <!-- angle 90 (top), 210, 330 degrees -->
+  <circle cx="720" cy="150" r="16" fill="#f1c40f" stroke="#9a7d0a" stroke-width="2"/>
+  <text x="720" y="135" text-anchor="middle" font-size="9" fill="#7d6608">TX1 (0°)</text>
+
+  <circle cx="650.7" cy="270" r="16" fill="#f1c40f" stroke="#9a7d0a" stroke-width="2"/>
+  <text x="615" y="290" text-anchor="middle" font-size="9" fill="#7d6608">TX2 (120°)</text>
+
+  <circle cx="789.3" cy="270" r="16" fill="#f1c40f" stroke="#9a7d0a" stroke-width="2"/>
+  <text x="825" y="290" text-anchor="middle" font-size="9" fill="#7d6608">TX3 (240°)</text>
+
+  <!-- dashed circle showing the 120 deg layout circle -->
+  <circle cx="720" cy="230" r="80" fill="none" stroke="#999" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="720" y1="230" x2="720" y2="150" stroke="#999" stroke-width="1" stroke-dasharray="2,2"/>
+  <line x1="720" y1="230" x2="650.7" y2="270" stroke="#999" stroke-width="1" stroke-dasharray="2,2"/>
+  <line x1="720" y1="230" x2="789.3" y2="270" stroke="#999" stroke-width="1" stroke-dasharray="2,2"/>
+  <text x="745" y="225" font-size="9" fill="#666">120°</text>
+
+  <!-- ===================== Callouts ===================== -->
+  <rect x="560" y="400" width="330" height="80" fill="#eafaf1" stroke="#1e8449" stroke-width="2"/>
+  <text x="725" y="424" text-anchor="middle" font-size="13" font-weight="bold" fill="#1e8449">Buoy 1 — UP-sweep</text>
+  <text x="725" y="442" text-anchor="middle" font-size="11" fill="#1e8449">LFM chirp: 38.5 kHz → 41.5 kHz</text>
+  <text x="725" y="458" text-anchor="middle" font-size="10" fill="#1e8449">Matched against matched_filter_1.v reference ROM</text>
+  <text x="725" y="472" text-anchor="middle" font-size="9" fill="#1e8449">Identical mechanical assembly to Buoy 2</text>
+
+  <rect x="560" y="495" width="330" height="80" fill="#fef5e7" stroke="#9a6a1f" stroke-width="2"/>
+  <text x="725" y="519" text-anchor="middle" font-size="13" font-weight="bold" fill="#9a6a1f">Buoy 2 — DOWN-sweep</text>
+  <text x="725" y="537" text-anchor="middle" font-size="11" fill="#9a6a1f">LFM chirp: 41.5 kHz → 38.5 kHz</text>
+  <text x="725" y="553" text-anchor="middle" font-size="10" fill="#9a6a1f">Matched against matched_filter_2.v reference ROM</text>
+  <text x="725" y="567" text-anchor="middle" font-size="9" fill="#9a6a1f">Identical mechanical assembly to Buoy 1</text>
+
+  <text x="475" y="630" text-anchor="middle" font-size="11" fill="#555">Beacon ID is code-division (sweep direction), not frequency band — both buoys share 38.5–41.5 kHz (per FC-7)</text>
+
+  <!-- Legend -->
+  <g transform="translate(60,680)">
+    <rect x="0" y="0" width="14" height="14" fill="#f5b7b1" stroke="#943126"/>
+    <text x="20" y="11" font-size="10" fill="#333">Pool noodle (float)</text>
+    <rect x="170" y="0" width="14" height="14" fill="#fdebd0" stroke="#9a6a1f"/>
+    <text x="190" y="11" font-size="10" fill="#333">ABS box</text>
+    <rect x="280" y="0" width="14" height="14" fill="#2ecc71" stroke="#1e8449"/>
+    <text x="300" y="11" font-size="10" fill="#333">Electronics (ESP32 / battery)</text>
+    <rect x="480" y="0" width="14" height="14" fill="#e74c3c" stroke="#922b21"/>
+    <text x="500" y="11" font-size="10" fill="#333">IRLZ44N MOSFETs</text>
+    <rect x="650" y="0" width="14" height="14" fill="#f1c40f" stroke="#9a7d0a"/>
+    <text x="670" y="11" font-size="10" fill="#333">TCT40-16T transducers</text>
+  </g>
+
+  <text x="475" y="760" text-anchor="middle" font-size="9" fill="#888">Note: IRLZ44N gate drive — 150–220Ω series resistor, 100kΩ gate pulldown, 1N4148 drain clamp (per component audit Jun 28)</text>
+</svg>
