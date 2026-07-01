@@ -2,7 +2,7 @@
   <rect x="0" y="0" width="950" height="720" fill="#ffffff"/>
 
   <text x="475" y="32" text-anchor="middle" font-size="20" font-weight="bold" fill="#1a1a1a">ASV Vehicle — Side Profile View</text>
-  <text x="475" y="52" text-anchor="middle" font-size="12" fill="#555555">Bow at left — heights referenced to waterline (WL = 0 mm). Scale: 1.1 px/mm.</text>
+  <text x="475" y="52" text-anchor="middle" font-size="12" fill="#555555">Foam-and-Deck Catamaran (Size B) — Bow at left, heights referenced to waterline (WL = 0 mm). Scale: 1.1 px/mm.</text>
 
   <defs>
     <marker id="arrowD" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
@@ -20,11 +20,11 @@
   <!-- =====================================================================
        VERTICAL REFERENCE GRID (all y coords derived from WL_y=490)
        WL_y   = 490  → 0 mm
-       Pontoon top y = 427  → +57 mm above WL
-       Cross member top y = 399 → +83 mm
-       Deck top y = 384  → +96 mm
-       Enclosure top y = 285  → +186 mm
-       Mast top y = 182  → +280 mm
+       Pontoon (noodle bundle) top y = 435 → +50 mm above WL (~half-submerged)
+       Deck bottom y = 415 → +68 mm
+       Deck top y = 400  → +82 mm
+       Enclosure top y = 301  → +172 mm
+       Mast top y = 137  → +325 mm (dowel tip incl. transducer)
        ===================================================================== -->
 
   <!-- Water fill (below WL) -->
@@ -34,128 +34,135 @@
   <line x1="55" y1="490" x2="895" y2="490" stroke="#2980b9" stroke-width="2" stroke-dasharray="9,5"/>
   <text x="900" y="494" font-size="11" fill="#2980b9" font-weight="bold">WL (0 mm)</text>
 
-  <!-- ========== PONTOON (side view — long rounded rect, CL at WL) ========== -->
-  <!-- x=100 bow, x=870 stern, y=427–553, rx=63 -->
-  <rect x="100" y="427" width="770" height="126" rx="63" fill="#d9d9d9" stroke="#666666" stroke-width="2"/>
-  <text x="485" y="498" text-anchor="middle" font-size="11" fill="#444">Pontoon  4" Sch 40 PVC  700 mm long  (shown ~50% submerged)</text>
+  <!-- ========== PONTOON (side view — noodle bundle, ~half submerged) ========== -->
+  <!-- x=155 bow, x=705 stern (500mm long), y=435-545, rx=55 -->
+  <rect x="155" y="435" width="550" height="110" rx="55" fill="#f5cba7" stroke="#b9770e" stroke-width="2"/>
+  <text x="430" y="500" text-anchor="middle" font-size="11" fill="#7d5a1e">Pontoon: 3× pool noodles on &#189;" PVC core rod, 500mm (shown ~half submerged)</text>
 
-  <!-- ========== CROSS MEMBERS (side profile = circles, on pontoon top) ========== -->
-  <!-- CL y = 427-14 = 413; radius = 14 px (= 25.4 mm dia × 1.1) -->
-  <circle cx="265" cy="413" r="14" fill="#aaaaaa" stroke="#555555" stroke-width="1.5"/>
-  <circle cx="485" cy="413" r="14" fill="#aaaaaa" stroke="#555555" stroke-width="1.5"/>
-  <circle cx="705" cy="413" r="14" fill="#aaaaaa" stroke="#555555" stroke-width="1.5"/>
+  <!-- noodle cross-section end-view inset (bow end, showing triangular bundle around rod) -->
+  <g transform="translate(60,455)">
+    <circle cx="0" cy="0" r="34" fill="#fbeee0" stroke="#cccccc" stroke-width="1" stroke-dasharray="2,2"/>
+    <circle cx="-11" cy="9" r="15" fill="#f5cba7" stroke="#b9770e" stroke-width="1.5"/>
+    <circle cx="11" cy="9" r="15" fill="#f5cba7" stroke="#b9770e" stroke-width="1.5"/>
+    <circle cx="0" cy="-13" r="15" fill="#f5cba7" stroke="#b9770e" stroke-width="1.5"/>
+    <circle cx="0" cy="0" r="4" fill="#aaaaaa" stroke="#555555" stroke-width="1"/>
+    <text x="0" y="48" text-anchor="middle" font-size="8" fill="#666">3-noodle bundle</text>
+    <text x="0" y="59" text-anchor="middle" font-size="8" fill="#666">+ &#189;" core rod</text>
+  </g>
 
-  <!-- cross member position ticks above pontoon -->
-  <line x1="265" y1="399" x2="265" y2="384" stroke="#888" stroke-width="1" stroke-dasharray="2,2"/>
-  <line x1="485" y1="399" x2="485" y2="384" stroke="#888" stroke-width="1" stroke-dasharray="2,2"/>
-  <line x1="705" y1="399" x2="705" y2="384" stroke="#888" stroke-width="1" stroke-dasharray="2,2"/>
+  <!-- zip-tie lash marks on pontoon (side view) -->
+  <g stroke="#7d5a1e" stroke-width="2.5" opacity="0.8">
+    <line x1="255" y1="435" x2="255" y2="545"/>
+    <line x1="355" y1="435" x2="355" y2="545"/>
+    <line x1="455" y1="435" x2="455" y2="545"/>
+    <line x1="555" y1="435" x2="555" y2="545"/>
+  </g>
 
-  <!-- Cross member labels -->
-  <text x="265" y="395" text-anchor="middle" font-size="9" fill="#555">CM1</text>
-  <text x="485" y="395" text-anchor="middle" font-size="9" fill="#555">CM2</text>
-  <text x="705" y="395" text-anchor="middle" font-size="9" fill="#555">CM3</text>
-  <text x="485" y="378" text-anchor="middle" font-size="10" fill="#555">1" PVC cross members × 3  (seen end-on from side)</text>
+  <!-- ========== PIPE STRAPS (core rod -> deck, side profile = small rects on pontoon top) ========== -->
+  <rect x="288" y="425" width="14" height="14" fill="#aaaaaa" stroke="#555555" stroke-width="1.2"/>
+  <rect x="558" y="425" width="14" height="14" fill="#aaaaaa" stroke="#555555" stroke-width="1.2"/>
+  <text x="430" y="420" text-anchor="middle" font-size="9" fill="#555">galvanized &#189;" pipe straps (core rod → deck)</text>
 
-  <!-- ========== DECK PLATFORM (sits on top of cross members) ========== -->
-  <!-- y = 369 (top) to y = 384 (bottom); x = 265 to 705 -->
-  <rect x="265" y="369" width="440" height="15" fill="#e8d5b0" stroke="#9a6a1f" stroke-width="1.5"/>
-  <rect x="265" y="369" width="440" height="15" fill="url(#deckHatch)" opacity="0.5"/>
-  <text x="485" y="363" text-anchor="middle" font-size="10" fill="#7d5a1e" font-weight="bold">Deck Platform  (marine ply / Al sheet)</text>
+  <!-- ========== DECK PLATFORM (sits on top of core rod straps) ========== -->
+  <!-- y = 400 (top) to y = 415 (bottom); x = 255 to 605 (deck panel edge-on) -->
+  <rect x="255" y="400" width="350" height="15" fill="#e8d5b0" stroke="#9a6a1f" stroke-width="1.5"/>
+  <rect x="255" y="400" width="350" height="15" fill="url(#deckHatch)" opacity="0.5"/>
+  <text x="430" y="394" text-anchor="middle" font-size="10" fill="#7d5a1e" font-weight="bold">Deck Platform (&#190;" plywood/pine, Spar Urethane sealed)</text>
 
-  <!-- ========== BOW BRACE (connects mast foot to deck/CM1) ========== -->
-  <!-- horizontal brace at deck level from bow (x=100) to CM1 (x=265), y=374 -->
-  <rect x="100" y="371" width="165" height="8" fill="#b0b0b0" stroke="#666" stroke-width="1.5"/>
-  <text x="182" y="368" text-anchor="middle" font-size="9" fill="#555">bow brace (1" PVC)</text>
+  <!-- ========== MAST L-BRACKET (connects mast foot to deck at bow) ========== -->
+  <rect x="195" y="392" width="70" height="8" fill="#b0b0b0" stroke="#666" stroke-width="1.5"/>
+  <text x="230" y="389" text-anchor="middle" font-size="9" fill="#555">Al L-bracket</text>
 
-  <!-- ========== MAST (foot at deck level y=369, top at y=182 = 280 mm above WL) ========== -->
-  <rect x="192" y="182" width="14" height="187" fill="#aaaaaa" stroke="#555555" stroke-width="1.5"/>
-
-  <!-- Mast label -->
-  <text x="176" y="200" text-anchor="end" font-size="11" fill="#444">Mast</text>
-  <text x="176" y="213" text-anchor="end" font-size="10" fill="#444">1" PVC</text>
-  <line x1="178" y1="200" x2="192" y2="200" stroke="#888" stroke-width="1"/>
+  <!-- ========== MAST (foot at deck level y=400, top at y=137 = 325 mm above WL incl. transducer) ========== -->
+  <rect x="220" y="150" width="12" height="250" fill="#d7bfa3" stroke="#7d5a1e" stroke-width="1.5"/>
+  <text x="204" y="220" text-anchor="end" font-size="11" fill="#444">Mast</text>
+  <text x="204" y="233" text-anchor="end" font-size="10" fill="#444">&#190;" pine dowel</text>
+  <line x1="206" y1="220" x2="220" y2="220" stroke="#888" stroke-width="1"/>
 
   <!-- ========== TRANSDUCER at mast top ========== -->
-  <rect x="181" y="163" width="36" height="20" fill="#f1c40f" stroke="#9a7d0a" stroke-width="2"/>
-  <text x="199" y="151" text-anchor="middle" font-size="11" fill="#9a7d0a" font-weight="bold">TCT40-16R</text>
-  <line x1="199" y1="153" x2="199" y2="163" stroke="#9a7d0a" stroke-width="1"/>
+  <rect x="208" y="118" width="36" height="20" fill="#f1c40f" stroke="#9a7d0a" stroke-width="2"/>
+  <text x="226" y="106" text-anchor="middle" font-size="11" fill="#9a7d0a" font-weight="bold">TCT40-16R</text>
+  <line x1="226" y1="108" x2="226" y2="118" stroke="#9a7d0a" stroke-width="1"/>
 
-  <!-- ========== ELECTRONICS ENCLOSURE (sits on deck, y_bot=369, height=99px=90mm) ========== -->
-  <!-- centered between CM1 and CM3: x_center=485, width=176 → x=397 to x=573 -->
-  <rect x="397" y="270" width="176" height="99" fill="#aed6f1" stroke="#1f6feb" stroke-width="2.5"/>
-  <text x="485" y="313" text-anchor="middle" font-size="11" font-weight="bold" fill="#0b3d91">Electronics</text>
-  <text x="485" y="327" text-anchor="middle" font-size="11" font-weight="bold" fill="#0b3d91">Enclosure</text>
-  <text x="485" y="341" text-anchor="middle" font-size="10" fill="#0b3d91">160 × 160 × 90 mm</text>
-  <text x="485" y="355" text-anchor="middle" font-size="9" fill="#0b3d91">(IP67)</text>
+  <!-- ========== ELECTRONICS ENCLOSURE (sits on deck, y_bot=400, height=99px=90mm) ========== -->
+  <!-- centered on deck: x_center=430, width=176 → x=342 to x=518 -->
+  <rect x="342" y="301" width="176" height="99" fill="#aed6f1" stroke="#1f6feb" stroke-width="2.5"/>
+  <text x="430" y="344" text-anchor="middle" font-size="11" font-weight="bold" fill="#0b3d91">Electronics</text>
+  <text x="430" y="358" text-anchor="middle" font-size="11" font-weight="bold" fill="#0b3d91">Enclosure</text>
+  <text x="430" y="372" text-anchor="middle" font-size="10" fill="#0b3d91">160 × 160 × 90 mm</text>
+  <text x="430" y="386" text-anchor="middle" font-size="9" fill="#0b3d91">(IP67, bolted to deck via M4)</text>
+
+  <!-- M4 bolt markers, enclosure to deck -->
+  <line x1="355" y1="400" x2="355" y2="410" stroke="#1f6feb" stroke-width="2"/>
+  <line x1="505" y1="400" x2="505" y2="410" stroke="#1f6feb" stroke-width="2"/>
 
   <!-- ========== THRUSTER (below WL, stern) ========== -->
-  <rect x="806" y="508" width="38" height="26" fill="#e74c3c" stroke="#922b21" stroke-width="2"/>
-  <text x="855" y="519" font-size="11" fill="#922b21" font-weight="bold">Thruster</text>
-  <text x="855" y="531" font-size="9" fill="#922b21">(below WL, stern)</text>
+  <rect x="636" y="516" width="38" height="26" fill="#e74c3c" stroke="#922b21" stroke-width="2"/>
+  <text x="685" y="527" font-size="11" fill="#922b21" font-weight="bold">Thruster</text>
+  <text x="685" y="539" font-size="9" fill="#922b21">(below WL, stern, clamped to core rod)</text>
 
   <!-- ========== CABLE ROUTING ========== -->
   <!-- Signal cable: enclosure → down mast face → transducer -->
-  <path d="M 430 295 C 350 270, 230 230, 199 185" fill="none" stroke="#27ae60" stroke-width="2" stroke-dasharray="5,3"/>
-  <text x="305" y="245" text-anchor="middle" font-size="9" fill="#1e8449">RX signal cable (coax)</text>
+  <path d="M 375 326 C 300 300, 240 200, 226 138" fill="none" stroke="#27ae60" stroke-width="2" stroke-dasharray="5,3"/>
+  <text x="270" y="230" text-anchor="middle" font-size="9" fill="#1e8449">RX signal cable (coax)</text>
 
-  <!-- Motor cable: enclosure → along deck → down into pontoon → thruster -->
-  <path d="M 573 340 L 800 369 L 825 508" fill="none" stroke="#8e44ad" stroke-width="2" stroke-dasharray="5,3"/>
-  <text x="680" y="360" text-anchor="middle" font-size="9" fill="#6c3483">motor + control cable</text>
+  <!-- Motor cable: enclosure → along deck → down onto core rod → thruster -->
+  <path d="M 518 370 L 630 400 L 655 516" fill="none" stroke="#8e44ad" stroke-width="2" stroke-dasharray="5,3"/>
+  <text x="600" y="390" text-anchor="middle" font-size="9" fill="#6c3483">motor + control cable</text>
 
   <!-- ========== DIMENSION SPINE (right side) ========== -->
-  <line x1="890" y1="490" x2="890" y2="163" stroke="#333" stroke-width="1.5"/>
+  <line x1="890" y1="490" x2="890" y2="118" stroke="#333" stroke-width="1.5"/>
 
   <!-- WL tick + label -->
   <line x1="883" y1="490" x2="897" y2="490" stroke="#333" stroke-width="1.5"/>
   <text x="878" y="494" text-anchor="end" font-size="11" fill="#000" font-weight="bold">0 mm  WL</text>
 
   <!-- Pontoon top tick -->
-  <line x1="883" y1="427" x2="897" y2="427" stroke="#333" stroke-width="1.5"/>
-  <text x="878" y="431" text-anchor="end" font-size="11" fill="#555">+57 mm  (pontoon top)</text>
+  <line x1="883" y1="435" x2="897" y2="435" stroke="#333" stroke-width="1.5"/>
+  <text x="878" y="439" text-anchor="end" font-size="11" fill="#555">+50 mm  (pontoon top, ~half-submerged)</text>
 
   <!-- Deck top tick -->
-  <line x1="883" y1="369" x2="897" y2="369" stroke="#333" stroke-width="1.5"/>
-  <text x="878" y="367" text-anchor="end" font-size="11" fill="#7d5a1e" font-weight="bold">+96 mm  deck surface</text>
+  <line x1="883" y1="400" x2="897" y2="400" stroke="#333" stroke-width="1.5"/>
+  <text x="878" y="398" text-anchor="end" font-size="11" fill="#7d5a1e" font-weight="bold">+82 mm  deck surface</text>
 
-  <!-- Enclosure bottom = deck top -->
   <!-- Enclosure top tick -->
-  <line x1="883" y1="270" x2="897" y2="270" stroke="#333" stroke-width="1.5"/>
-  <text x="878" y="268" text-anchor="end" font-size="11" fill="#0b3d91">+186 mm  enclosure top</text>
+  <line x1="883" y1="301" x2="897" y2="301" stroke="#333" stroke-width="1.5"/>
+  <text x="878" y="299" text-anchor="end" font-size="11" fill="#0b3d91">+172 mm  enclosure top</text>
 
   <!-- Mast top tick -->
-  <line x1="883" y1="182" x2="897" y2="182" stroke="#333" stroke-width="1.5"/>
-  <text x="878" y="180" text-anchor="end" font-size="11" fill="#9a7d0a" font-weight="bold">+280 mm  mast top (250–300 mm per spec)</text>
+  <line x1="883" y1="137" x2="897" y2="137" stroke="#333" stroke-width="1.5"/>
+  <text x="878" y="135" text-anchor="end" font-size="11" fill="#9a7d0a" font-weight="bold">+325 mm  mast/transducer top (target 250–300mm WL clearance, per spec)</text>
 
   <!-- Double-headed arrows for key spans -->
   <!-- WL to deck -->
-  <line x1="84" y1="490" x2="84" y2="369" stroke="#555" stroke-width="1" marker-end="url(#arrowD)"/>
-  <line x1="84" y1="369" x2="84" y2="490" stroke="#555" stroke-width="1" marker-end="url(#arrowD)"/>
-  <text x="68" y="435" text-anchor="middle" font-size="10" fill="#555" transform="rotate(-90,68,435)">96 mm</text>
+  <line x1="84" y1="490" x2="84" y2="400" stroke="#555" stroke-width="1" marker-end="url(#arrowD)"/>
+  <line x1="84" y1="400" x2="84" y2="490" stroke="#555" stroke-width="1" marker-end="url(#arrowD)"/>
+  <text x="68" y="448" text-anchor="middle" font-size="10" fill="#555" transform="rotate(-90,68,448)">82 mm</text>
 
   <!-- Deck to mast top -->
-  <line x1="74" y1="369" x2="74" y2="182" stroke="#555" stroke-width="1" marker-end="url(#arrowD)"/>
-  <line x1="74" y1="182" x2="74" y2="369" stroke="#555" stroke-width="1" marker-end="url(#arrowD)"/>
-  <text x="58" y="280" text-anchor="middle" font-size="10" fill="#555" transform="rotate(-90,58,280)">184 mm mast above deck</text>
+  <line x1="74" y1="400" x2="74" y2="137" stroke="#555" stroke-width="1" marker-end="url(#arrowD)"/>
+  <line x1="74" y1="137" x2="74" y2="400" stroke="#555" stroke-width="1" marker-end="url(#arrowD)"/>
+  <text x="58" y="270" text-anchor="middle" font-size="10" fill="#555" transform="rotate(-90,58,270)">243 mm mast above deck</text>
 
   <!-- ========== FOOTER NOTES ========== -->
-  <text x="475" y="648" text-anchor="middle" font-size="12" fill="#333" font-weight="bold">Mast height 250–300 mm above waterline (CLAUDE.md). Deck/float heights are estimates — verify after buoyancy bench test.</text>
-  <text x="475" y="664" text-anchor="middle" font-size="10" fill="#666">Structural layers (bottom to top): Pontoon → Cross Members (1" PVC) → Deck Platform → Enclosure / Mast</text>
+  <text x="475" y="648" text-anchor="middle" font-size="12" fill="#333" font-weight="bold">Mast/transducer height 250–300 mm above waterline (CLAUDE.md, unchanged spec). Deck/float heights are estimates — verify after buoyancy float test (Phase 6).</text>
+  <text x="475" y="664" text-anchor="middle" font-size="10" fill="#666">Structural layers (bottom to top): Noodle Pontoon (PVC core rod spine) → Deck Platform (pipe-strapped) → Enclosure / Mast — all mechanical fasteners, zero structural epoxy</text>
 
   <!-- ========== LEGEND ========== -->
   <g transform="translate(60,680)">
-    <rect x="0"   y="0" width="14" height="14" fill="#d9d9d9" stroke="#666"/>
-    <text x="18"  y="11" font-size="10" fill="#333">PVC</text>
-    <rect x="60"  y="0" width="14" height="14" fill="#e8d5b0" stroke="#9a6a1f"/>
-    <text x="78"  y="11" font-size="10" fill="#333">Deck platform</text>
-    <rect x="178" y="0" width="14" height="14" fill="#aed6f1" stroke="#1f6feb"/>
-    <text x="196" y="11" font-size="10" fill="#333">Enclosure</text>
-    <rect x="266" y="0" width="14" height="14" fill="#e74c3c" stroke="#922b21"/>
-    <text x="284" y="11" font-size="10" fill="#333">Thruster</text>
-    <rect x="354" y="0" width="14" height="14" fill="#f1c40f" stroke="#9a7d0a"/>
-    <text x="372" y="11" font-size="10" fill="#333">Transducer</text>
-    <line x1="448" y1="7" x2="478" y2="7" stroke="#27ae60" stroke-width="2" stroke-dasharray="4,3"/>
-    <text x="483" y="11" font-size="10" fill="#333">Signal cable</text>
-    <line x1="570" y1="7" x2="600" y2="7" stroke="#8e44ad" stroke-width="2" stroke-dasharray="4,3"/>
-    <text x="605" y="11" font-size="10" fill="#333">Power/control cable</text>
+    <rect x="0"   y="0" width="14" height="14" fill="#f5cba7" stroke="#b9770e"/>
+    <text x="18"  y="11" font-size="10" fill="#333">Noodle pontoon</text>
+    <rect x="120"  y="0" width="14" height="14" fill="#e8d5b0" stroke="#9a6a1f"/>
+    <text x="138"  y="11" font-size="10" fill="#333">Deck platform</text>
+    <rect x="240" y="0" width="14" height="14" fill="#aed6f1" stroke="#1f6feb"/>
+    <text x="258" y="11" font-size="10" fill="#333">Enclosure</text>
+    <rect x="328" y="0" width="14" height="14" fill="#e74c3c" stroke="#922b21"/>
+    <text x="346" y="11" font-size="10" fill="#333">Thruster</text>
+    <rect x="416" y="0" width="14" height="14" fill="#f1c40f" stroke="#9a7d0a"/>
+    <text x="434" y="11" font-size="10" fill="#333">Transducer</text>
+    <line x1="510" y1="7" x2="540" y2="7" stroke="#27ae60" stroke-width="2" stroke-dasharray="4,3"/>
+    <text x="545" y="11" font-size="10" fill="#333">Signal cable</text>
+    <line x1="632" y1="7" x2="662" y2="7" stroke="#8e44ad" stroke-width="2" stroke-dasharray="4,3"/>
+    <text x="667" y="11" font-size="10" fill="#333">Power/control cable</text>
   </g>
 </svg>

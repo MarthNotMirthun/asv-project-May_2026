@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 950 820" font-family="Arial, sans-serif">
-  <rect x="0" y="0" width="950" height="820" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 950 700" font-family="Arial, sans-serif">
+  <rect x="0" y="0" width="950" height="700" fill="#ffffff"/>
 
   <text x="475" y="35" text-anchor="middle" font-size="20" font-weight="bold" fill="#1a1a1a">ASV Vehicle — Top View</text>
-  <text x="475" y="56" text-anchor="middle" font-size="12" fill="#555555">Catamaran Hull, PVC Frame — All dimensions in millimeters (mm)</text>
+  <text x="475" y="56" text-anchor="middle" font-size="12" fill="#555555">Foam-and-Deck Catamaran (Size B) — All dimensions in millimeters (mm)</text>
 
   <!-- Orientation arrow -->
   <line x1="100" y1="90" x2="160" y2="90" stroke="#333" stroke-width="2" marker-end="url(#arrow)"/>
@@ -19,112 +19,137 @@
     <pattern id="hatch" patternUnits="userSpaceOnUse" width="12" height="12" patternTransform="rotate(45)">
       <line x1="0" y1="0" x2="0" y2="12" stroke="#c9a96e" stroke-width="1" opacity="0.5"/>
     </pattern>
+    <!-- zip-tie lash mark pattern helper (drawn individually below) -->
   </defs>
 
-  <!-- ===== PONTOONS (render first — bottom layer) ===== -->
-  <!-- scale: 1.1 px/mm; bow x=100; pontoon1 cy=203; pontoon2 cy=643; radius=63px (114.3mm OD) -->
-  <rect x="100" y="140" width="770" height="126" rx="63" fill="#d9d9d9" stroke="#666666" stroke-width="2"/>
-  <rect x="100" y="580" width="770" height="126" rx="63" fill="#d9d9d9" stroke="#666666" stroke-width="2"/>
-  <text x="485" y="133" text-anchor="middle" font-size="12" fill="#555555">Port Pontoon — 4" Sch 40 PVC, 700mm</text>
-  <text x="485" y="722" text-anchor="middle" font-size="12" fill="#555555">Stbd Pontoon — 4" Sch 40 PVC, 700mm</text>
+  <!-- ===== PONTOONS (noodle bundles — render first — bottom layer) ===== -->
+  <!-- scale: 1.1 px/mm; bow x=155; pontoon1 cy=203; pontoon2 cy=478; radius=52px (~3-noodle bundle OD) -->
+  <!-- pontoon length 500mm -> 550px; x=155 to x=705 -->
+  <rect x="155" y="151" width="550" height="104" rx="52" fill="#f5cba7" stroke="#b9770e" stroke-width="2"/>
+  <rect x="155" y="426" width="550" height="104" rx="52" fill="#f5cba7" stroke="#b9770e" stroke-width="2"/>
 
-  <!-- ===== DECK PLATFORM (sits on cross members, between pontoons) ===== -->
-  <!-- Spans CM1 to CM3: x=251 to x=719; between pontoon inner edges: y=266 to y=580 -->
-  <!-- Pontoon1 inner edge (bottom of pontoon rect): y=140+126=266  -->
-  <!-- Pontoon2 inner edge (top of pontoon rect): y=580              -->
-  <rect x="251" y="266" width="468" height="314" fill="#e8d5b0" stroke="#9a6a1f" stroke-width="2"/>
-  <rect x="251" y="266" width="468" height="314" fill="url(#hatch)" opacity="0.4"/>
-  <text x="375" y="545" text-anchor="middle" font-size="11" fill="#7d5a1e">Deck Platform</text>
-  <text x="375" y="559" text-anchor="middle" font-size="10" fill="#7d5a1e">(marine ply / Al sheet)</text>
+  <!-- individual noodle outlines within each bundle (3 noodles, triangular) to suggest bundled cross-section from above -->
+  <ellipse cx="430" cy="177" rx="270" ry="16" fill="none" stroke="#d68910" stroke-width="1" opacity="0.5"/>
+  <ellipse cx="430" cy="203" rx="270" ry="16" fill="none" stroke="#d68910" stroke-width="1" opacity="0.5"/>
+  <ellipse cx="430" cy="229" rx="270" ry="16" fill="none" stroke="#d68910" stroke-width="1" opacity="0.5"/>
+  <ellipse cx="430" cy="452" rx="270" ry="16" fill="none" stroke="#d68910" stroke-width="1" opacity="0.5"/>
+  <ellipse cx="430" cy="478" rx="270" ry="16" fill="none" stroke="#d68910" stroke-width="1" opacity="0.5"/>
+  <ellipse cx="430" cy="504" rx="270" ry="16" fill="none" stroke="#d68910" stroke-width="1" opacity="0.5"/>
 
-  <!-- Dimension: platform span 400mm (CM1 to CM3 = 400mm) -->
-  <line x1="251" y1="255" x2="719" y2="255" stroke="#7d5a1e" stroke-width="1"/>
-  <line x1="251" y1="249" x2="251" y2="261" stroke="#7d5a1e" stroke-width="1"/>
-  <line x1="719" y1="249" x2="719" y2="261" stroke="#7d5a1e" stroke-width="1"/>
-  <text x="485" y="247" text-anchor="middle" font-size="10" fill="#7d5a1e">400mm (CM1 to CM3)</text>
+  <!-- zip-tie lash marks every ~120mm (132px) along the 550px pontoon length -->
+  <g stroke="#7d5a1e" stroke-width="3">
+    <line x1="188" y1="151" x2="188" y2="255"/>
+    <line x1="320" y1="151" x2="320" y2="255"/>
+    <line x1="452" y1="151" x2="452" y2="255"/>
+    <line x1="584" y1="151" x2="584" y2="255"/>
+    <line x1="188" y1="426" x2="188" y2="530"/>
+    <line x1="320" y1="426" x2="320" y2="530"/>
+    <line x1="452" y1="426" x2="452" y2="530"/>
+    <line x1="584" y1="426" x2="584" y2="530"/>
+  </g>
 
-  <!-- ===== CROSS MEMBERS (1" PVC, 28px wide = 25.4mm×1.1, centered on their mm marks) ===== -->
-  <!-- CM1 at 150mm: x_center=265, half-width=14 → rect x=251                                -->
-  <!-- CM2 at 350mm: x_center=485, half-width=14 → rect x=471                                -->
-  <!-- CM3 at 550mm: x_center=705, half-width=14 → rect x=691                                -->
-  <rect x="251" y="203" width="28" height="440" fill="#aaaaaa" stroke="#555555" stroke-width="1.5"/>
-  <rect x="471" y="203" width="28" height="440" fill="#aaaaaa" stroke="#555555" stroke-width="1.5"/>
-  <rect x="691" y="203" width="28" height="440" fill="#aaaaaa" stroke="#555555" stroke-width="1.5"/>
+  <text x="430" y="144" text-anchor="middle" font-size="12" fill="#7d5a1e">Port Pontoon — 3× pool noodles bundled on &#189;" PVC core rod, 500mm</text>
+  <text x="430" y="546" text-anchor="middle" font-size="12" fill="#7d5a1e">Stbd Pontoon — 3× pool noodles bundled on &#189;" PVC core rod, 500mm</text>
+  <text x="430" y="270" text-anchor="middle" font-size="9" fill="#9a6a1f">zip-tie lashings every ~120mm (shown as marks)</text>
 
-  <!-- Cross member position labels -->
-  <text x="265" y="186" text-anchor="middle" font-size="11" fill="#444">150mm</text>
-  <text x="485" y="186" text-anchor="middle" font-size="11" fill="#444">350mm</text>
-  <text x="705" y="186" text-anchor="middle" font-size="11" fill="#444">550mm</text>
-  <text x="485" y="173" text-anchor="middle" font-size="11" fill="#444">Cross members — 1" PVC (×3), spanning 40cm beam</text>
+  <!-- ===== DECK PLATFORM (spans between the two core rods) ===== -->
+  <!-- deck 350x200mm -> 385x220px, centered between pontoons -->
+  <!-- Pontoon1 inner edge (bottom of pontoon rect): y=151+104=255  -->
+  <!-- Pontoon2 inner edge (top of pontoon rect): y=426              -->
+  <!-- deck centered vertically in gap (255 to 426, center=340.5), height 220 -> y=230.5 to 450.5 -->
+  <rect x="272" y="230" width="316" height="220" fill="#e8d5b0" stroke="#9a6a1f" stroke-width="2"/>
+  <rect x="272" y="230" width="316" height="220" fill="url(#hatch)" opacity="0.4"/>
+  <text x="430" y="410" text-anchor="middle" font-size="11" fill="#7d5a1e">Deck Platform</text>
+  <text x="430" y="424" text-anchor="middle" font-size="10" fill="#7d5a1e">(&#190;" plywood/pine, Spar Urethane sealed)</text>
 
-  <!-- ===== BOW MOUNT BRACE (mast foot ties back to CM1 via a short brace) ===== -->
-  <!-- Center line at y=423 from CM1 front edge (x=251) to mast center (x=140) -->
-  <line x1="140" y1="423" x2="251" y2="423" stroke="#9a6a1f" stroke-width="4"/>
-  <text x="195" y="415" text-anchor="middle" font-size="9" fill="#7d5a1e">bow brace</text>
+  <!-- Dimension: deck span 350x200mm -->
+  <line x1="272" y1="219" x2="588" y2="219" stroke="#7d5a1e" stroke-width="1"/>
+  <line x1="272" y1="213" x2="272" y2="225" stroke="#7d5a1e" stroke-width="1"/>
+  <line x1="588" y1="213" x2="588" y2="225" stroke="#7d5a1e" stroke-width="1"/>
+  <text x="430" y="211" text-anchor="middle" font-size="10" fill="#7d5a1e">350mm deck length</text>
 
-  <!-- ===== ELECTRONICS ENCLOSURE (160×160mm → 176×176px, centered on platform) ===== -->
-  <rect x="397" y="335" width="176" height="176" fill="#aed6f1" stroke="#1f6feb" stroke-width="2.5"/>
-  <text x="485" y="408" text-anchor="middle" font-size="12" fill="#0b3d91" font-weight="bold">Electronics</text>
-  <text x="485" y="424" text-anchor="middle" font-size="12" fill="#0b3d91" font-weight="bold">Enclosure</text>
-  <text x="485" y="440" text-anchor="middle" font-size="11" fill="#0b3d91">160 × 160mm</text>
-  <text x="485" y="454" text-anchor="middle" font-size="10" fill="#0b3d91">(IP67, Otdorpatio B0DX781Z3W)</text>
+  <line x1="600" y1="230" x2="600" y2="450" stroke="#7d5a1e" stroke-width="1"/>
+  <line x1="594" y1="230" x2="606" y2="230" stroke="#7d5a1e" stroke-width="1"/>
+  <line x1="594" y1="450" x2="606" y2="450" stroke="#7d5a1e" stroke-width="1"/>
+  <text x="640" y="343" text-anchor="middle" font-size="10" fill="#7d5a1e" transform="rotate(90,640,343)">200mm deck width</text>
+
+  <!-- ===== PIPE STRAPS (core rod -> deck fasteners, 2 per rod) ===== -->
+  <rect x="296" y="245" width="16" height="18" fill="#aaaaaa" stroke="#555555" stroke-width="1.2"/>
+  <rect x="548" y="245" width="16" height="18" fill="#aaaaaa" stroke="#555555" stroke-width="1.2"/>
+  <rect x="296" y="418" width="16" height="18" fill="#aaaaaa" stroke="#555555" stroke-width="1.2"/>
+  <rect x="548" y="418" width="16" height="18" fill="#aaaaaa" stroke="#555555" stroke-width="1.2"/>
+  <text x="430" y="197" text-anchor="middle" font-size="9" fill="#555">4× galvanized &#189;" pipe straps (core rod → deck)</text>
+
+  <!-- ===== ELECTRONICS ENCLOSURE (160×160mm → 176×176px, centered on deck) ===== -->
+  <rect x="342" y="252" width="176" height="176" fill="#aed6f1" stroke="#1f6feb" stroke-width="2.5"/>
+  <text x="430" y="325" text-anchor="middle" font-size="12" fill="#0b3d91" font-weight="bold">Electronics</text>
+  <text x="430" y="341" text-anchor="middle" font-size="12" fill="#0b3d91" font-weight="bold">Enclosure</text>
+  <text x="430" y="357" text-anchor="middle" font-size="11" fill="#0b3d91">160 × 160mm</text>
+  <text x="430" y="371" text-anchor="middle" font-size="10" fill="#0b3d91">(IP67, Otdorpatio B0DX781Z3W)</text>
 
   <!-- Internal electronics callout (green circles) -->
-  <circle cx="430" cy="370" r="14" fill="#2ecc71" stroke="#1e8449" stroke-width="1.5"/>
-  <text x="430" y="374" text-anchor="middle" font-size="9" fill="#0b3d24">Pi 4</text>
-  <circle cx="540" cy="370" r="14" fill="#2ecc71" stroke="#1e8449" stroke-width="1.5"/>
-  <text x="540" y="374" text-anchor="middle" font-size="8" fill="#0b3d24">FPGA</text>
+  <circle cx="375" cy="288" r="14" fill="#2ecc71" stroke="#1e8449" stroke-width="1.5"/>
+  <text x="375" y="292" text-anchor="middle" font-size="9" fill="#0b3d24">Pi 4</text>
+  <circle cx="485" cy="288" r="14" fill="#2ecc71" stroke="#1e8449" stroke-width="1.5"/>
+  <text x="485" y="292" text-anchor="middle" font-size="8" fill="#0b3d24">FPGA</text>
 
-  <!-- ===== MAST (1" PVC, at bow, centered on beam) ===== -->
-  <circle cx="140" cy="423" r="16" fill="#cccccc" stroke="#555555" stroke-width="2"/>
-  <text x="140" y="458" text-anchor="middle" font-size="11" fill="#444">Mast</text>
-  <text x="140" y="471" text-anchor="middle" font-size="10" fill="#444">1" PVC</text>
-  <text x="140" y="484" text-anchor="middle" font-size="9" fill="#444">TCT40-16R</text>
-  <text x="140" y="497" text-anchor="middle" font-size="9" fill="#444">at top</text>
+  <!-- ===== MAST (¾" pine dowel, at bow, centered on beam) ===== -->
+  <circle cx="195" cy="340" r="14" fill="#d7bfa3" stroke="#7d5a1e" stroke-width="2"/>
+  <text x="195" y="373" text-anchor="middle" font-size="11" fill="#444">Mast</text>
+  <text x="195" y="386" text-anchor="middle" font-size="10" fill="#444">&#190;" pine dowel</text>
+  <text x="195" y="399" text-anchor="middle" font-size="9" fill="#444">TCT40-16R</text>
+  <text x="195" y="412" text-anchor="middle" font-size="9" fill="#444">at tip</text>
+
+  <!-- Mast L-bracket -->
+  <line x1="195" y1="326" x2="272" y2="290" stroke="#888888" stroke-width="4"/>
+  <text x="235" y="300" text-anchor="middle" font-size="8" fill="#555">Al L-bracket</text>
 
   <!-- ===== JSN-SR04T sonar (bow center, facing forward) ===== -->
-  <rect x="88" y="410" width="24" height="26" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
-  <line x1="100" y1="410" x2="100" y2="395" stroke="#9a7d0a" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <text x="55" y="382" text-anchor="middle" font-size="10" fill="#7d6608">JSN-SR04T</text>
-  <text x="55" y="394" text-anchor="middle" font-size="9" fill="#7d6608">(fwd-facing)</text>
+  <rect x="130" y="326" width="24" height="26" fill="#f1c40f" stroke="#9a7d0a" stroke-width="1.5"/>
+  <line x1="142" y1="326" x2="142" y2="311" stroke="#9a7d0a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="97" y="298" text-anchor="middle" font-size="10" fill="#7d6608">JSN-SR04T</text>
+  <text x="97" y="310" text-anchor="middle" font-size="9" fill="#7d6608">(fwd-facing)</text>
 
-  <!-- ===== THRUSTERS (stern, one per pontoon) ===== -->
-  <rect x="848" y="188" width="36" height="28" fill="#e74c3c" stroke="#922b21" stroke-width="1.5"/>
-  <text x="866" y="178" text-anchor="middle" font-size="10" fill="#922b21">Thruster (P)</text>
-  <rect x="848" y="630" width="36" height="28" fill="#e74c3c" stroke="#922b21" stroke-width="1.5"/>
-  <text x="866" y="676" text-anchor="middle" font-size="10" fill="#922b21">Thruster (S)</text>
+  <!-- ===== THRUSTERS (stern, one per core rod) ===== -->
+  <rect x="678" y="187" width="36" height="28" fill="#e74c3c" stroke="#922b21" stroke-width="1.5"/>
+  <text x="696" y="177" text-anchor="middle" font-size="10" fill="#922b21">Thruster (P)</text>
+  <rect x="678" y="463" width="36" height="28" fill="#e74c3c" stroke="#922b21" stroke-width="1.5"/>
+  <text x="696" y="509" text-anchor="middle" font-size="10" fill="#922b21">Thruster (S)</text>
 
   <!-- ===== DIMENSION LINES ===== -->
-  <!-- Pontoon length: 700mm -->
-  <line x1="100" y1="758" x2="870" y2="758" stroke="#333" stroke-width="1"/>
-  <line x1="100" y1="751" x2="100" y2="765" stroke="#333" stroke-width="1"/>
-  <line x1="870" y1="751" x2="870" y2="765" stroke="#333" stroke-width="1"/>
-  <text x="485" y="776" text-anchor="middle" font-size="13" fill="#000" font-weight="bold">700mm (pontoon length)</text>
+  <!-- Pontoon length: 500mm -->
+  <line x1="155" y1="600" x2="705" y2="600" stroke="#333" stroke-width="1"/>
+  <line x1="155" y1="593" x2="155" y2="607" stroke="#333" stroke-width="1"/>
+  <line x1="705" y1="593" x2="705" y2="607" stroke="#333" stroke-width="1"/>
+  <text x="430" y="620" text-anchor="middle" font-size="13" fill="#000" font-weight="bold">500mm (pontoon length)</text>
 
-  <!-- Beam: 400mm pontoon centerline to centerline -->
-  <line x1="930" y1="203" x2="930" y2="643" stroke="#333" stroke-width="1"/>
-  <line x1="922" y1="203" x2="938" y2="203" stroke="#333" stroke-width="1"/>
-  <line x1="922" y1="643" x2="938" y2="643" stroke="#333" stroke-width="1"/>
-  <text x="945" y="423" text-anchor="middle" font-size="13" fill="#000" font-weight="bold" transform="rotate(90,945,423)">400mm beam (pontoon CL to CL)</text>
+  <!-- Beam: 350mm pontoon centerline to centerline -->
+  <line x1="850" y1="203" x2="850" y2="478" stroke="#333" stroke-width="1"/>
+  <line x1="842" y1="203" x2="858" y2="203" stroke="#333" stroke-width="1"/>
+  <line x1="842" y1="478" x2="858" y2="478" stroke="#333" stroke-width="1"/>
+  <text x="875" y="340" text-anchor="middle" font-size="13" fill="#000" font-weight="bold" transform="rotate(90,875,340)">350mm beam (pontoon CL to CL)</text>
 
   <!-- ===== LEGEND ===== -->
-  <g transform="translate(100,793)">
-    <rect x="0"   y="0" width="14" height="14" fill="#d9d9d9" stroke="#666"/>
-    <text x="18"  y="11" font-size="10" fill="#333">PVC frame</text>
+  <g transform="translate(100,650)">
+    <rect x="0"   y="0" width="14" height="14" fill="#f5cba7" stroke="#b9770e"/>
+    <text x="18"  y="11" font-size="10" fill="#333">Noodle pontoon</text>
 
-    <rect x="90"  y="0" width="14" height="14" fill="#e8d5b0" stroke="#9a6a1f"/>
-    <text x="108" y="11" font-size="10" fill="#333">Deck platform</text>
+    <rect x="120" y="0" width="14" height="14" fill="#e8d5b0" stroke="#9a6a1f"/>
+    <text x="138" y="11" font-size="10" fill="#333">Deck platform</text>
 
-    <rect x="200" y="0" width="14" height="14" fill="#aed6f1" stroke="#1f6feb"/>
-    <text x="218" y="11" font-size="10" fill="#333">Enclosure</text>
+    <rect x="240" y="0" width="14" height="14" fill="#aed6f1" stroke="#1f6feb"/>
+    <text x="258" y="11" font-size="10" fill="#333">Enclosure</text>
 
-    <rect x="290" y="0" width="14" height="14" fill="#2ecc71" stroke="#1e8449"/>
-    <text x="308" y="11" font-size="10" fill="#333">Electronics</text>
+    <rect x="330" y="0" width="14" height="14" fill="#2ecc71" stroke="#1e8449"/>
+    <text x="348" y="11" font-size="10" fill="#333">Electronics</text>
 
-    <rect x="390" y="0" width="14" height="14" fill="#e74c3c" stroke="#922b21"/>
-    <text x="408" y="11" font-size="10" fill="#333">Thrusters</text>
+    <rect x="430" y="0" width="14" height="14" fill="#e74c3c" stroke="#922b21"/>
+    <text x="448" y="11" font-size="10" fill="#333">Thrusters</text>
 
-    <rect x="470" y="0" width="14" height="14" fill="#f1c40f" stroke="#9a7d0a"/>
-    <text x="488" y="11" font-size="10" fill="#333">Sensor</text>
+    <rect x="510" y="0" width="14" height="14" fill="#f1c40f" stroke="#9a7d0a"/>
+    <text x="528" y="11" font-size="10" fill="#333">Sensor</text>
+
+    <rect x="590" y="0" width="14" height="14" fill="#aaaaaa" stroke="#555555"/>
+    <text x="608" y="11" font-size="10" fill="#333">Pipe strap</text>
   </g>
 </svg>
