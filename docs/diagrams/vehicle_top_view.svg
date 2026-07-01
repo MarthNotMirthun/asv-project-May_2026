@@ -73,12 +73,20 @@
   <line x1="594" y1="450" x2="606" y2="450" stroke="#7d5a1e" stroke-width="1"/>
   <text x="640" y="343" text-anchor="middle" font-size="10" fill="#7d5a1e" transform="rotate(90,640,343)">200mm deck width</text>
 
-  <!-- ===== PIPE STRAPS (core rod -> deck fasteners, 2 per rod) ===== -->
-  <rect x="296" y="245" width="16" height="18" fill="#aaaaaa" stroke="#555555" stroke-width="1.2"/>
-  <rect x="548" y="245" width="16" height="18" fill="#aaaaaa" stroke="#555555" stroke-width="1.2"/>
-  <rect x="296" y="418" width="16" height="18" fill="#aaaaaa" stroke="#555555" stroke-width="1.2"/>
-  <rect x="548" y="418" width="16" height="18" fill="#aaaaaa" stroke="#555555" stroke-width="1.2"/>
-  <text x="430" y="197" text-anchor="middle" font-size="9" fill="#555">4× galvanized &#189;" pipe straps (core rod → deck)</text>
+  <!-- ===== ZIP-TIE LASHING (deck -> noodle bundle, through drilled holes, 2 per rod) ===== -->
+  <circle cx="304" cy="248" r="2.5" fill="none" stroke="#333333" stroke-width="1"/>
+  <circle cx="304" cy="260" r="2.5" fill="none" stroke="#333333" stroke-width="1"/>
+  <path d="M304,248 Q288,254 304,260" fill="none" stroke="#333333" stroke-width="1.2"/>
+  <circle cx="556" cy="248" r="2.5" fill="none" stroke="#333333" stroke-width="1"/>
+  <circle cx="556" cy="260" r="2.5" fill="none" stroke="#333333" stroke-width="1"/>
+  <path d="M556,248 Q572,254 556,260" fill="none" stroke="#333333" stroke-width="1.2"/>
+  <circle cx="304" cy="421" r="2.5" fill="none" stroke="#333333" stroke-width="1"/>
+  <circle cx="304" cy="433" r="2.5" fill="none" stroke="#333333" stroke-width="1"/>
+  <path d="M304,421 Q288,427 304,433" fill="none" stroke="#333333" stroke-width="1.2"/>
+  <circle cx="556" cy="421" r="2.5" fill="none" stroke="#333333" stroke-width="1"/>
+  <circle cx="556" cy="433" r="2.5" fill="none" stroke="#333333" stroke-width="1"/>
+  <path d="M556,421 Q572,427 556,433" fill="none" stroke="#333333" stroke-width="1.2"/>
+  <text x="430" y="197" text-anchor="middle" font-size="9" fill="#555">8× zip ties through drilled deck holes, lashed around noodle bundle (2 pairs/rod)</text>
 
   <!-- ===== ELECTRONICS ENCLOSURE (160×160mm → 176×176px, centered on deck) ===== -->
   <rect x="342" y="252" width="176" height="176" fill="#aed6f1" stroke="#1f6feb" stroke-width="2.5"/>
@@ -149,7 +157,7 @@
     <rect x="510" y="0" width="14" height="14" fill="#f1c40f" stroke="#9a7d0a"/>
     <text x="528" y="11" font-size="10" fill="#333">Sensor</text>
 
-    <rect x="590" y="0" width="14" height="14" fill="#aaaaaa" stroke="#555555"/>
-    <text x="608" y="11" font-size="10" fill="#333">Pipe strap</text>
+    <path d="M594,3 Q583,7 594,11" fill="none" stroke="#333333" stroke-width="1.2"/>
+    <text x="608" y="11" font-size="10" fill="#333">Zip-tie lash point</text>
   </g>
 </svg>

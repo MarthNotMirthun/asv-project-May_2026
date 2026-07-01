@@ -58,12 +58,12 @@
     <line x1="555" y1="435" x2="555" y2="545"/>
   </g>
 
-  <!-- ========== PIPE STRAPS (core rod -> deck, side profile = small rects on pontoon top) ========== -->
-  <rect x="288" y="425" width="14" height="14" fill="#aaaaaa" stroke="#555555" stroke-width="1.2"/>
-  <rect x="558" y="425" width="14" height="14" fill="#aaaaaa" stroke="#555555" stroke-width="1.2"/>
-  <text x="430" y="420" text-anchor="middle" font-size="9" fill="#555">galvanized &#189;" pipe straps (core rod → deck)</text>
+  <!-- ========== ZIP-TIE LASHING (deck -> noodle bundle, through drilled deck holes) ========== -->
+  <path d="M292,425 Q280,432 292,439" fill="none" stroke="#333333" stroke-width="1.2"/>
+  <path d="M562,425 Q574,432 562,439" fill="none" stroke="#333333" stroke-width="1.2"/>
+  <text x="430" y="420" text-anchor="middle" font-size="9" fill="#555">zip ties through drilled deck holes, lashed around noodle bundle</text>
 
-  <!-- ========== DECK PLATFORM (sits on top of core rod straps) ========== -->
+  <!-- ========== DECK PLATFORM (sits on top of zip-tie lash points) ========== -->
   <!-- y = 400 (top) to y = 415 (bottom); x = 255 to 605 (deck panel edge-on) -->
   <rect x="255" y="400" width="350" height="15" fill="#e8d5b0" stroke="#9a6a1f" stroke-width="1.5"/>
   <rect x="255" y="400" width="350" height="15" fill="url(#deckHatch)" opacity="0.5"/>
@@ -146,7 +146,7 @@
 
   <!-- ========== FOOTER NOTES ========== -->
   <text x="475" y="648" text-anchor="middle" font-size="12" fill="#333" font-weight="bold">Mast/transducer height 250–300 mm above waterline (CLAUDE.md, unchanged spec). Deck/float heights are estimates — verify after buoyancy float test (Phase 6).</text>
-  <text x="475" y="664" text-anchor="middle" font-size="10" fill="#666">Structural layers (bottom to top): Noodle Pontoon (PVC core rod spine) → Deck Platform (pipe-strapped) → Enclosure / Mast — all mechanical fasteners, zero structural epoxy</text>
+  <text x="475" y="664" text-anchor="middle" font-size="10" fill="#666">Structural layers (bottom to top): Noodle Pontoon (PVC core rod spine) → Deck Platform (zip-tied through drilled deck holes) → Enclosure / Mast — all mechanical fasteners, zero structural epoxy</text>
 
   <!-- ========== LEGEND ========== -->
   <g transform="translate(60,680)">

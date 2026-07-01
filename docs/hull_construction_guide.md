@@ -12,13 +12,13 @@
 |------|-----|-------|
 | Standard pool noodles | 6 | 3 bundled per side (triangular arrangement around core rod) |
 | ½" Schedule 40 PVC pipe | ~1.1 m | Cut into 2× 500 mm core rods (one per pontoon) |
-| UV-resistant zip ties, 8" | ~24 | Lash noodle bundles to core rod every ~120mm (≈4 per rod × 2 rods, plus spares) |
+| UV-resistant zip ties, 8" | ~32 | ~4 per rod × 2 rods for noodle-to-rod lashing (Phase 3), plus 8 for deck-to-bundle lashing (Phase 4), plus spares |
 | ¾" plywood / pressure-treated pine project panel | 1 piece, ≥350×200mm | Deck platform |
 | Spray Spar Urethane (Varathane, oil-based, clear) | 1 can | Deck seal — all faces + cut edges, one coat |
 | ¾" pine dowel | 1, ~500mm | Mast |
 | Aluminum angle stock, 1"×1/16" | ~150mm offcut | Mast L-bracket, drilled |
-| Galvanized ½" pipe straps | 4 | Core rod → deck fastening (2 per rod) |
-| Wood screws (assorted, #8) | ~12 | Pipe straps + mast L-bracket to deck |
+| Wood screws (assorted, #8) | ~4 | Mast L-bracket to deck |
+| Drill bit, small (~1/8") | — | For deck lash-holes (Phase 4) — no dedicated purchase needed if already owned |
 | Stainless M4 bolts + washers | 4 | Enclosure → deck mounting |
 | Sandpaper (220 grit) | 1 sheet | Deck edge prep before sealing |
 
@@ -27,7 +27,7 @@
 - Additional M16/M12 cable glands ×4-pack (order with MCP6022)
 - LICHIFIT RF-370 thruster mounts (arrives with motors)
 
-**Zero structural epoxy/cement in this design.** All hull fasteners are mechanical (zip ties, pipe straps, screws, bolts). The only "cure" step is a passive wood-sealant dry time (hours, same day) — there are no 24-hour structural cure gates.
+**Zero structural epoxy/cement in this design.** All hull fasteners are mechanical (zip ties, screws, bolts). The only "cure" step is a passive wood-sealant dry time (hours, same day) — there are no 24-hour structural cure gates.
 
 ---
 
@@ -74,17 +74,20 @@
 
 ---
 
-## Phase 4 — Mount Core Rods to Deck (30 min)
+## Phase 4 — Mount Noodle Bundles to Deck (30 min)
 
 **Goal:** Both pontoon assemblies fastened to the sealed deck at the correct 350mm beam.
 
-1. Confirm the deck sealant coat from Phase 2 is fully dry before drilling or screwing into it.
-2. Position the two core-rod/noodle assemblies parallel, **350mm beam (centerline to centerline)**, with the deck panel centered between them spanning the gap.
-3. Mark 2 pipe-strap positions per rod (near each end of the deck's contact span) on the top of each core rod.
-4. Screw one galvanized ½" pipe strap at each marked position, through the sealed plywood deck and around the core rod, into the deck underside. 4 straps total (2 per rod).
-5. Confirm both rods are parallel and the deck sits flat and level across them.
+> **Why not a pipe strap:** a rigid ½" pipe strap only closes around bare pipe — it cannot clamp a 5–6"-wide noodle bundle, and by Phase 3 the core rod is fully wrapped in foam along its whole length. Rather than planning a precise bare-rod gap mid-bundle for a strap to grab, this design lashes the deck directly to the noodle bundle with zip ties through drilled holes — simpler to build, fully reversible, and uses hardware already on the parts list.
 
-> **Check:** No skew — both pontoon assemblies parallel at 350mm beam, deck flat. Because every fastener here is mechanical (screws, straps), this step is fully reversible if something needs adjusting — no cure wait, no irreversible bond.
+1. Confirm the deck sealant coat from Phase 2 is fully dry before drilling it.
+2. Position the two lashed noodle-bundle assemblies parallel, **350mm beam (centerline to centerline)**, with the deck panel centered between them spanning the gap, resting on top of both bundles.
+3. Mark 2 lash points per rod (near each end of the deck's contact span, directly above each bundle) — 4 lash points total.
+4. At each lash point, drill a pair of small holes (~1/8", ~15mm apart) through the deck, straddling the noodle bundle below.
+5. Thread an 8" zip tie down through one hole, around the underside of the noodle bundle, and back up through the second hole. Cinch tight so the deck sits snug on the bundle, then trim the tail. Repeat with a second zip tie at each lash point for redundancy (8 ties total, 2 per lash point × 4 points).
+6. Confirm both rods are parallel and the deck sits flat and level across them.
+
+> **Check:** No skew — both pontoon assemblies parallel at 350mm beam, deck flat and snug against both bundles. Because every fastener here is mechanical (zip ties, easily cut and redone), this step is fully reversible if something needs adjusting — no cure wait, no irreversible bond.
 
 ---
 
