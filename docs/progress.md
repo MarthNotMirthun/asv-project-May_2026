@@ -1,3 +1,139 @@
+## 2026-07-01 — ROS 2 NODES COMPLETE + uart_rx.v RTL DONE — Week 6 Build Acceleration
+
+**Completed (this session):**
+
+**6 ROS 2 Nodes Built** (all under ros2_ws/src/ — three packages: vehicle_control, acoustic_homing, telemetry):
+- `motor_driver_node.py` — final Pi-side gate before ESP32; diff-thrust diagnostics, 80% duty clamp (defense-in-depth), 500ms watchdog, publishes /motor/status
+- `collision_safety_node.py` — Pi-side ESTOP gate, 30cm threshold, 1s sensor-timeout fail-safe, publishes /cmd_vel_safe
+- `dead_reckoning_node.py` — custom predict-only EKF (unicycle model, 3×3 covariance propagation), NOT a robot_localization wrapper; fuses IMU yaw rate + wheel-derived speed; publishes /odometry/filtered at 50Hz. Documented as cuttable for MVP.
+- `acoustic_homing_node.py` — full FC-6/FC-7/FC-8 state machine (INIT→SCAN_1→ACQUIRING_1→HOMING_1→ARRIVED_1→EGRESS_1→SCAN_2→ACQUIRING_2→HOMING_2→ARRIVED_2), SNR-gradient homing with hunting/gradient-ascent heuristic, egress dead-reckoning via odometry
+- `mission_state_machine.py` — logs state transitions with elapsed time, publishes /mission/log and /mission/complete
+- `telemetry_node.py` — UDP JSON telemetry to shore display at 2Hz, non-fatal on WiFi failure
+
+**CRITICAL WIRING ARCHITECTURE CORRECTIONS DISCOVERED** — deviations from original node-by-node spec:
+- **esp32/vehicle_firmware/vehicle_firmware.ino** (built 2026-06-29, pre-existing, NOT previously reflected in CLAUDE.md) subscribes directly to literal "/cmd_vel" and implements its OWN onboard ESTOP (30cm) + 500ms cmd_vel watchdog — entirely independent of Pi-side ROS nodes
+- **Corrected Pi-side topic chain:** acoustic_homing_node → /cmd_vel_raw → collision_safety_node → /cmd_vel_safe → motor_driver_node → /cmd_vel → ESP32 (micro-ROS agent)
+- **This replaces the ambiguous flat model** in CLAUDE.md's ROS 2 Node Graph where all three nodes referenced plain "/cmd_vel"
+- esp32/vehicle_firmware publishes /wheel/velocity as `geometry_msgs/TwistStamped` (linear.x = mean forward speed, angular.z = RAW right-left velocity difference, NOT yet divided by wheel_base) — NOT Float32MultiArray as currently shown. dead_reckoning_node divides by wheel_base itself.
+- **ESP32 firmware pre-existence discovered:** esp32/vehicle_firmware/ (vehicle code) and esp32/buoy_firmware/ (chirp generator + MOSFETs) both exist dated 2026-06-29, but CLAUDE.md still says "Status: not started" for both ESP32 #1 and #2. This is a documentation gap — firmware exists but is unflashed/untested; hardware bench tasks remain for Week 6 Jul 3-5 per plan.
+
+**uart_rx.v BUILT** (via standard pipeline: hw-validation blocked by tool-permission issue, replaced with direct engineering analysis; dsp-signal-validator DID run):
+- 4-byte frame protocol: [addr_hi][addr_lo][data_hi][data_lo] → addr_out[15:0] (65536 locations), data_out[15:0] (signed, FC-1 compliant)
+- **Rationale:** Original 2-byte [addr:8][data:8] had 4 BLOCKERs: 8-bit address cannot reach 2109-deep reference-chirp BSRAM, 8-bit data cannot carry signed-16 samples or peak_detector.v's 32-bit FLOOR, no region-field separates config-register addresses from BSRAM addresses, matched-filter reference BSRAM lacks load-complete gate against live MAC reads
+- **Deferred items (documented in uart_rx.v header):** consumer module "config-register-bank / BSRAM-loader" not yet built; address-map convention written into uart_rx.v header: 0x0000-0x0001=FLOOR hi/lo, 0x0002=K_SHIFT, 0x0003=SNR_SHIFT, 0x1000-0x183C=ch1 ref chirp, 0x2000-0x283C=ch2 ref chirp
+- **Pin assignment:** rx pin candidate = pin 87 (EXPLICITLY FLAGGED UNVERIFIED in uart_rx.cst header) — do NOT represent as confirmed until hw-validation physical verification (PV-style discipline) is complete
+- Full regression: ALL 10 fpga/sim testbenches (uart_tx, adc_interface, cic_decimator, fir_filter_bank1/2, matched_filter_1/2, peak_detector, top_level, uart_rx) — ALL PASS, zero X/Z states, zero regressions
+
+**Verified:**
+- dsp-signal-validator: Original 2-byte spec had 4 BLOCKERs (address depth, data width, region field, load-gate). 4-byte widening fixes 2 structurally; other 2 deferred to config-loader consumer module. All module boundaries validated end-to-end for FC-1/FC-2/FC-3 compliance. Zero cross-module conflicts.
+- verilog-sim-runner: 10/10 testbenches PASS (regression against top_level.v pipeline baseline), zero X/Z, zero new failures
+
+**Validator Findings:**
+- dsp-signal-validator found 4 BLOCKERs in original 2-byte uart_rx spec, resolved 2 via 4-byte widening. 2 remaining deferred: region-decode convention (documented in uart_rx.v) and reference-BSRAM load-gate (matched_filter.v RTL unchanged; gate logic deferred to new config-loader module).
+- verilog-sim-runner: ALL 10/10 PASS after uart_rx.v addition
+
+**CLAUDE.md Updated:**
+- ROS 2 Node Graph section: corrected topic wiring chain (cmd_vel_raw → cmd_vel_safe → cmd_vel), /wheel/velocity type (TwistStamped, not Float32MultiArray)
+- ESP32 #1 and #2 status: corrected "Status: not started" to "Firmware exists (built Jun 29), unflashed/untested; hardware bench tasks remain Week 6 Jul 3-5"
+- FPGA Build Status section: uart_rx.v added as "RTL + testbench, sim verified; pin assignment pending hw-validation (pin 87 candidate, unverified)"
+- File structure section: listed ros2_ws/src/{vehicle_control, acoustic_homing, telemetry} packages and esp32/{vehicle_firmware, buoy_firmware, bench_test} directories now existing
+
+**Files Modified/Created:**
+- fpga/src/uart_rx.v ← NEW (4-byte frame, address-map convention in header comment)
+- fpga/sim/tb_uart_rx.v ← NEW testbench
+- fpga/constraints/uart_rx.cst ← NEW (pin 87 candidate, flagged unverified)
+- ros2_ws/src/vehicle_control/motor_driver_node.py ← NEW
+- ros2_ws/src/vehicle_control/collision_safety_node.py ← NEW
+- ros2_ws/src/vehicle_control/dead_reckoning_node.py ← NEW
+- ros2_ws/src/acoustic_homing/acoustic_homing_node.py ← NEW
+- ros2_ws/src/acoustic_homing/mission_state_machine.py ← NEW
+- ros2_ws/src/telemetry/telemetry_node.py ← NEW
+- esp32/vehicle_firmware/ ← PRE-EXISTING (built Jun 29, now documented)
+- esp32/buoy_firmware/ ← PRE-EXISTING (built Jun 29, now documented)
+
+**CLAUDE.md Updated:**
+- Current Status header: updated to "Week 6 Day 3 — 6 ROS 2 nodes built, uart_rx.v RTL complete, 40 days to demo"
+- ROS 2 Node Graph section: corrected topic chain (cmd_vel_raw → cmd_vel_safe → cmd_vel), /wheel/velocity type (TwistStamped)
+- FPGA Build Status: added uart_rx.v line (RTL + sim verified, pin assignment unverified)
+- File structure section: added ros2_ws/src/ package list and esp32/ firmware directories
+- ESP32 #1 and #2 sections: updated status to reflect firmware exists but is unflashed/untested
+
+**Next Priority (unchanged from Jun 30 plan):**
+1. Jul 1 (TODAY) — Hull fabrication start: cut/test-fit PVC pontoons with Dad
+2. Jul 2 — Layer A bench check: acoustic path frequency sweep 37–43 kHz to verify 38.5–41.5 kHz band (-6dB envelope)
+3. Jul 3 — ESP32 vehicle firmware: LEDC PWM on GPIO25/26, stall-current monitoring, MPU-6050 I2C, JSN-SR04T 30cm ESTOP (prepping pre-existing firmware.ino for hardware)
+4. Jul 4-5 — ESP32 buoy firmware: verify LFM chirp generation against oscilloscope at 38.5–41.5 kHz
+
+**Critical Status:**
+- 🟢 FPGA: All 10 pipeline modules simulating clean (9 proven, uart_rx new). 3/9 synthesized with positive timing (top_level.v, uart_tx, adc_interface). uart_rx.v synthesis pending.
+- 🟡 ROS 2: 6 nodes built, wiring architecture corrected and documented. No integration testing yet — ready for dry-land E2E rehearsal Week 7.
+- 🟡 ESP32: Firmware pre-exists, unflashed; hardware bring-up tasks pending (LEDC PWM routing, stall-current shunt validation).
+- 🔴 Hull: Materials NOT yet purchased. PVC run with Dad is TODAY's blocking item per Jun 30 plan.
+- 🟡 Layer A: MCP6022 preamp ordered (Prime, arriving Jul 1-2); bench check scheduled Jul 2.
+
+40 days to August 10 demo. Week 6 progress: ✅ 9 FPGA modules synthesized or simulated verified; ✅ 6 ROS 2 nodes built; ⏳ hull fabrication; ⏳ Layer A acoustic verification.
+
+---
+
+## 2026-06-30 — Gowin EDA Synthesis COMPLETE — top_level.v P&R PASSED
+
+**Completed:**
+- Gowin EDA place-and-route (P&R) synthesis of top_level.v in external Gowin IDE project (C:\Users\mirth\OneDrive\Desktop\tang_nano_20k\top_level\impl\)
+- Synthesis verification: timing report, utilization report, netlist generation, 0 errors, 0 warnings
+
+**Verified:**
+- Timing analysis (gwsynthesis + pnr):
+  - Worst SETUP slack: +28.619ns (target clock period 37.037ns @ 27MHz) — PASS with large margin
+  - Worst HOLD slack: +0.322ns (positive, met; tightest margin but within margin) — PASS
+  - Critical path delay: only ~8.4ns (design could run much faster than 27MHz if ever needed)
+  - Total P&R runtime: 3 seconds (efficient place-and-route)
+  - Tool: Gowin V1.9.11.03 Education, part GW2AR-LV18QN88C8/I7
+
+- Resource utilization (confirmed against RTL estimates):
+  - LUT/ALU/ROM16: 827 / 20,736 (4%) — well within margin
+  - Registers: 457 / 15,750 (3%) — well within margin
+  - DSP (ALU54D blocks): 2/24 (9%) = 4 of 48 MULT18X18 multipliers used — CONFIRMS prior estimate of 4 multipliers from RTL simulation
+  - I/O Ports: 17/66 (26%) — well within margin
+  - Total margin: 96%, 97%, 91%, 74% respectively — very comfortable design
+
+- Pin mapping verification:
+  - All 14 pins (clk, rst_n, adc_data[0:11], adc_otr, adc_clk) land on exact pins specified in fpga/constraints/top_level.cst
+  - All pins remain LVCMOS33-compatible per adc_interface.cst baseline (Jun 13)
+  - No pin conflicts, no routing violations
+
+**Validator Findings:**
+- 0 BLOCKERs, 0 WARNINGs in synthesis logs (gwsynthesis and pnr)
+- All design rules verified: non-blocking assignments, BSRAM usage, DSP pipelining
+- Synthesis timing matches RTL simulation latency expectations
+
+**CLAUDE.md Updated:**
+- Current Status header: "Week 6 Day 1 → top_level.v pipeline integration" changed to "Week 6 Day 2 → top_level.v + Gowin synthesis ✅ COMPLETE"
+- Last Updated: June 29 → June 30, 2026
+- Days to demo: 42 → 41 days remaining
+- FPGA Build Status (as of) date: June 17 → June 30, 2026
+- Added new line after top_level.v: "✅ Gowin EDA P&R synthesis — [synthesis results with slack/resource/zero-error details]"
+- HW multiplier line updated: "pending synthesis report" → "synthesis confirmed (Jun 30)"
+- FPGA Pipeline diagram: resource utilization note changed from "RTL simulation confirms connectivity; synthesis report will refine" to "RTL simulation confirmed (Jun 29), synthesis confirmed (Jun 30)" with specific DSP/multiplier count
+- Week 6 Priority #2 (Jun 30 synthesis): marked ✅ COMPLETE with results summary
+- CURRENT BUILD STATUS section: updated header to reflect Jun 30 synthesis completion
+- Week 6 exit criterion: updated to show synthesis ✅ DONE, hull/Layer A still ⏳
+
+**Files Modified:**
+- CLAUDE.md: build status markers, resource/timing section, current status header, week 6 priorities
+- docs/progress.md: new entry added (this one)
+
+**Next Immediate:**
+1. Jul 1 — Hull fabrication start (cut/test-fit PVC pontoons, confirm MCP6022 delivered by Prime)
+2. Jul 2 — Layer A bench check (acoustic path TCT40-16T → preamp → AD9226 → FPGA scope verification at 38.5–41.5 kHz)
+3. Jul 3 — ESP32 vehicle firmware (micro-ROS motor control, stall-current trip)
+
+**Critical Path Status:**
+Synthesis gate CLEARED with flying colors. No negative slack found. Design is ready for hardware bring-up.
+Hull fabrication and Layer A acoustic bench check are now the critical dependencies for Week 6 exit.
+41 days to August 10 demo.
+
+---
+
 ## 2026-06-29 — top_level.v PIPELINE INTEGRATION COMPLETE — 9-MODULE CHAIN VALIDATED
 
 **Completed:**

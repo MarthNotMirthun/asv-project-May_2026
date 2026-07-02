@@ -1,0 +1,44 @@
+# ekf_params.yaml
+#
+# NOT currently consumed by dead_reckoning_node.py -- that node is a
+# self-contained predict-only EKF (see its module docstring for why:
+# no absolute correction source exists in V1, so the full
+# robot_localization package is unnecessary weight on a Pi 4 1GB).
+#
+# This file is kept as a documented, ready-to-use robot_localization
+# ekf_node config for a V2 upgrade IF an absolute correction source is
+# ever added (e.g. a TDOA bearing fix). To switch:
+#   1. `sudo apt install ros-jazzy-robot-localization`
+#   2. Launch `robot_localization`'s `ekf_node` with this file
+#   3. Point it at /imu/data and an odom-shaped wheel velocity topic
+#   4. Remove dead_reckoning_node.py from the launch file
+#
+# Until then, dead_reckoning_node.py's own declared ROS parameters
+# (wheel_base, process_noise_xy, process_noise_theta) are the ones
+# actually in effect -- set via a launch file or `ros2 param set`.
+
+ekf_filter_node:
+  ros__parameters:
+    frequency: 50.0
+    two_d_mode: true
+    publish_tf: false
+    odom_frame: odom
+    base_link_frame: base_link
+    world_frame: odom
+
+    imu0: /imu/data
+    imu0_config: [false, false, false,   # x, y, z position
+                  false, false, false,   # roll, pitch, yaw
+                  false, false, false,   # vx, vy, vz
+                  false, false, true,    # vroll, vpitch, vyaw (gyro yaw rate)
+                  false, false, false]   # ax, ay, az
+    imu0_differential: false
+    imu0_relative: false
+
+    odom0: /wheel/velocity_odom  # would require a Twist->Odometry wrapper upstream
+    odom0_config: [false, false, false,
+                   false, false, false,
+                   true, false, false,   # vx (forward speed)
+                   false, false, false,
+                   false, false, false]
+    odom0_differential: false

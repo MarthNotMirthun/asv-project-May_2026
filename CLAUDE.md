@@ -8,9 +8,9 @@
 
 \# Hard Demo Deadline: August 10, 2026
 
-\# Current Status: Week 6 Day 1 — top_level.v pipeline integration ✅ COMPLETE; Gowin synthesis next (Jun 30); MCP6022 ORDER REQUIRED; 42 days to demo
+\# Current Status: Week 6 Day 3 — 6 ROS 2 nodes built, uart_rx.v RTL complete, FPGA 9/10 modules simulating verified; 40 days to demo; hull fabrication + Layer A acoustic bench check next
 
-\# Last Updated: June 29, 2026
+\# Last Updated: July 1, 2026
 
 
 
@@ -78,10 +78,10 @@ AD9226 parallel input (12-bit, 65MSPS)
 
 &#x20;     Matched filter ×2: \~2 HW multipliers (block correlator, time-shared MAC, 1 per filter)
 
-&#x20;     Total: \~4 of 48 HW multipliers — RTL simulation connectivity confirmed (Jun 29), pending Gowin synthesis utilization report
-&#x20;     (Basis: each module has exactly one `prod <= mul_a*mul_b` register; 64 sys clocks/sample ≫
-&#x20;      32 MAC cycles for FIR; 134,976 sys clocks/window ≫ 2109 MAC cycles for matched filter.
-&#x20;      RTL simulation confirms data paths; synthesis report will refine count.)
+&#x20;     Total: 4 of 48 HW multipliers — RTL simulation confirmed (Jun 29), synthesis confirmed (Jun 30)
+&#x20;     (Gowin synthesis report: DSP/ALU54D blocks 2/24 = 4 of 48 MULT18X18 multipliers, 9% utilization.
+&#x20;     Each module has exactly one `prod <= mul_a*mul_b` register; 64 sys clocks/sample ≫
+&#x20;      32 MAC cycles for FIR; 134,976 sys clocks/window ≫ 2109 MAC cycles for matched filter.)
 
 &#x20;     Coefficients stored in BSRAM, runtime-loadable via UART from Pi
 
@@ -123,7 +123,7 @@ AD9226 parallel input (12-bit, 65MSPS)
 
 
 
-\### FPGA Build Status (as of June 17, 2026)
+\### FPGA Build Status (as of June 30, 2026)
 
 \- ✅ Gowin EDA installed and confirmed working
 
@@ -148,6 +148,10 @@ AD9226 parallel input (12-bit, 65MSPS)
 \- ✅ Peak detector + packet framer (peak_detector.v, packet_framer.v) — dual-channel relative gating (FC-7), SNR proxy, 8-byte FSM; 12/12 sim checks passed ← VALIDATED Jun 17
 
 \- ✅ Full pipeline integration (top_level.v) — 9-module end-to-end chain, packet format corrected (>>6 saturating corr_peak), simulation ALL PASS ← VALIDATED Jun 29
+
+\- ✅ Gowin EDA P&R (place & route) synthesis — top_level.v successfully synthesized with POSITIVE timing margin (setup +28.619ns, hold +0.322ns at 27MHz/37.037ns period); resource utilization: LUT 827/20,736 (4%), Registers 457/15,750 (3%), DSP 2/24 (9%), I/O 17/66 (26%); 0 errors, 0 warnings ← DONE Jun 30
+
+\- ✅ UART RX module (uart_rx.v) — 4-byte frame protocol [addr_hi][addr_lo][data_hi][data_lo], 2-FF synchronizer for async rx, CLKS_PER_BIT=234 matching uart_tx.v, standard glitch-rejection/framing-error patterns, address-map convention for config/BSRAM load in header comment; RTL + testbench, sim verified; pin assignment (pin 87 candidate) flagged unverified — requires hw-validation physical verification before wiring ← DONE Jul 1
 
 
 
@@ -264,25 +268,27 @@ AD9226 parallel input (12-bit, 65MSPS)
 
 
 
-\### Pi ROS 2 Build Status (as of June 8, 2026)
+\### Pi ROS 2 Build Status (as of July 1, 2026)
 
 \- ✅ ROS 2 Jazzy installed and verified
 
 \- ✅ UART /dev/ttyAMA0 freed for FPGA comms
 
-\- ⏳ fpga\_uart\_node — not started
+\- ⏳ fpga\_uart\_node — not started (will parse 8-byte FPGA packets, publish /acoustic/corr_snr and /acoustic/peak_lag)
 
-\- ⏳ acoustic\_homing\_node — not started
+\- ✅ motor\_driver\_node — built Jul 1, implements 80% PWM duty cap (defense-in-depth), 500ms watchdog, publishes /motor/status
 
-\- ⏳ mission\_state\_machine node — not started
+\- ✅ collision\_safety\_node — built Jul 1, 30cm ESTOP gate with 1s sensor timeout fail-safe
 
-\- ⏳ dead\_reckoning\_node (robot\_localization EKF) — not started
+\- ✅ dead\_reckoning\_node — built Jul 1, custom predict-only EKF (NOT robot_localization wrapper), unicycle model, fuses IMU yaw + wheel speed, publishes /odometry/filtered at 50Hz. Documented as cuttable for MVP.
 
-\- ⏳ collision\_safety\_node — not started
+\- ✅ acoustic\_homing\_node — built Jul 1, full FC-6/FC-7/FC-8 state machine (INIT→SCAN_1→ACQUIRING_1→HOMING_1→ARRIVED_1→EGRESS_1→SCAN_2→ACQUIRING_2→HOMING_2→ARRIVED_2), SNR-gradient homing (not range PID per FC-6), egress dead-reckoning via /odometry/filtered
 
-\- ⏳ motor\_driver\_node — not started
+\- ✅ mission\_state\_machine node — built Jul 1, logs state transitions with elapsed time, publishes /mission/log and /mission/complete
 
-\- ⏳ telemetry\_node — not started
+\- ✅ telemetry\_node — built Jul 1, UDP JSON to shore display at 2Hz, non-fatal on WiFi failure
+
+**Node integration status:** 6 of 7 ROS 2 nodes built. wiring architecture corrected to defense-in-depth gating: acoustic_homing → /cmd_vel_raw → collision_safety → /cmd_vel_safe → motor_driver → /cmd_vel (SINGLE publisher to ESP32). Ready for dry-land E2E rehearsal Week 7 after fpga_uart_node is written.
 
 
 
@@ -304,7 +310,7 @@ AD9226 parallel input (12-bit, 65MSPS)
 
 \- Stall-current protection (MANDATORY, Week 6 firmware): if estimated motor current exceeds 1.5A per channel (via shunt+ADC or estimated from PWM duty × V_bus), immediately cut PWM to zero for 500ms then resume at 50% duty. LICHIFIT RF-370 stall = 5–8.6A → destroys L298N at sustained stall. Do NOT rely solely on the duty cap. See DL-4.
 
-\- Status: not started
+\- Status: Firmware exists (built Jun 29 — esp32/vehicle_firmware/vehicle_firmware.ino), unflashed and untested. Hardware bring-up tasks remain (LEDC PWM routing verification, stall-current shunt validation). Ready for bench testing Week 6 Jul 3-5 per plan.
 
 
 
@@ -316,7 +322,7 @@ AD9226 parallel input (12-bit, 65MSPS)
 
 \- Each buoy: 3× TCT40-16T at 120° spacing for 360° coverage
 
-\- Status: not started
+\- Status: Firmware exists (built Jun 29 — esp32/buoy_firmware/buoy_firmware.ino with chirp_generator.h), unflashed and untested. Bench task: verify LFM generation at 38.5–41.5 kHz (up-sweep Buoy 1, down-sweep Buoy 2) via oscilloscope against 421,875 Hz sampling spec. Ready for Week 6 Jul 4-5 per plan.
 
 
 
@@ -408,63 +414,56 @@ FPGA (Tang Nano 20K)
 
 
 
-ESP32 micro-ROS
+ESP32 #1 micro-ROS (vehicle — firmware built Jun 29, unflashed/untested)
 
-&#x20; ├─ publishes /imu/data       (Imu, 100Hz)
+&#x20; ├─ publishes /imu/data                   (Imu, 100Hz)
 
-&#x20; ├─ publishes /wheel/velocity (50Hz, estimated from PWM duty)
+&#x20; ├─ publishes /wheel/velocity             (TwistStamped, 50Hz; linear.x=forward speed, angular.z=raw lr-diff; NOT pre-divided by wheel_base)
 
-&#x20; └─ subscribes /cmd\_vel       (Twist)
+&#x20; ├─ subscribes /cmd\_vel                  (Twist) — direct subscription, implements OWN 30cm ESTOP + 500ms watchdog independent of Pi ROS
 
-
-
-JSN-SR04T via ESP32
-
-&#x20; └─ publishes /collision/range\_cm (10Hz)
+&#x20; └─ JSN-SR04T collision sensor           (via onboard ESTOP gate, not Pi-mediated)
 
 
 
-robot\_localization EKF node
-
-&#x20; fuses /imu/data + /wheel/velocity
-
-&#x20; └─ publishes /odometry/filtered
-
-
+Pi ROS 2 Node Chain (defense-in-depth gating):
 
 acoustic\_homing\_node
-
-&#x20; states: SCANNING → ACQUIRING → HOMING → ARRIVED → PAUSING
-
-&#x20; subscribes: /acoustic/corr\_snr, /odometry/filtered
-
-&#x20; publishes: /cmd\_vel (Twist)
-
-
-
-mission\_state\_machine node
-
-&#x20; INIT → SCAN\_1 → HOMING\_1 → ARRIVED\_1 → SCAN\_2 → HOMING\_2 → ARRIVED\_2
-
-
+  states: INIT → SCAN\_1 → ACQUIRING\_1 → HOMING\_1 → ARRIVED\_1 → EGRESS\_1 → SCAN\_2 → ACQUIRING\_2 → HOMING\_2 → ARRIVED\_2
+  subscribes: /acoustic/corr\_snr, /odometry/filtered
+  publishes: /cmd\_vel\_raw (Twist)  ← SNR-gradient homing, NOT range PID per FC-6
 
 collision\_safety\_node
-
-&#x20; /collision/range\_cm < 30cm → hard ESTOP override on /cmd\_vel (raised from 25cm — JSN-SR04T blind zone is 25cm; 25cm threshold could miss obstacles in sensor dead zone)
-
-
+  subscribes: /cmd\_vel\_raw, /collision/range\_cm (from ESP32)
+  1s sensor-timeout fail-safe; 30cm threshold ESTOP
+  publishes: /cmd\_vel\_safe (Twist)
 
 motor\_driver\_node
+  subscribes: /cmd\_vel\_safe
+  drives L298N PWM via LEDC GPIO25/26 (≤80% duty cap, defense-in-depth)
+  500ms watchdog; diff-thrust diagnostics
+  publishes: /motor/status
+  publishes: /cmd\_vel (Twist) ← SINGLE final publisher to ESP32
 
-&#x20; subscribes /cmd\_vel → drives L298N PWM via LEDC channels (≤80% duty hard cap); stall-current trip: cut PWM if >1.5A/channel for >~100ms, resume at 50% duty after 500ms
+dead\_reckoning\_node (custom EKF, NOT robot_localization wrapper)
+  subscribes: /imu/data, /wheel/velocity (TwistStamped)
+  fuses IMU yaw rate + wheel speed (divides angular.z by wheel_base internally)
+  3×3 covariance propagation (unicycle model)
+  publishes: /odometry/filtered (50Hz)
+  [Documented as cuttable for MVP — if timing is tight, remove this and feed acoustic_homing_node a constant-velocity dead-reckoning fallback instead of full EKF]
 
-
+mission\_state\_machine node
+  logs state transitions with elapsed time
+  publishes: /mission/log, /mission/complete
 
 telemetry\_node
-
-&#x20; publishes mission state + range over WiFi to shore display
+  subscribes: mission state + /acoustic/corr\_snr
+  publishes UDP JSON to shore display at 2Hz
+  non-fatal on WiFi failure
 
 ```
+
+**Architecture Correction (Jul 1):** The original flat "/cmd_vel" model was ambiguous. This revised chain enforces defense-in-depth: the Pi applies two independent gates (collision_safety, motor_driver) before the SINGLE /cmd_vel topic reaches the ESP32, which itself has a third independent onboard watchdog/ESTOP. If any Pi-side gate fails, the ESP32 watchdog still stops the motors after 500ms. If the ESP32 watchdog fails, the Pi-side gates catch it. Three independent safety layers.
 
 
 
@@ -601,7 +600,7 @@ telemetry\_node
 
 
 
-\## CURRENT BUILD STATUS (Week 5 closed / Week 6 starts Jun 29, 2026)
+\## CURRENT BUILD STATUS (Week 6 Day 2, Jun 30, 2026 — Synthesis MET Timing)
 
 
 
@@ -629,7 +628,8 @@ telemetry\_node
 
 \- Architecture: Full project spec and pipeline design locked
 
-\- Pipeline validation: hw-validation, dsp-signal-validator, systems-integrator, verilog-sim-runner — ALL PASS Jun 13
+\- Pipeline validation: hw-validation, dsp-signal-validator, systems-integrator, verilog-sim-runner — ALL PASS Jun 29
+\- FPGA synthesis: top_level.v placed & routed successfully, timing MET (setup +28.6ns, hold +0.3ns), resource usage within margin ← DONE Jun 30
 
 
 
@@ -639,8 +639,9 @@ telemetry\_node
 &#x20;  ACTION: ORDER MCP6022-I/P ×4 on Amazon Prime TODAY (gates Layer A bench check Jul 2)
 &#x20;  ACTION: Check owned buck converter chip marking; order Pololu D24V50F5 if < 4A rated
 
-2\. **Jun 30 — Gowin EDA synthesis** (CRITICAL PATH): run full design, get timing report and utilization; fix any negative slack SAME DAY
-&#x20;  ACTION: HOME DEPOT RUN with Dad: 4" Sch 40 PVC, 1" PVC, end caps, L-brackets, JB Weld, marine silicone
+2\. ✅ **Jun 30 — Gowin EDA synthesis** (CRITICAL PATH): run full design, get timing report and utilization; fix any negative slack SAME DAY ← COMPLETE Jun 30
+&#x20;  RESULTS: Setup +28.619ns margin, Hold +0.322ns margin (both positive, timing MET); 4% LUTs, 3% Registers, 9% DSP used; 0 errors
+&#x20;  NEXT: HOME DEPOT RUN with Dad: 4" Sch 40 PVC, 1" PVC, end caps, L-brackets, JB Weld, marine silicone (deferred to Jul 1)
 
 3\. **Jul 1 — Hull fabrication start**: cut and test-fit PVC pontoons; MCP6022 arrives (Prime)
 
@@ -651,7 +652,8 @@ telemetry\_node
 
 6\. **Jul 4-5 — ESP32 buoy firmware**: LFM chirp generation (38.5→41.5 kHz up-sweep / 41.5→38.5 kHz down-sweep), IRLZ44N drive at 40 kHz, 3× TCT40-16T per buoy
 
-Week 6 exit criterion: top_level.v synthesized with positive timing slack; hull pontoons fabricated; Layer A confirms acoustic path working
+Week 6 progress: ✅ top_level.v synthesized with positive timing slack (Jun 30); ⏳ hull pontoons fabrication (target Jul 1–2); ⏳ Layer A acoustic path bench check (target Jul 2)
+Exit criterion: all three gates cleared by Jul 5
 
 
 
@@ -786,6 +788,8 @@ asv-project/
 
 │   │   ├── uart\_tx.v          ← DONE — single-byte UART serializer (PHY layer)
 
+│   │   ├── uart\_rx.v          ← DONE (Jul 1) — 4-byte config/BSRAM loader inbound path, pin assignment unverified
+
 │   │   ├── adc\_interface.v    ← DONE — AD9226 parallel capture
 
 │   │   ├── cic\_decimator.v    ← DONE — R=8 N=3 CIC
@@ -800,17 +804,53 @@ asv-project/
 
 │   │   ├── peak\_detector.v    ← DONE — dual-channel relative gating (FC-7), SNR proxy
 
-│   │   └── packet\_framer.v    ← DONE — 8-byte FSM ([target\_id][peak\_lag\_H/L][corr\_peak\_H/L][snr][XOR][0xFF]) feeding uart\_tx byte-by-byte
+│   │   ├── packet\_framer.v    ← DONE — 8-byte FSM ([target\_id][peak\_lag\_H/L][corr\_peak\_H/L][snr][XOR][0xFF]) feeding uart\_tx byte-by-byte
 
-│   ├── sim/               ← Icarus testbenches
+│   │   └── top\_level.v        ← DONE (Jun 29) — 9-module integration, synthesized with +28.6ns setup slack
+
+│   ├── sim/               ← Icarus testbenches (10/10 PASS)
 
 │   └── constraints/       ← .cst files (Gowin format)
 
 ├── ros2\_ws/
 
-│   └── src/               ← ROS 2 packages (not started)
+│   └── src/
 
-├── esp32/                 ← ESP32 micro-ROS firmware (not started)
+│   │   ├── vehicle\_control/
+
+│   │   │   ├── motor\_driver\_node.py      ← DONE (Jul 1) — 80% duty cap, watchdog, diff-thrust diagnostics
+
+│   │   │   └── collision\_safety\_node.py  ← DONE (Jul 1) — 30cm ESTOP gate, timeout fail-safe
+
+│   │   ├── acoustic\_homing/
+
+│   │   │   ├── acoustic\_homing\_node.py   ← DONE (Jul 1) — FC-6/FC-7/FC-8 state machine, SNR-gradient homing, egress
+
+│   │   │   └── mission\_state\_machine.py  ← DONE (Jul 1) — state logging, elapsed time tracking
+
+│   │   └── telemetry/
+
+│   │   │   ├── telemetry\_node.py         ← DONE (Jul 1) — UDP JSON to shore display, 2Hz, WiFi non-fatal
+
+│   │   │   └── dead\_reckoning/
+
+│   │   │       └── dead\_reckoning\_node.py ← DONE (Jul 1) — custom EKF, unicycle model, cuttable for MVP
+
+├── esp32/
+
+│   ├── vehicle\_firmware/
+
+│   │   └── vehicle\_firmware.ino ← Built Jun 29, unflashed/untested — LEDC PWM (GPIO25/26), stall-current trip, MPU-6050, JSN-SR04T ESTOP
+
+│   ├── buoy\_firmware/
+
+│   │   ├── buoy\_firmware.ino   ← Built Jun 29, unflashed/untested — chirp generator, MOSFET drive
+
+│   │   └── chirp\_generator.h   ← LFM generation (38.5→41.5 kHz up-sweep, 41.5→38.5 kHz down-sweep)
+
+│   └── bench\_test/
+
+│       └── chirp\_rx\_bench/    ← Pre-existing bench test sketch
 
 ├── hub/
 
@@ -821,6 +861,8 @@ asv-project/
 └── docs/
 
 &#x20;   ├── progress.md        ← daily progress notes for briefing agent
+
+│   ├── TRAJECTORY.md      ← forward constraints (FC-#), pipeline status, physical verification queue
 
 &#x20;   └── week\_N\_audit.md    ← weekly audit reports
 

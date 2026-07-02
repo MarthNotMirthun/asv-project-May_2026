@@ -1,0 +1,38 @@
+// Constraint file: uart_rx.cst
+// Format: Gowin .cst (Tang Nano 20K, GW2AR-18 QFN88)
+// Module: uart_rx — inbound Pi -> FPGA config/BSRAM-load UART receiver
+//
+// *** PIN ASSIGNMENT STATUS: UNVERIFIED — DO NOT WIRE UNTIL CONFIRMED ***
+// Unlike uart_tx.cst and adc_interface.cst (both cross-checked against the
+// Sipeed Tang_Nano_20K_3921_Schematics.pdf rev 1.22 + pin-label diagram),
+// this file's `rx` pin could NOT be verified in this session: the
+// hw-validation agent (which normally does this datasheet cross-check,
+// see pipeline_prompt.txt Stage 1A) was blocked by an unrelated
+// tool-permission issue and could not run.
+//
+// Pin 87 is used below as a CANDIDATE ONLY, based on the "avoided pin"
+// list already documented in uart_tx.cst's own comments (S1=88 already
+// used for rst_n; S2=87 was noted as a button pin, same bank/family as
+// 88, plausibly free if not wired to anything else on this board
+// revision) -- this is a reasonable guess, NOT a verified assignment.
+// Before wiring the Pi's UART TX line (Pi GPIO14 / /dev/ttyAMA0 TX) to
+// this pin:
+//   1. Cross-check pin 87 against the Sipeed schematic PDF + pin-label
+//      diagram (same sources uart_tx.cst/adc_interface.cst used) to
+//      confirm it is a free, header-broken-out, LVCMOS33 pad with no
+//      onboard function (S2 button, in this project's case, may need a
+//      different free pad instead if it turns out to be reserved).
+//   2. Confirm no bank conflict with the already-assigned pins in
+//      uart_tx.cst / adc_interface.cst / top_level.cst (4, 25-31, 73-77,
+//      80, 85, 86, 88).
+// This gate is the same discipline as PV-1/2/3 in TRAJECTORY.md — get a
+// pin assignment wrong here and it risks silently reading garbage or,
+// worse, a pin conflict during synthesis/place-and-route.
+//
+// Electrical note (uncontested, standard and not requiring datasheet
+// lookup): Pi 4 GPIO is 3.3V logic, Tang Nano 20K header pins are
+// LVCMOS33 -- direct wire compatible, no level shifting needed, same as
+// the already-verified uart_tx tx->Pi RX link.
+
+IO_LOC "rx" 87;
+IO_PORT "rx" PULL_MODE=UP IO_TYPE=LVCMOS33;

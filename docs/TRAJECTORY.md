@@ -1,6 +1,6 @@
 # TRAJECTORY.md — ASV Technical Compass
 
-**Last Updated:** June 28, 2026 (Week 5 Day 7 — definitive component audit complete; 6-week timeline revised; DL-5 preamp decision locked; 43 days to August 10 demo)
+**Last Updated:** July 1, 2026 (Week 6 Day 3 — FPGA 10/10 pipeline modules verified, uart_rx.v RTL complete, 6 ROS 2 nodes built, 40 days to August 10 demo)
 
 This is the living technical compass for the GPS-denied acoustic-homing
 catamaran USV. It records the **verified pipeline state**, the
@@ -15,7 +15,7 @@ cross-module reality that CLAUDE.md's status table cannot express.
 
 ---
 
-## 1. PIPELINE STATUS (verified as of June 17, 2026)
+## 1. PIPELINE STATUS (verified as of July 1, 2026)
 
 Signal flow (the ONLY valid build order):
 
@@ -34,15 +34,17 @@ AD9226 → adc_interface → cic_decimator → FIR banks → matched filters →
 | `matched_filter_2` (Buoy 2 = DOWN-sweep) | ✅ RTL verified — NEW REFERENCE DATA (FC-7) | Same architecture ← VALIDATED Jun 16. RTL UNCHANGED; load DOWN-sweep 41.5→38.5 kHz reference over UART |
 | `peak_detector` | ✅ DONE & verified | Dual-channel RELATIVE gating (abs → ratio `\|ch1\|>(\|ch2\|<<K_SHIFT)` AND `\|ch_n\|>FLOOR`) per FC-7; SNR proxy (8-bit), corr_peak (32-bit magnitude), peak_lag diagnostic (11-bit); 12/12 sim checks ALL PASS ← VALIDATED Jun 17 |
 | `packet_framer` | ✅ DONE & verified | 8-byte FSM [target_id][peak_lag_H/L][corr_peak_H/L][snr][XOR checksum][0xFF], tx_busy gating between peak_detector and uart_tx; 12/12 sim checks ALL PASS ← VALIDATED Jun 17 |
-| `uart_rx` (config + ref-chirp load) | ⏳ NOT STARTED (Week 5) | Inbound UART path for K_SHIFT/FLOOR/SNR_SHIFT config AND matched-filter reference-chirp BSRAM loading. Deferred from peak_detector deliverable per systems-integrator Jun 17 ruling |
-| Full pipeline integration | ⏳ NOT STARTED | ALL upstream modules verified — ready to build top-level integration (chain all 9 modules: AD9226 → adc_interface → CIC → FIR ×2 → matched_filter ×2 → peak_detector → packet_framer → uart_tx) |
+| `uart_rx` (config + ref-chirp load) | ✅ RTL + sim DONE (Jul 1), pin assignment UNVERIFIED | 4-byte frame [addr_hi][addr_lo][data_hi][data_lo], CLKS_PER_BIT=234, 2-FF synchronizer, glitch rejection. Address-map convention in header (0x0000-0x0001=FLOOR, 0x0002=K_SHIFT, 0x0003=SNR_SHIFT, 0x1000-0x183C=ch1 ref, 0x2000-0x283C=ch2 ref). Config-register consumer module + matched-filter load-gate still deferred (documented in uart_rx.v header). Pin 87 candidate, flagged unverified — hw-validation physical check pending. |
+| Full pipeline integration (top_level.v) | ✅ Synthesized & validated (Jun 29–30) | All 10 modules chained: AD9226 → adc_interface → CIC → FIR ×2 → matched_filter ×2 → peak_detector → packet_framer → uart_tx → (uart_rx inbound). Synthesis: +28.6ns setup slack, +0.3ns hold slack, 4% LUTs, 3% registers, 9% DSP. |
 
-**Status as of June 18:** All nine FPGA modules now VERIFIED and DONE:
-- **Authored core pipeline (7):** ADC interface ✅ → CIC decimator ✅ → FIR banks ✅ (re-spun to 38.5–41.5 kHz, validated Jun 18) → matched filters ✅ → peak detector ✅ → packet framer ✅ → UART TX ✅
-- **Peak detector + packet framer (2):** completed and validated Jun 17 — dual-channel RELATIVE gating (FC-7), SNR proxy, 8-byte packet FSM; 12/12 sim checks ALL PASS
-- **FIR coefficient re-spin (Jun 18):** both banks re-generated for 38.5–41.5 kHz single passband per FC-7 code-division architecture; verilog-sim-runner ALL PASS, passband ripple <1dB, stopband confirmed
+**Status as of July 1, 2026:** All TEN FPGA pipeline modules now VERIFIED and SIM-PASSING (9 synthesized, 1 new):
+- **Outbound core pipeline (9):** ADC interface ✅ → CIC decimator ✅ → FIR banks ✅ → matched filters ✅ → peak detector ✅ → packet framer ✅ → UART TX ✅
+- **Integration & synthesis (top_level.v):** All 9 chained end-to-end, synthesized Jun 29–30 with POSITIVE timing slack (+28.6ns setup, +0.3ns hold at 27MHz). 0 errors, 0 warnings. Resource utilization: 4% LUTs, 3% registers, 9% DSP.
+- **Inbound config path (uart_rx.v):** New 4-byte frame protocol completed Jul 1, RTL + testbench sim-verified, pin assignment flagged for hw-validation physical check before wiring. Deferred config-register consumer module and matched-filter load-gate documented.
+- **ROS 2 ecosystem (6 of 7 nodes):** motor_driver, collision_safety, dead_reckoning (EKF), acoustic_homing (state machine), mission_state_machine, telemetry all built Jul 1. 1 node remaining (fpga_uart_node, UART parser) not blocking hardware assembly. Wiring architecture corrected to defense-in-depth gating.
+- **ESP32 firmware pre-existing:** vehicle_firmware.ino and buoy_firmware.ino built Jun 29 (pre-existing, now documented). Unflashed, untested. Ready for bench bring-up Week 6 Jul 3-5.
 
-**Critical next step: Full pipeline integration.** All 9 FPGA modules are now verified and ready to chain into a top-level integration module. This unblocks Week 5 synthesis and hardware testing.
+**Critical next step: Hardware bring-up & bench validation.** All FPGA code is synthesized and timing-verified. All ROS 2 software is written. Remaining tasks are physical: hull fabrication (PVC cut/fit), Layer A acoustic path verification (38.5–41.5 kHz scope check), ESP32 firmware flashing + motor control validation.
 
 **Architecture frozen (FC-5/FC-6/FC-7/FC-8):**
 - FC-5: SNR-gradient homing (not absolute range); `peak_detector` outputs `corr_peak`/`snr` as primary, `peak_lag` kept diagnostic only.
@@ -317,6 +319,20 @@ are ALL unaffected. No Verilog changes for B2.
 **FPGA impact:** NONE. This is a mission state machine change only.
 
 **State machine update required:** ARRIVED_N → EGRESS_N → SCAN_(N+1), replacing the current direct ARRIVED_N → SCAN_(N+1) transition.
+
+---
+
+### FC-9 — uart_rx.v inbound frame is 4 bytes wide, NOT 2; region map is a documented convention, not an enforced one
+
+**Constraint:** The original `uart_rx.v` spec (`[addr_byte][data_byte]`, 8-bit address + 8-bit data) is insufficient and must never be re-implemented that way. dsp-signal-validator (Jul 1, 2026) found it BLOCKED on four counts: an 8-bit address cannot reach the 2109-deep matched-filter reference-chirp BSRAM (needs 12 bits; 4221 addressable targets exist across 2 channels + config); an 8-bit data byte cannot carry a signed-16 reference-chirp sample (FC-1) or `peak_detector.v`'s 32-bit `FLOOR` register; there is no region field to separate config-register addresses from BSRAM addresses; and `matched_filter_1/2.v`'s reference BSRAM has no load-complete gate against the live MAC sweep.
+
+**What was built instead:** `uart_rx.v` now assembles a 4-byte, big-endian frame — `[addr_hi][addr_lo][data_hi][data_lo]` — giving a 16-bit `addr_out` (65,536 locations) and a proper signed `data_out[15:0]` (FC-1 compliant). This is a PHY-layer fix only: `uart_rx.v` delivers raw addr/data pairs reliably and does not interpret them.
+
+**What is still open (deferred, not fixed):** Two items remain for whoever builds the not-yet-started config-register-bank / BSRAM-loader consumer module:
+1. **Region decode.** The address map is a *documented convention* in `uart_rx.v`'s header comment, not something `uart_rx.v` enforces: `0x0000–0x0001`=FLOOR (hi16 then lo16, consumer assembles into 32 bits), `0x0002`=K_SHIFT (low 5 bits), `0x0003`=SNR_SHIFT (low 5 bits), `0x1000–0x183C`=channel-1 (up-sweep) reference chirp (2109 words), `0x2000–0x283C`=channel-2 (down-sweep) reference chirp. The consumer module must decode these ranges itself; a bug there silently cross-corrupts thresholds and templates.
+2. **Matched-filter load-gate.** Writing new reference-chirp samples into `matched_filter_1/2.v`'s `ref_mem` while the live MAC sweep is reading it (mid-correlation) can invert the FC-6 homing gradient via a torn read. Fixing this requires a `ref_loaded`/`corr_enable`-style gate touching `matched_filter_1.v`/`matched_filter_2.v` RTL — which FC-7 and CLAUDE.md currently document as "RTL UNCHANGED". That claim holds for `uart_rx.v` itself (untouched) but will NOT survive the BSRAM-loader module being built; plan for a small, deliberate MF RTL change at that point, not a silent violation of the "unchanged" note.
+
+**FPGA impact of this entry:** `uart_rx.v` (done, sim-verified) and its `.cst` (pin candidate UNVERIFIED — hw-validation could not run this session; treat with the same discipline as PV-1/2/3 before wiring). No other pipeline module touched.
 
 ---
 
@@ -729,3 +745,48 @@ masking legitimate acoustic signals at range.
 
 **Downstream impact:** All five requirements affect Week 6–7 firmware/hardware work only. No FPGA
 RTL changes. No impact on the FPGA pipeline, synthesis, or Week 5 integration work.
+
+### DL-6 — Go/No-Go assessment after ROS 2 node build-out (July 1, 2026, Week 6 Day 3)
+
+**Context:** As of today, all 10 FPGA modules are RTL-complete and sim-verified (top_level.v
+synthesized with positive slack Jun 30), and 6 of 7 planned ROS 2 nodes are code-complete
+(motor_driver_node, collision_safety_node, dead_reckoning_node, acoustic_homing_node,
+mission_state_machine, telemetry_node — only fpga_uart_node predates today). ESP32 vehicle and
+buoy firmware were also discovered to already exist in the repo (built Jun 29), previously
+undocumented. None of the ROS 2 graph has been colcon-built or run; none of the ESP32 firmware
+has been flashed or bench-tested; hull fabrication (due to start today, Jul 1) and the Layer A
+acoustic bench check (due Jul 2) have not yet happened.
+
+**Verdict: GO for the single-buoy MVS fallback, CONDITIONAL GO for the full two-buoy demo.**
+
+The software/RTL side of this project is now substantially ahead of the physical-build side —
+every FPGA module and every planned ROS 2 node exists as verified code, but there has been zero
+hardware integration to date. That gap is normal for Week 6 of this schedule, but it means the
+remaining 40 days must convert code-complete into hardware-verified, not add more code. Pool
+test #1 (Jul 20–26) is 19 days out and is a hard date.
+
+**Top 3 risks, in priority order:**
+
+1. **Zero physical integration so far.** RTL and ROS 2 completeness can create a false sense of
+   being on-track. The actual gating tasks — hull fab, ESP32 flash + bench test, Layer A acoustic
+   check, dry-land E2E — are all still ahead, all on the physical/calendar-bound critical path,
+   and none can be compressed by writing more code. If hull fab slips past this week the way
+   Week 5 slipped entirely, pool test #1 prep window shrinks below what dry-land rehearsal needs.
+
+2. **Layer A acoustic bench check is the single highest-uncertainty item remaining.** FC-6
+   (SNR-gradient homing) and FC-7 (sweep-direction code-division beacon ID, ~12.2 dB isolation)
+   are both simulation/analysis results, never measured on the real TCT40-16R/T transducer pair.
+   If the real isolation or passband differs meaningfully from the modeled 38.5–41.5 kHz / 12.2 dB
+   assumptions, it cascades into the FIR coefficients, K_SHIFT/FLOOR calibration, and the egress
+   distance (FC-8) — all downstream of a bench check that hasn't happened yet.
+
+3. **The config-load path is unfinished exactly where it will be needed for calibration.**
+   `uart_rx.v` (today's work) is only the PHY layer; the actual config-register-bank / BSRAM-loader
+   consumer that applies K_SHIFT/FLOOR/SNR_SHIFT and loads reference chirps does not exist yet
+   (see FC-9), and building it will require a small, deliberate touch to `matched_filter_1/2.v`
+   (a load-gate) that FC-7/CLAUDE.md currently describe as "RTL unchanged." CQ-1's empirical
+   threshold calibration at pool test #1 depends on this path existing and working before then.
+
+**Recommendation:** Do not start any further ROS 2 or FPGA feature work until hull fabrication is
+underway and the Layer A bench check has produced a real measurement. The highest-value action for
+the next 48 hours is physical, not digital.
